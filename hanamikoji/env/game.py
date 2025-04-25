@@ -13,11 +13,10 @@ RealCard2EnvCard = {'3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
 class GameEnv(object):
 
     def __init__(self, players):
-
-        self.move_history = []
+        self.deck = None
         self.game_over = False
         self.acting_player_position = 'first'
-        self.played_moves = {'first': [],
+        self.move_history = {'first': [],
                              'second': []}
         self.num_wins = {'first': 0,
                          'second': 0}
@@ -30,31 +29,16 @@ class GameEnv(object):
     def card_play_init(self, card_play_data):
         self.info_sets['first'].player_hand_cards = card_play_data['first']
         self.info_sets['second'].player_hand_cards = card_play_data['second']
-        self.get_acting_player_position()
         self.game_infoset = self.get_infoset()
 
     def game_done(self):
-        if len(self.info_sets['landlord'].player_hand_cards) == 0 or \
-                len(self.info_sets['landlord_up'].player_hand_cards) == 0 or \
-                len(self.info_sets['landlord_down'].player_hand_cards) == 0:
-            # if one of the three players discards his hand,
-            # then game is over.
-            self.compute_player_utility()
+        if len(self.info_sets['first'].move_history[1]) == 6:
             self.update_num_wins_scores()
-
             self.game_over = True
-
-    def compute_player_utility(self):
-
-        if len(self.info_sets['landlord'].player_hand_cards) == 0:
-            self.player_utility_dict = {'landlord': 2,
-                                        'farmer': -1}
-        else:
-            self.player_utility_dict = {'landlord': -2,
-                                        'farmer': 1}
 
     def update_num_wins_scores(self):
         for pos, utility in self.player_utility_dict.items():
+            self.winner = pos
             base_score = 2 if pos == 'landlord' else 1
             if utility > 0:
                 self.num_wins[pos] += 1
@@ -113,9 +97,6 @@ class GameEnv(object):
             last_two_moves.insert(0, card)
             last_two_moves = last_two_moves[:2]
         return last_two_moves
-
-    def get_acting_player_position(self):
-        return self.acting_player_position
 
     def update_acting_player_hand_cards(self, action):
         if action != []:
@@ -217,15 +198,6 @@ class GameEnv(object):
         self.game_over = False
         self.acting_player_position = None
         self.player_utility_dict = None
-
-        self.last_move_dict = {'first': [],
-                               'second': []}
-
-        self.played_cards = {'landlord': [],
-                             'landlord_up': [],
-                             'landlord_down': []}
-
-
         self.info_sets = {'first': InfoSet('first'),
                          'second': InfoSet('second')}
 
@@ -270,7 +242,7 @@ class GameEnv(object):
         self.info_sets[
             self.acting_player_position].all_handcards = \
             {pos: self.info_sets[pos].player_hand_cards
-             for pos in ['landlord', 'landlord_up', 'landlord_down']}
+             for pos in ['first', 'second']}
 
         return deepcopy(self.info_sets[self.acting_player_position])
 
@@ -288,23 +260,23 @@ class InfoSet(object):
         # Player round position meaning that in the current round was started by player or not
         self.player_round_position = None
         # The public geisha gift cards of the current player.
-        self.player_gift_cards = None
+        self.player_gift_cards = [0, 0, 0, 0, 0, 0, 0]
         # The public geisha gift cards of the opp player.
-        self.opp_gift_cards = None
+        self.opp_gift_cards = [0, 0, 0, 0, 0, 0, 0]
         # The possible action cards of the current player
-        self.player_action_cards = None
+        self.player_action_cards = [1, 1, 1, 1]
         # The possible action cards of the opp player
-        self.opp_action_cards = None
+        self.opp_action_cards = [1, 1, 1, 1]
         # decision cards 1 - 2
-        self.decision_cards_1_2 = None
+        self.decision_cards_1_2 = [0, 0, 0, 0, 0, 0, 0]
         # decision cards 2 - 2
-        self.decision_cards_2_2 = None
+        self.decision_cards_2_2 = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
         # + 1 if current player is preferred, -1 if opp, otherwise 0
-        self.geisha_preferences = None
+        self.geisha_preferences = [0, 0, 0, 0, 0, 0, 0]
         # The number of cards left for each player. It is a dict with str-->int
-        self.num_cards_left_dict = None
-        # The historical moves. It is a list
-        self.move_history = None
+        self.num_cards_left_dict = [7, 6]
+        # Contains two lists. First list is the round starter moves, the other list is for round second moves
+        self.move_history = [[], []]
 
         # Curr player info
         # The hand cards of the current player. A list.
@@ -325,7 +297,3 @@ class InfoSet(object):
         self.opp_trash_cards = None
         # The unknown cards of the deck for the current player
         self.opp_unknown_cards = None
-
-        # Arbiter info
-        # The random deck unknown for both player
-        self.deck = None
