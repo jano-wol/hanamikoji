@@ -13,6 +13,7 @@ RealCard2EnvCard = {'3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
 class GameEnv(object):
 
     def __init__(self, players):
+        self.players = players
         self.deck = None
         self.winner = None
         self.acting_player_position = 'first'
