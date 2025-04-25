@@ -98,6 +98,7 @@ class Model:
         self.models['landlord_down'] = FarmerLstmModel().to(torch.device(device))
 
     def forward(self, position, z, x, training=False, flags=None):
+        # here player_round_position should help decide which model to call
         model = self.models[position]
         return model.forward(z, x, training, flags)
 

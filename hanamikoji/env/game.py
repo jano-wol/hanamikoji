@@ -20,8 +20,6 @@ class GameEnv(object):
     def __init__(self, players):
 
         self.card_play_action_seq = []
-
-        self.three_landlord_cards = None
         self.game_over = False
 
         self.acting_player_position = None
@@ -343,8 +341,10 @@ class InfoSet(object):
     """
     def __init__(self, player_position):
         # Common info
-        # The player position, i.e., section_first, section_second
+        # Global player position, first, second
         self.player_position = player_position
+        # Player round position meaning that in the current round was started by player or not
+        self.player_round_position = None
         # The public geisha gift cards of the current player.
         self.player_gift_cards = None
         # The public geisha gift cards of the opp player.
