@@ -14,7 +14,7 @@ class GameEnv(object):
 
     def __init__(self, players):
         self.deck = None
-        self.game_over = False
+        self.winner = None
         self.acting_player_position = 'first'
         self.move_history = {'first': [],
                              'second': []}
@@ -33,19 +33,11 @@ class GameEnv(object):
 
     def game_done(self):
         if len(self.info_sets['first'].move_history[1]) == 6:
+            self.winner = 'first' # TODO
             self.update_num_wins_scores()
-            self.game_over = True
 
     def update_num_wins_scores(self):
-        for pos, utility in self.player_utility_dict.items():
-            self.winner = pos
-            base_score = 2 if pos == 'landlord' else 1
-            if utility > 0:
-                self.num_wins[pos] += 1
-                self.winner = pos
-                self.num_scores[pos] += base_score * (2 ** self.bomb_num)
-            else:
-                self.num_scores[pos] -= base_score * (2 ** self.bomb_num)
+        self.num_wins[self.winner] += 1
 
     def get_winner(self):
         return self.winner
