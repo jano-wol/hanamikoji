@@ -342,31 +342,48 @@ class InfoSet(object):
     historical moves, etc.
     """
     def __init__(self, player_position):
-        # The player position, i.e., landlord, landlord_down, or landlord_up
+        # Common info
+        # The player position, i.e., section_first, section_second
         self.player_position = player_position
-        # The hand cands of the current player. A list.
-        self.player_hand_cards = None
-        # The number of cards left for each player. It is a dict with str-->int 
+        # The public geisha gift cards of the current player.
+        self.player_gift_cards = None
+        # The public geisha gift cards of the opp player.
+        self.opp_gift_cards = None
+        # The possible action cards of the current player
+        self.player_action_cards = None
+        # The possible action cards of the opp player
+        self.opp_action_cards = None
+        # decision cards 1 - 2
+        self.decision_cards_1_2 = None
+        # decision cards 2 - 2
+        self.decision_cards_2_2 = None
+        # + 1 if current player is preferred, -1 if opp, otherwise 0
+        self.geisha_preferences = None
+        # The number of cards left for each player. It is a dict with str-->int
         self.num_cards_left_dict = None
-        # The three landload cards. A list.
-        self.three_landlord_cards = None
-        # The historical moves. It is a list of list
+        # The historical moves. It is a list
         self.card_play_action_seq = None
-        # The union of the hand cards of the other two players for the current player 
-        self.other_hand_cards = None
-        # The legal actions for the current move. It is a list of list
-        self.legal_actions = None
-        # The most recent valid move
-        self.last_move = None
-        # The most recent two moves
-        self.last_two_moves = None
-        # The last moves for all the postions
-        self.last_move_dict = None
-        # The played cands so far. It is a list.
-        self.played_cards = None
-        # The hand cards of all the players. It is a dict. 
-        self.all_handcards = None
-        # Last player position that plays a valid move, i.e., not `pass`
-        self.last_pid = None
-        # The number of bombs played so far
-        self.bomb_num = None
+
+        # Curr player info
+        # The hand cards of the current player. A list.
+        self.player_hand_cards = None
+        # The stashed card of the current player
+        self.player_stashed_card = None
+        # The two trashed cards of the current player
+        self.player_trash_cards = None
+        # The unknown cards of the deck for the current player
+        self.player_unknown_cards = None
+
+        # Opp info
+        # The hand cards of the opp player. A list.
+        self.opp_hand_cards = None
+        # The stashed card of the current player
+        self.opp_stashed_card = None
+        # The two trashed cards of the current player
+        self.opp_trash_cards = None
+        # The unknown cards of the deck for the current player
+        self.opp_unknown_cards = None
+
+        # Arbiter info
+        # The random deck unknown for both player
+        self.deck = None
