@@ -69,27 +69,12 @@ class GameEnv(object):
 
     def get_infoset(self):
         self.info_sets[
-            self.acting_player_position].last_pid = self.last_pid
-
-        self.info_sets[
             self.acting_player_position].legal_actions = \
             self.get_legal_card_play_actions()
 
-        self.info_sets[
-            self.acting_player_position].bomb_num = self.bomb_num
-
-        self.info_sets[
-            self.acting_player_position].last_move = self.get_last_move()
-
-        self.info_sets[
-            self.acting_player_position].last_two_moves = self.get_last_two_moves()
-
-        self.info_sets[
-            self.acting_player_position].last_move_dict = self.last_move_dict
-
         self.info_sets[self.acting_player_position].num_cards_left_dict = \
             {pos: len(self.info_sets[pos].player_hand_cards)
-             for pos in ['landlord', 'landlord_up', 'landlord_down']}
+             for pos in ['first', 'second']}
 
         self.info_sets[self.acting_player_position].other_hand_cards = []
         for pos in ['landlord', 'landlord_up', 'landlord_down']:
@@ -100,11 +85,6 @@ class GameEnv(object):
 
         self.info_sets[self.acting_player_position].played_cards = \
             self.played_cards
-        self.info_sets[self.acting_player_position].three_landlord_cards = \
-            self.three_landlord_cards
-        self.info_sets[self.acting_player_position].card_play_action_seq = \
-            self.card_play_action_seq
-
         self.info_sets[
             self.acting_player_position].all_handcards = \
             {pos: self.info_sets[pos].player_hand_cards
