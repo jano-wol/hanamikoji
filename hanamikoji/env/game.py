@@ -17,6 +17,7 @@ class GameEnv(object):
         self.deck = None
         self.winner = None
         self.acting_player_position = 'first'
+        self.section = 1
         self.move_history = {'first': [], 'second': []}
         self.num_wins = {'first': 0, 'second': 0}
         self.num_scores = {'first': 0, 'second': 0}
@@ -40,31 +41,12 @@ class GameEnv(object):
         return self.winner
 
     def step(self):
-        action = self.players[self.acting_player_position].act(
-            self.game_infoset)
+        action = self.players[self.acting_player_position].act(self.game_infoset)
         assert action in self.game_infoset.legal_actions
-
-        if len(action) > 0:
-            self.last_pid = self.acting_player_position
-
-        self.last_move_dict[
-            self.acting_player_position] = action.copy()
-
-        self.card_play_action_seq.append(action)
-        self.update_acting_player_hand_cards(action)
-
-        self.played_cards[self.acting_player_position] += action
-
-        if self.acting_player_position == 'landlord' and \
-                len(action) > 0 and \
-                len(self.three_landlord_cards) > 0:
-            for card in action:
-                if len(self.three_landlord_cards) > 0:
-                    if card in self.three_landlord_cards:
-                        self.three_landlord_cards.remove(card)
-                else:
-                    break
-
+        self.move_history[self.acting_player_position].append(action)
+        # TODO update
+        # self.update_acting_player_hand_cards(action)
+        # self.played_cards[self.acting_player_position] += action
         self.game_done()
         if not self.game_over:
             self.get_acting_player_position()
@@ -79,13 +61,6 @@ class GameEnv(object):
                 last_move = self.card_play_action_seq[-1]
 
         return last_move
-
-    def get_last_two_moves(self):
-        last_two_moves = [[], []]
-        for card in self.card_play_action_seq[-2:]:
-            last_two_moves.insert(0, card)
-            last_two_moves = last_two_moves[:2]
-        return last_two_moves
 
     def update_acting_player_hand_cards(self, action):
         if action != []:
