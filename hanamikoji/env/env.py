@@ -1,31 +1,19 @@
 from collections import Counter
 import numpy as np
 
-from douzero.env.game import GameEnv
+from hanamikoji.env.game import GameEnv
 
-Card2Column = {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7,
-               11: 8, 12: 9, 13: 10, 14: 11, 17: 12}
+Card2Column = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6}
 
-NumOnes2Array = {0: np.array([0, 0, 0, 0]),
-                 1: np.array([1, 0, 0, 0]),
-                 2: np.array([1, 1, 0, 0]),
-                 3: np.array([1, 1, 1, 0]),
-                 4: np.array([1, 1, 1, 1])}
-
-deck = []
-for i in range(3, 15):
-    deck.extend([i for _ in range(4)])
-deck.extend([17 for _ in range(4)])
-deck.extend([20, 30])
+deck = ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd', 'd', 'e', 'e', 'e', 'f', 'f', 'f', 'f', 'g', 'g', 'g', 'g', 'g']
 
 class Env:
     """
-    Doudizhu multi-agent wrapper
+    Hanamikoji multi-agent wrapper
     """
     def __init__(self, objective):
         """
-        Objective is wp/adp/logadp. It indicates whether considers
-        bomb in reward calculation. Here, we use dummy agents.
+        Objective is wp/adp/logadp. Here, we use dummy agents.
         This is because, in the orignial game, the players
         are `in` the game. Here, we want to isolate
         players and environments to have a more gym style
@@ -39,7 +27,7 @@ class Env:
         # Initialize players
         # We use three dummy player for the target position
         self.players = {}
-        for position in ['landlord', 'landlord_up', 'landlord_down']:
+        for position in ['first', 'second']:
             self.players[position] = DummyAgent(position)
 
         # Initialize the internal environment

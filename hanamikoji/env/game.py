@@ -10,55 +10,26 @@ RealCard2EnvCard = {'3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
                     '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12,
                     'K': 13, 'A': 14, '2': 17, 'X': 20, 'D': 30}
 
-bombs = [[3, 3, 3, 3], [4, 4, 4, 4], [5, 5, 5, 5], [6, 6, 6, 6],
-         [7, 7, 7, 7], [8, 8, 8, 8], [9, 9, 9, 9], [10, 10, 10, 10],
-         [11, 11, 11, 11], [12, 12, 12, 12], [13, 13, 13, 13], [14, 14, 14, 14],
-         [17, 17, 17, 17], [20, 30]]
-
 class GameEnv(object):
 
     def __init__(self, players):
 
-        self.card_play_action_seq = []
+        self.move_history = []
         self.game_over = False
-
-        self.acting_player_position = None
-        self.player_utility_dict = None
-
-        self.players = players
-
-        self.last_move_dict = {'landlord': [],
-                               'landlord_up': [],
-                               'landlord_down': []}
-
-        self.played_cards = {'landlord': [],
-                             'landlord_up': [],
-                             'landlord_down': []}
-
-        self.last_move = []
-        self.last_two_moves = []
-
-        self.num_wins = {'landlord': 0,
-                         'farmer': 0}
-
-        self.num_scores = {'landlord': 0,
-                           'farmer': 0}
-
-        self.info_sets = {'landlord': InfoSet('landlord'),
-                         'landlord_up': InfoSet('landlord_up'),
-                         'landlord_down': InfoSet('landlord_down')}
-
-        self.bomb_num = 0
-        self.last_pid = 'landlord'
+        self.acting_player_position = 'first'
+        self.played_moves = {'first': [],
+                             'second': []}
+        self.num_wins = {'first': 0,
+                         'second': 0}
+        self.num_scores = {'first': 0,
+                           'second': 0}
+        self.info_sets = {'first': InfoSet('first'),
+                         'second': InfoSet('second')}
+        self.game_infoset = None
 
     def card_play_init(self, card_play_data):
-        self.info_sets['landlord'].player_hand_cards = \
-            card_play_data['landlord']
-        self.info_sets['landlord_up'].player_hand_cards = \
-            card_play_data['landlord_up']
-        self.info_sets['landlord_down'].player_hand_cards = \
-            card_play_data['landlord_down']
-        self.three_landlord_cards = card_play_data['three_landlord_cards']
+        self.info_sets['first'].player_hand_cards = card_play_data['first']
+        self.info_sets['second'].player_hand_cards = card_play_data['second']
         self.get_acting_player_position()
         self.game_infoset = self.get_infoset()
 
@@ -95,9 +66,6 @@ class GameEnv(object):
     def get_winner(self):
         return self.winner
 
-    def get_bomb_num(self):
-        return self.bomb_num
-
     def step(self):
         action = self.players[self.acting_player_position].act(
             self.game_infoset)
@@ -105,9 +73,6 @@ class GameEnv(object):
 
         if len(action) > 0:
             self.last_pid = self.acting_player_position
-
-        if action in bombs:
-            self.bomb_num += 1
 
         self.last_move_dict[
             self.acting_player_position] = action.copy()
@@ -150,19 +115,6 @@ class GameEnv(object):
         return last_two_moves
 
     def get_acting_player_position(self):
-        if self.acting_player_position is None:
-            self.acting_player_position = 'landlord'
-
-        else:
-            if self.acting_player_position == 'landlord':
-                self.acting_player_position = 'landlord_down'
-
-            elif self.acting_player_position == 'landlord_down':
-                self.acting_player_position = 'landlord_up'
-
-            else:
-                self.acting_player_position = 'landlord'
-
         return self.acting_player_position
 
     def update_acting_player_hand_cards(self, action):
@@ -261,31 +213,21 @@ class GameEnv(object):
         return moves
 
     def reset(self):
-        self.card_play_action_seq = []
-
-        self.three_landlord_cards = None
+        self.move_history = []
         self.game_over = False
-
         self.acting_player_position = None
         self.player_utility_dict = None
 
-        self.last_move_dict = {'landlord': [],
-                               'landlord_up': [],
-                               'landlord_down': []}
+        self.last_move_dict = {'first': [],
+                               'second': []}
 
         self.played_cards = {'landlord': [],
                              'landlord_up': [],
                              'landlord_down': []}
 
-        self.last_move = []
-        self.last_two_moves = []
 
-        self.info_sets = {'landlord': InfoSet('landlord'),
-                         'landlord_up': InfoSet('landlord_up'),
-                         'landlord_down': InfoSet('landlord_down')}
-
-        self.bomb_num = 0
-        self.last_pid = 'landlord'
+        self.info_sets = {'first': InfoSet('first'),
+                         'second': InfoSet('second')}
 
     def get_infoset(self):
         self.info_sets[
@@ -362,7 +304,7 @@ class InfoSet(object):
         # The number of cards left for each player. It is a dict with str-->int
         self.num_cards_left_dict = None
         # The historical moves. It is a list
-        self.card_play_action_seq = None
+        self.move_history = None
 
         # Curr player info
         # The hand cards of the current player. A list.
