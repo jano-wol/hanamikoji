@@ -6,6 +6,7 @@ __pycache__
 *.pyc
 dist/
 douzero_checkpoints
+checkpoints
 most_recent_model
 eval_data.pkl
 /venv/**

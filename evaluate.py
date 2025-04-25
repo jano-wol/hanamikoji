@@ -1,11 +1,11 @@
 import os 
 import argparse
 
-from douzero.evaluation.simulation import evaluate
+from hanamikoji.evaluation.simulation import evaluate
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-                    'Dou Dizhu Evaluation')
+                    'Hanamikoji Evaluation')
     parser.add_argument('--landlord', type=str,
             default='baselines/douzero_ADP/landlord.ckpt')
     parser.add_argument('--landlord_up', type=str,

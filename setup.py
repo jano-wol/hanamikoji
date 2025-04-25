@@ -6,16 +6,16 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="douzero",
+    name="hanamikojizero",
     version=VERSION,
-    author="Daochen Zha",
-    author_email="daochen.zha@tamu.edu",
-    description="DouZero DouDizhu AI",
+    author="Janos Wolosz",
+    author_email="jjjkamu@gmail.com",
+    description="Hanamikoji AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/kwai/DouZero",
+    url="https://github.com/jano-wol/hanamikoji",
     license='Apache License 2.0',
-    keywords=["DouDizhu", "AI", "Reinforcment Learning", "RL", "Torch", "Poker"],
+    keywords=["Hanamikoji", "DouZero", "AI", "Reinforcment Learning", "RL", "Torch", "Poker"],
     packages=setuptools.find_packages(),
     install_requires=[
         'torch',
