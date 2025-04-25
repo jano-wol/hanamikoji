@@ -52,16 +52,6 @@ class GameEnv(object):
             # TODO fix
             self.game_infoset = self.get_infoset()
 
-    def get_last_move(self):
-        last_move = []
-        if len(self.card_play_action_seq) != 0:
-            if len(self.card_play_action_seq[-1]) == 0:
-                last_move = self.card_play_action_seq[-2]
-            else:
-                last_move = self.card_play_action_seq[-1]
-
-        return last_move
-
     def update_acting_player_hand_cards(self, action):
         if action != []:
             for card in action:
