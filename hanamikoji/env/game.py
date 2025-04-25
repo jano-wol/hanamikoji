@@ -48,8 +48,8 @@ class GameEnv(object):
         # self.update_acting_player_hand_cards(action)
         # self.played_cards[self.acting_player_position] += action
         self.game_done()
-        if not self.game_over:
-            self.get_acting_player_position()
+        if not self.winner:
+            # TODO fix
             self.game_infoset = self.get_infoset()
 
     def get_last_move(self):
@@ -159,7 +159,7 @@ class GameEnv(object):
 
     def reset(self):
         self.move_history = []
-        self.game_over = False
+        self.winner = None
         self.acting_player_position = None
         self.player_utility_dict = None
         self.info_sets = {'first': InfoSet('first'),
