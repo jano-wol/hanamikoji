@@ -17,14 +17,10 @@ class GameEnv(object):
         self.deck = None
         self.winner = None
         self.acting_player_position = 'first'
-        self.move_history = {'first': [],
-                             'second': []}
-        self.num_wins = {'first': 0,
-                         'second': 0}
-        self.num_scores = {'first': 0,
-                           'second': 0}
-        self.info_sets = {'first': InfoSet('first'),
-                         'second': InfoSet('second')}
+        self.move_history = {'first': [], 'second': []}
+        self.num_wins = {'first': 0, 'second': 0}
+        self.num_scores = {'first': 0, 'second': 0}
+        self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
         self.game_infoset = None
 
     def card_play_init(self, card_play_data):
