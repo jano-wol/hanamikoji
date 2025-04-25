@@ -22,7 +22,7 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
     env = GameEnv(players)
     for idx, card_play_data in enumerate(card_play_data_list):
         env.card_play_init(card_play_data)
-        while not env.game_over:
+        while not env.winner:
             env.step()
         env.reset()
 

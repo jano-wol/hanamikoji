@@ -12,7 +12,6 @@ class GameEnv(object):
         self.section = 1
         self.move_history = {'first': [], 'second': []}
         self.num_wins = {'first': 0, 'second': 0}
-        self.num_scores = {'first': 0, 'second': 0}
         self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
         self.game_infoset = None
 
@@ -24,9 +23,9 @@ class GameEnv(object):
     def game_done(self):
         if len(self.info_sets['first'].move_history[1]) == 6:
             self.winner = 'first' # TODO
-            self.update_num_wins_scores()
+            self.update_num_wins()
 
-    def update_num_wins_scores(self):
+    def update_num_wins(self):
         self.num_wins[self.winner] += 1
 
     def get_winner(self):
@@ -44,106 +43,27 @@ class GameEnv(object):
             # TODO fix
             self.game_infoset = self.get_infoset()
 
-    def update_acting_player_hand_cards(self, action):
-        if action != []:
-            for card in action:
-                self.info_sets[
-                    self.acting_player_position].player_hand_cards.remove(card)
-            self.info_sets[self.acting_player_position].player_hand_cards.sort()
+    #def update_acting_player_hand_cards(self, action):
+    #    if action != []:
+    #        for card in action:
+    #            self.info_sets[
+    #                self.acting_player_position].player_hand_cards.remove(card)
+    #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
     def get_legal_card_play_actions(self):
         mg = MovesGener(
             self.info_sets[self.acting_player_position].player_hand_cards)
 
-        action_sequence = self.card_play_action_seq
-
-        rival_move = []
-        if len(action_sequence) != 0:
-            if len(action_sequence[-1]) == 0:
-                rival_move = action_sequence[-2]
-            else:
-                rival_move = action_sequence[-1]
-
-        rival_type = md.get_move_type(rival_move)
-        rival_move_type = rival_type['type']
-        rival_move_len = rival_type.get('len', 1)
         moves = list()
-
-        if rival_move_type == md.TYPE_0_PASS:
-            moves = mg.gen_moves()
-
-        elif rival_move_type == md.TYPE_1_SINGLE:
-            all_moves = mg.gen_type_1_single()
-            moves = ms.filter_type_1_single(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_2_PAIR:
-            all_moves = mg.gen_type_2_pair()
-            moves = ms.filter_type_2_pair(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_3_TRIPLE:
-            all_moves = mg.gen_type_3_triple()
-            moves = ms.filter_type_3_triple(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_4_BOMB:
-            all_moves = mg.gen_type_4_bomb() + mg.gen_type_5_king_bomb()
-            moves = ms.filter_type_4_bomb(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_5_KING_BOMB:
-            moves = []
-
-        elif rival_move_type == md.TYPE_6_3_1:
-            all_moves = mg.gen_type_6_3_1()
-            moves = ms.filter_type_6_3_1(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_7_3_2:
-            all_moves = mg.gen_type_7_3_2()
-            moves = ms.filter_type_7_3_2(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_8_SERIAL_SINGLE:
-            all_moves = mg.gen_type_8_serial_single(repeat_num=rival_move_len)
-            moves = ms.filter_type_8_serial_single(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_9_SERIAL_PAIR:
-            all_moves = mg.gen_type_9_serial_pair(repeat_num=rival_move_len)
-            moves = ms.filter_type_9_serial_pair(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_10_SERIAL_TRIPLE:
-            all_moves = mg.gen_type_10_serial_triple(repeat_num=rival_move_len)
-            moves = ms.filter_type_10_serial_triple(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_11_SERIAL_3_1:
-            all_moves = mg.gen_type_11_serial_3_1(repeat_num=rival_move_len)
-            moves = ms.filter_type_11_serial_3_1(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_12_SERIAL_3_2:
-            all_moves = mg.gen_type_12_serial_3_2(repeat_num=rival_move_len)
-            moves = ms.filter_type_12_serial_3_2(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_13_4_2:
-            all_moves = mg.gen_type_13_4_2()
-            moves = ms.filter_type_13_4_2(all_moves, rival_move)
-
-        elif rival_move_type == md.TYPE_14_4_22:
-            all_moves = mg.gen_type_14_4_22()
-            moves = ms.filter_type_14_4_22(all_moves, rival_move)
-
-        if rival_move_type not in [md.TYPE_0_PASS,
-                                   md.TYPE_4_BOMB, md.TYPE_5_KING_BOMB]:
-            moves = moves + mg.gen_type_4_bomb() + mg.gen_type_5_king_bomb()
-
-        if len(rival_move) != 0:  # rival_move is not 'pass'
-            moves = moves + [[]]
-
         for m in moves:
             m.sort()
 
         return moves
 
     def reset(self):
-        self.move_history = []
+        self.move_history = {'first': [], 'second': []}
         self.winner = None
         self.acting_player_position = None
-        self.player_utility_dict = None
         self.info_sets = {'first': InfoSet('first'),
                          'second': InfoSet('second')}
 
