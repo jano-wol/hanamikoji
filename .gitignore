@@ -9,3 +9,4 @@ douzero_checkpoints
 most_recent_model
 eval_data.pkl
 /venv/**
+/.idea/**
