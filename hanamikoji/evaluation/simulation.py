@@ -1,16 +1,13 @@
 import multiprocessing as mp
 import pickle
 
-from douzero.env.game import GameEnv
+from hanamikoji.env.game import GameEnv
 
 def load_card_play_models(card_play_model_path_dict):
     players = {}
 
     for position in ['landlord', 'landlord_up', 'landlord_down']:
-        if card_play_model_path_dict[position] == 'rlcard':
-            from .rlcard_agent import RLCardAgent
-            players[position] = RLCardAgent(position)
-        elif card_play_model_path_dict[position] == 'random':
+        if card_play_model_path_dict[position] == 'random':
             from .random_agent import RandomAgent
             players[position] = RandomAgent()
         else:
@@ -64,10 +61,10 @@ def evaluate(landlord, landlord_up, landlord_down, eval_data, num_workers):
     ctx = mp.get_context('spawn')
     q = ctx.SimpleQueue()
     processes = []
-    for card_paly_data in card_play_data_list_each_worker:
+    for card_play_data in card_play_data_list_each_worker:
         p = ctx.Process(
                 target=mp_simulate,
-                args=(card_paly_data, card_play_model_path_dict, q))
+                args=(card_play_data, card_play_model_path_dict, q))
         p.start()
         processes.append(p)
 

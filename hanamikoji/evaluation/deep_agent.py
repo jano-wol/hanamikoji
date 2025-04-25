@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 
-from douzero.env.env import get_obs
+from hanamikoji.env.env import get_obs
 
 def _load_model(position, model_path):
-    from douzero.dmc.models import model_dict
+    from hanamikoji.dmc.models import model_dict
     model = model_dict[position]()
     model_state_dict = model.state_dict()
     if torch.cuda.is_available():
