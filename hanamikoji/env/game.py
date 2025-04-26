@@ -1,17 +1,37 @@
 from copy import deepcopy
 from .move_generator import MovesGener
 
+class PublicState:
+
+    def __init__(self):
+        # The public geisha gift cards
+        self.gift_cards = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
+        # The possible action cards
+        self.action_cards = {'first': [1, 1, 1, 1], 'second': [1, 1, 1, 1]}
+        # decision cards 1 - 2
+        self.decision_cards_1_2 = None
+        # decision cards 2 - 2
+        self.decision_cards_2_2 = None
+        # + 0.5 if current player is preferred, -0.5 if opp, otherwise 0
+        self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
+        # The number of cards left for each player. It is a dict with str-->int
+        self.num_cards_left_dict = {'first': 7, 'second': 6}
+        # Contains two lists. First list is the round starter moves, the other list is for round second moves
+        self.round_actions = {'first': 7, 'second': 6}
+
+        self.round = 1
+
 class GameEnv(object):
 
     def __init__(self, players):
         self.players = players
         self.deck = None
         self.winner = None
-        self.acting_player_position = 'first'
+        self.acting_player_id = 'first'
         self.section = 1
         self.move_history = {'first': [], 'second': []}
         self.num_wins = {'first': 0, 'second': 0}
-        self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
+        self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
         self.game_infoset = None
 
     def card_play_init(self, card_play_data):
@@ -58,8 +78,8 @@ class GameEnv(object):
     def reset(self):
         self.move_history = {'first': [], 'second': []}
         self.winner = None
-        self.acting_player_position = 'first'
-        self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
+        self.acting_player_id = 'first'
+        self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
 
     def get_infoset(self):
         self.info_sets[self.acting_player_position].legal_actions = self.get_legal_actions()
@@ -91,12 +111,12 @@ class InfoSet(object):
     such as the hand cards of the three players, the
     historical moves, etc.
     """
-    def __init__(self, player_position):
+    def __init__(self, player_id, player_round_position):
         # Common info
         # Global player position, first, second
-        self.player_position = player_position
+        self.player_id = player_id
         # Player round position meaning that in the current round was started by player or not
-        self.player_round_position = None
+        self.player_round_position = player_round_position
         # The public geisha gift cards of the current player.
         self.player_gift_cards = [0, 0, 0, 0, 0, 0, 0]
         # The public geisha gift cards of the opp player.
@@ -106,15 +126,15 @@ class InfoSet(object):
         # The possible action cards of the opp player
         self.opp_action_cards = [1, 1, 1, 1]
         # decision cards 1 - 2
-        self.decision_cards_1_2 = [0, 0, 0, 0, 0, 0, 0]
+        self.decision_cards_1_2 = None
         # decision cards 2 - 2
-        self.decision_cards_2_2 = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
-        # + 1 if current player is preferred, -1 if opp, otherwise 0
+        self.decision_cards_2_2 = None
+        # + 0.5 if current player is preferred, -0.5 if opp, otherwise 0
         self.geisha_preferences = [0, 0, 0, 0, 0, 0, 0]
         # The number of cards left for each player. It is a dict with str-->int
         self.num_cards_left_dict = [7, 6]
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
-        self.move_history = [[], []]
+        self.round_history = [[], []]
 
         # Curr player info
         # The hand cards of the current player. A list.
@@ -122,18 +142,6 @@ class InfoSet(object):
         # The stashed card of the current player
         self.player_stashed_card = None
         # The two trashed cards of the current player
-        self.player_trash_cards = None
-        # The unknown cards of the deck for the current player
-        self.player_unknown_cards = None
+        self.player_trashed_cards = None
         # The legal actions. It is a list of list
         self.legal_actions = None
-
-        # Opp info
-        # The hand cards of the opp player. A list.
-        self.opp_hand_cards = None
-        # The stashed card of the current player
-        self.opp_stashed_card = None
-        # The two trashed cards of the current player
-        self.opp_trash_cards = None
-        # The unknown cards of the deck for the current player
-        self.opp_unknown_cards = None
