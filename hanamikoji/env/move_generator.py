@@ -31,6 +31,28 @@ class MovesGener(object):
             self.resolve_2_2[1][1] = choose_2_2[0]
             return
 
+        if legal_actions[0] == 1:
+            self.stash_1 = []
+            for i in range(7):
+                if cards_list[i] == 0:
+                    continue
+                vector = [0] * 7
+                vector[i] += 1
+                self.stash_1.append(vector)
+
+        if legal_actions[1] == 1:
+            self.trash_2 = []
+            for i in range(7):
+                if cards_list[i] == 0:
+                    continue
+                for j in range(i, 7):
+                    if (i == j and cards_list[i] < 2) or (i != j and cards_list[j] == 0):
+                        continue
+                    vector = [0] * 7
+                    vector[i] += 1
+                    vector[j] += 1
+                    self.trash_2.append(vector)
+
         if legal_actions[2] == 1:
             self.choose_1_2 = []
             for i in range(7):
