@@ -3,9 +3,7 @@ import numpy as np
 
 from hanamikoji.env.game import GameEnv
 
-Card2Column = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6}
-
-deck = ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd', 'd', 'e', 'e', 'e', 'f', 'f', 'f', 'f', 'g', 'g', 'g', 'g', 'g']
+deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 
 class Env:
     """

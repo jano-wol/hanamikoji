@@ -12,14 +12,6 @@ class MovesGener(object):
         self.resolve_1_2 = None
         self.resolve_2_2 = None
 
-        if choose_2_2:
-            self.resolve_2_2 = [[[], []], [[], []]]
-            self.resolve_2_2[0][0] = choose_2_2[0]
-            self.resolve_2_2[0][1] = choose_2_2[1]
-            self.resolve_2_2[1][0] = choose_2_2[1]
-            self.resolve_2_2[1][1] = choose_2_2[0]
-            return
-
         if choose_1_2:
             self.resolve_1_2 = []
             for i, val in enumerate(choose_1_2):
@@ -31,6 +23,13 @@ class MovesGener(object):
                     self.resolve_1_2.append([a, b])
             return
 
+        if choose_2_2:
+            self.resolve_2_2 = [[[], []], [[], []]]
+            self.resolve_2_2[0][0] = choose_2_2[0]
+            self.resolve_2_2[0][1] = choose_2_2[1]
+            self.resolve_2_2[1][0] = choose_2_2[1]
+            self.resolve_2_2[1][1] = choose_2_2[0]
+            return
 
 
         self.cards_list = cards_list
