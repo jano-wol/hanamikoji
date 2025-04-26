@@ -64,8 +64,7 @@ class GameEnv(object):
         self.move_history = {'first': [], 'second': []}
         self.winner = None
         self.acting_player_position = None
-        self.info_sets = {'first': InfoSet('first'),
-                         'second': InfoSet('second')}
+        self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
 
     def get_infoset(self):
         self.info_sets[

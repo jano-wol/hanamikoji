@@ -46,13 +46,12 @@ class Env:
         # Randomly shuffle the deck
         _deck = deck.copy()
         np.random.shuffle(_deck)
-        card_play_data = {'landlord': _deck[:20],
-                          'landlord_up': _deck[20:37],
-                          'landlord_down': _deck[37:54],
-                          'three_landlord_cards': _deck[17:20],
-                          }
-        for key in card_play_data:
-            card_play_data[key].sort()
+        card_play_data = {'first': _deck[:7],
+                          'second': _deck[7:13],
+                          'deck': _deck[13:21]}
+
+        for position in ['first', 'second']:
+            card_play_data[position].sort()
 
         # Initialize the cards
         self._env.card_play_init(card_play_data)
