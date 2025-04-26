@@ -18,6 +18,7 @@ class GameEnv(object):
     def card_play_init(self, card_play_data):
         self.info_sets['first'].player_hand_cards = card_play_data['first']
         self.info_sets['second'].player_hand_cards = card_play_data['second']
+        self.deck = card_play_data['deck']
         self.game_infoset = self.get_infoset()
 
     def game_done(self):
