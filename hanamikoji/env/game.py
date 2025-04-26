@@ -51,7 +51,7 @@ class GameEnv(object):
     #                self.acting_player_position].player_hand_cards.remove(card)
     #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
-    def get_legal_card_play_actions(self):
+    def get_legal_actions(self):
         mg = MovesGener(
             self.info_sets[self.acting_player_position].player_hand_cards)
 
@@ -68,9 +68,7 @@ class GameEnv(object):
         self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
 
     def get_infoset(self):
-        self.info_sets[
-            self.acting_player_position].legal_actions = \
-            self.get_legal_card_play_actions()
+        self.info_sets[self.acting_player_position].legal_actions = self.get_legal_actions()
 
         self.info_sets[self.acting_player_position].num_cards_left_dict = \
             {pos: len(self.info_sets[pos].player_hand_cards)
@@ -133,6 +131,8 @@ class InfoSet(object):
         self.player_trash_cards = None
         # The unknown cards of the deck for the current player
         self.player_unknown_cards = None
+        # The legal actions. It is a list of list
+        self.legal_actions = None
 
         # Opp info
         # The hand cards of the opp player. A list.

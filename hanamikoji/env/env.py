@@ -62,7 +62,7 @@ class Env:
     def step(self, action):
         """
         Step function takes as input the action, which
-        is a list of integers, and output the next obervation,
+        is a list of integers, and output the next observation,
         reward, and a Boolean variable indicating whether the
         current game is finished. It also returns an empty
         dictionary that is reserved to pass useful information.
