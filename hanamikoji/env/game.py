@@ -51,19 +51,14 @@ class GameEnv(object):
     #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
     def get_legal_actions(self):
-        mg = MovesGener(
-            self.info_sets[self.acting_player_position].player_hand_cards)
-
-        moves = list()
-        for m in moves:
-            m.sort()
-
+        mg = MovesGener(self.info_sets[self.acting_player_position].player_hand_cards, self.info_sets[self.acting_player_position].legal_actions, )
+        moves = mg.gen_moves()
         return moves
 
     def reset(self):
         self.move_history = {'first': [], 'second': []}
         self.winner = None
-        self.acting_player_position = None
+        self.acting_player_position = 'first'
         self.info_sets = {'first': InfoSet('first'), 'second': InfoSet('second')}
 
     def get_infoset(self):
