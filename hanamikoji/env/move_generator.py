@@ -1,4 +1,9 @@
-import collections
+TYPE_0_STASH = 0
+TYPE_1_TRASH = 1
+TYPE_2_CHOOSE_1_2 = 2
+TYPE_3_CHOOSE_2_2 = 3
+TYPE_4_RESOLVE_1_2 = 4
+TYPE_5_RESOLVE_2_2 = 5
 
 class MovesGener(object):
     """
@@ -20,15 +25,15 @@ class MovesGener(object):
                     b = choose_1_2[:]
                     a[i] = 1
                     b[i] -= 1
-                    self.resolve_1_2.append([a, b])
+                    self.resolve_1_2.append([TYPE_4_RESOLVE_1_2, [a, b]])
             return
 
         if choose_2_2:
-            self.resolve_2_2 = [[[], []], [[], []]]
-            self.resolve_2_2[0][0] = choose_2_2[0]
-            self.resolve_2_2[0][1] = choose_2_2[1]
-            self.resolve_2_2[1][0] = choose_2_2[1]
-            self.resolve_2_2[1][1] = choose_2_2[0]
+            self.resolve_2_2 = [[TYPE_5_RESOLVE_2_2, [[], []]], [TYPE_5_RESOLVE_2_2, [[], []]]]
+            self.resolve_2_2[0][1][0] = choose_2_2[0]
+            self.resolve_2_2[0][1][1] = choose_2_2[1]
+            self.resolve_2_2[1][1][0] = choose_2_2[1]
+            self.resolve_2_2[1][1][1] = choose_2_2[0]
             return
 
         if legal_actions[0] == 1:
@@ -38,7 +43,7 @@ class MovesGener(object):
                     continue
                 vector = [0] * 7
                 vector[i] += 1
-                self.stash_1.append(vector)
+                self.stash_1.append([TYPE_0_STASH, vector])
 
         if legal_actions[1] == 1:
             self.trash_2 = []
@@ -51,7 +56,7 @@ class MovesGener(object):
                     vector = [0] * 7
                     vector[i] += 1
                     vector[j] += 1
-                    self.trash_2.append(vector)
+                    self.trash_2.append([TYPE_1_TRASH, vector])
 
         if legal_actions[2] == 1:
             self.choose_1_2 = []
@@ -70,7 +75,7 @@ class MovesGener(object):
                         vector[i] += 1
                         vector[j] += 1
                         vector[k] += 1
-                        self.choose_1_2.append(vector)
+                        self.choose_1_2.append([TYPE_2_CHOOSE_1_2, vector])
 
         if legal_actions[3] == 1:
             self.choose_2_2 = []
@@ -99,23 +104,21 @@ class MovesGener(object):
                             pair1[q] += 1
                             pair2[r] += 1
                             pair2[s] += 1
-                            self.choose_2_2.append([pair1, pair2])
+                            self.choose_2_2.append([TYPE_3_CHOOSE_2_2, [pair1, pair2]])
 
     # generate all possible moves from given cards
     def gen_moves(self):
         moves = []
-        moves.extend(self.gen_type_1_single())
-        moves.extend(self.gen_type_2_pair())
-        moves.extend(self.gen_type_3_triple())
-        moves.extend(self.gen_type_4_bomb())
-        moves.extend(self.gen_type_5_king_bomb())
-        moves.extend(self.gen_type_6_3_1())
-        moves.extend(self.gen_type_7_3_2())
-        moves.extend(self.gen_type_8_serial_single())
-        moves.extend(self.gen_type_9_serial_pair())
-        moves.extend(self.gen_type_10_serial_triple())
-        moves.extend(self.gen_type_11_serial_3_1())
-        moves.extend(self.gen_type_12_serial_3_2())
-        moves.extend(self.gen_type_13_4_2())
-        moves.extend(self.gen_type_14_4_22())
+        if self.stash_1:
+            moves.extend(self.stash_1)
+        if self.trash_2:
+            moves.extend(self.trash_2)
+        if self.choose_1_2:
+            moves.extend(self.choose_1_2)
+        if self.choose_2_2:
+            moves.extend(self.choose_2_2)
+        if self.resolve_1_2:
+            moves.extend(self.resolve_1_2)
+        if self.resolve_2_2:
+            moves.extend(self.resolve_2_2)
         return moves
