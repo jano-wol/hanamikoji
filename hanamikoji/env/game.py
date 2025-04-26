@@ -1,5 +1,4 @@
 from copy import deepcopy
-from . import move_detector as md, move_selector as ms
 from .move_generator import MovesGener
 
 class GameEnv(object):
