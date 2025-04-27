@@ -41,11 +41,10 @@ class GameEnv(object):
         self.game_infoset = self.get_infoset()
 
     def game_done(self):
-        if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
-            winner_player = self.is_game_ended()
-            if winner_player:
-                self.winner = winner_player
-                self.num_wins[self.winner] += 1
+        winner_player = self.is_game_ended()
+        if winner_player:
+            self.winner = winner_player
+            self.num_wins[self.winner] += 1
 
     def get_winner(self):
         return self.winner
@@ -85,23 +84,19 @@ class GameEnv(object):
         return None
 
     def step(self):
-        action = self.players[self.acting_player_id].act(self.game_infoset)
-        assert action in self.game_infoset.legal_actions
-        self.move_history[self.acting_player_position].append(action)
+        move = self.players[self.acting_player_id].act(self.game_infoset)
+        assert move in self.game_infoset.moves
+        self.move_history[self.acting_player_id].append(move)
         # TODO update
         # self.update_acting_player_hand_cards(action)
         # self.played_cards[self.acting_player_position] += action
-        self.game_done()
-        if not self.winner:
-            # TODO fix
-            self.game_infoset = self.get_infoset()
 
-    # def update_acting_player_hand_cards(self, action):
-    #    if action != []:
-    #        for card in action:
-    #            self.info_sets[
-    #                self.acting_player_position].player_hand_cards.remove(card)
-    #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
+        if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
+            self.update_geisha_preferences()
+            self.game_done()
+            if not self.winner:
+                # TODO fix
+                self.game_infoset = self.get_infoset()
 
     def get_moves(self):
         mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
