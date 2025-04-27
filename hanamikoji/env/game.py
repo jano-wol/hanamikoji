@@ -30,8 +30,8 @@ class GameEnv(object):
         self.decision_cards_2_2 = None
         # +1 if player is preferred
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
-        # The number of cards left for each player.
-        self.num_cards_left = {'first': 7, 'second': 6}
+        # The number of cards in hand
+        self.num_cards = {'first': 7, 'second': 6}
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
         self.round_moves = {'first': [], 'second': []}
 
@@ -98,6 +98,7 @@ class GameEnv(object):
         info = self.info_sets[self.acting_player_id]
         if self.decision_cards_1_2 is None and self.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
+            self.num_cards[self.acting_player_id] += 1
             self.deck.pop(0)
 
         move = self.players[self.acting_player_id].act(self.game_infoset)
@@ -108,6 +109,7 @@ class GameEnv(object):
             self.action_cards[self.acting_player_id][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_cards = move[1]
+            self.num_cards[self.acting_player_id] -= 1
         if move[1] == TYPE_1_TRASH:
             pass
         if move[2] == TYPE_2_CHOOSE_1_2:
