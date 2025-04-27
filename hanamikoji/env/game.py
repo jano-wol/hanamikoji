@@ -48,19 +48,19 @@ class GameEnv(object):
         self.round = 1
 
         self.state = GameState()
-        self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
+        self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
 
     def card_play_init(self, card_play_data):
-        self.info_sets['first'].hand_cards = card_play_data['first']
-        self.info_sets['second'].hand_cards = card_play_data['second']
+        self.private_info_sets['first'].hand_cards = card_play_data['first']
+        self.private_info_sets['second'].hand_cards = card_play_data['second']
         self.deck = card_play_data['deck']
 
     def get_winner(self):
         return self.winner
 
     def update_geisha_preferences(self):
-        first_gifts = _add_cards(self.state.gift_cards['first'], self.info_sets['first'].stashed_card)
-        second_gifts = _add_cards(self.state.gift_cards['second'], self.info_sets['second'].stashed_card)
+        first_gifts = _add_cards(self.state.gift_cards['first'], self.private_info_sets['first'].stashed_card)
+        second_gifts = _add_cards(self.state.gift_cards['second'], self.private_info_sets['second'].stashed_card)
         self.state.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         for i in range(7):
             if first_gifts[i] > second_gifts[i] or (
@@ -99,7 +99,7 @@ class GameEnv(object):
             self.num_wins[self.winner] += 1
 
     def get_moves(self):
-        mg = MovesGener(self.info_sets[self.state.acting_player_id].hand_cards,
+        mg = MovesGener(self.private_info_sets[self.state.acting_player_id].hand_cards,
                         self.state.action_cards[self.state.acting_player_id],
                         self.state.decision_cards_1_2,
                         self.state.decision_cards_2_2)
@@ -107,17 +107,19 @@ class GameEnv(object):
         return moves
 
     def get_infoset(self):
-        return deepcopy([self.info_sets[self.state.acting_player_id], self.state])
+        return deepcopy([self.private_info_sets[self.state.acting_player_id], self.state])
 
     def step(self):
         curr = self.state.acting_player_id
         opp = 'first' if curr == 'second' else 'second'
-        info = self.info_sets[curr]
+        info = self.private_info_sets[curr]
         if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
             self.state.num_cards[curr] += 1
             self.deck.pop(0)
         info.moves = self.get_moves()
+        # 'infoset' is an object pair, containing all the info relevant to decide move.
+        # First element is PrivateInfo, second element is GameState.
         infoset = self.get_infoset()
         move = self.players[curr].act(infoset)
         assert move in infoset[0].moves
@@ -164,12 +166,12 @@ class GameEnv(object):
         self.winner = None
         self.round = 1
         self.state = GameState()
-        self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
+        self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
 
 
-class InfoSet(object):
+class PrivateInfoSet(object):
     """
-    InfoSet contains the private data of the players.
+    PrivateInfoSet contains the private data of the players.
     """
 
     def __init__(self):
