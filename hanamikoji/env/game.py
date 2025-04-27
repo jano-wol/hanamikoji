@@ -17,11 +17,13 @@ deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 def get_card_play_data():
     _deck = deck.copy()
     np.random.shuffle(_deck)
-    # TODO card_play_data first and second should contain 7 element vecotrs of card type freqs
-    card_play_data = {'first': _deck[:7], 'second': _deck[7:13], 'deck': _deck[13:21]}
-    for position in ['first', 'second']:
-        card_play_data[position].sort()
-    return card_play_data
+    f = [0] * 7
+    for num in _deck[:7]:
+        f[num] += 1
+    s = [0] * 6
+    for num in _deck[7:13]:
+        s[num] += 1
+    return {'first': f, 'second': s, 'deck': _deck[13:21]}
 
 
 class GameState(object):
