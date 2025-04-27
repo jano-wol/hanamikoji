@@ -49,20 +49,28 @@ class GameEnv(object):
     def get_winner(self):
         return self.winner
 
-    def is_game_ended(self):
+    def update_geisha_preferences(self):
         first_gifts = [a + b for a, b in zip(self.gift_cards['first'], self.info_sets['first'].player_stashed_card)]
         second_gifts = [a + b for a, b in zip(self.gift_cards['second'], self.info_sets['second'].player_stashed_card)]
+        self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
+        for i in range(7):
+            if first_gifts[i] > second_gifts[i] or (
+                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['first'] == 1):
+                self.geisha_preferences['first'][i] = 1
+            if first_gifts[i] < second_gifts[i] or (
+                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['second'] == 1):
+                self.geisha_preferences['second'][i] = 1
+
+    def is_game_ended(self):
         first_geisha_win = 0
         first_geisha_points = 0
         second_geisha_win = 0
         second_geisha_points = 0
         for i in range(7):
-            if first_gifts[i] > second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['first'] == 1):
+            if self.geisha_preferences['first'][i] == 1:
                 first_geisha_win += 1
                 first_geisha_points += self.points[i]
-            if first_gifts[i] < second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['second'] == 1):
+            if self.geisha_preferences['second'][i] == 1:
                 second_geisha_win += 1
                 second_geisha_points += self.points[i]
         if 11 <= first_geisha_points:
