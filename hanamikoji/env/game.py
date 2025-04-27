@@ -1,5 +1,5 @@
 from copy import deepcopy
-from .move_generator import MovesGener
+from .move_generator import *
 
 
 class GameEnv(object):
@@ -93,9 +93,19 @@ class GameEnv(object):
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
         self.move_history[self.acting_player_id].append(move)
-        # TODO update
-        # self.update_acting_player_hand_cards(action)
-        # self.played_cards[self.acting_player_position] += action
+        if move[0] == TYPE_0_STASH:
+            pass
+        if move[1] == TYPE_1_TRASH:
+            pass
+        if move[2] == TYPE_2_CHOOSE_1_2:
+            pass
+        if move[3] == TYPE_3_CHOOSE_2_2:
+            pass
+        if move[4] == TYPE_4_RESOLVE_1_2:
+            pass
+        if move[5] == TYPE_5_RESOLVE_2_2:
+            pass
+
 
         if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
             self.update_geisha_preferences()
