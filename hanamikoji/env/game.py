@@ -46,10 +46,11 @@ class GameEnv(object):
         self.winner = None
         self.num_wins = {'first': 0, 'second': 0}
         self.round = 1
-        self.state = GameState()
 
-        # TODO clarify what are these
+        self.state = GameState()
         self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
+
+        # TODO clarify what is this
         self.game_infoset = None
 
     def card_play_init(self, card_play_data):
@@ -102,67 +103,70 @@ class GameEnv(object):
             self.num_wins[self.winner] += 1
 
     def get_moves(self):
-        mg = MovesGener(self.info_sets[self.acting_player_id].hand_cards,
-                        self.state.action_cards[self.acting_player_id],
+        mg = MovesGener(self.info_sets[self.state.acting_player_id].hand_cards,
+                        self.state.action_cards[self.state.acting_player_id],
                         self.state.decision_cards_1_2,
                         self.state.decision_cards_2_2)
         moves = mg.gen_moves()
         return moves
 
     def step(self):
-        info = self.info_sets[self.acting_player_id]
-        opp = 'first' if self.acting_player_id == 'second' else 'second'
+        curr = self.state.acting_player_id
+        opp = 'first' if curr == 'second' else 'second'
+        info = self.info_sets[curr]
         if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
-            self.state.num_cards[self.acting_player_id] += 1
+            self.state.num_cards[curr] += 1
             self.deck.pop(0)
 
-        move = self.players[self.acting_player_id].act(self.game_infoset)
+        # TODO construct infoset
+
+        move = self.players[curr].act(self.game_infoset)
         assert move in self.game_infoset.moves
 
-        self.state.round_moves[self.acting_player_id].append(move)
+        self.state.round_moves[curr].append(move)
         if move[0] == TYPE_0_STASH:
-            self.state.action_cards[self.acting_player_id][0] = 0
+            self.state.action_cards[curr][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_cards = move[1]
-            self.state.num_cards[self.acting_player_id] -= 1
+            self.state.num_cards[curr] -= 1
         if move[1] == TYPE_1_TRASH:
-            self.state.action_cards[self.acting_player_id][1] = 0
+            self.state.action_cards[curr][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]
-            self.state.num_cards[self.acting_player_id] -= 2
+            self.state.num_cards[curr] -= 2
         if move[2] == TYPE_2_CHOOSE_1_2:
-            self.state.action_cards[self.acting_player_id][2] = 0
+            self.state.action_cards[curr][2] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             self.state.decision_cards_1_2 = move[1]
-            self.state.num_cards[self.acting_player_id] -= 3
+            self.state.num_cards[curr] -= 3
         if move[3] == TYPE_3_CHOOSE_2_2:
-            self.state.action_cards[self.acting_player_id][3] = 0
+            self.state.action_cards[curr][3] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
             info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
             self.state.decision_cards_2_2 = move[1]
-            self.state.num_cards[self.acting_player_id] -= 4
+            self.state.num_cards[curr] -= 4
         if move[4] == TYPE_4_RESOLVE_1_2:
             self.state.decision_cards_1_2 = None
-            self.state.gift_cards[self.acting_player_id] = (
-                _add_cards(self.state.gift_cards[self.acting_player_id], move[1][0]))
+            self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
         if move[5] == TYPE_5_RESOLVE_2_2:
             self.state.decision_cards_2_2 = None
-            self.state.gift_cards[self.acting_player_id] = (
-                _add_cards(self.state.gift_cards[self.acting_player_id], move[1][0]))
+            self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
         self.state.acting_player_id = opp
 
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             self.update_geisha_preferences()
             self.set_winner()
+            # TODO init new round if needed
 
     def reset(self):
-        self.move_history = {'first': [], 'second': []}
+        self.deck = None
         self.winner = None
-        self.acting_player_id = 'first'
-        self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
+        self.round = 1
+        self.state = GameState()
+        self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
 
     def get_infoset(self):
         self.info_sets[self.acting_player_position].legal_actions = self.get_moves()
