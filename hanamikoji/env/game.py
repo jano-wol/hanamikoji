@@ -28,7 +28,7 @@ class GameEnv(object):
         # The number of cards left for each player.
         self.num_cards_left = {'first': 7, 'second': 6}
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
-        self.round_actions = {'first': [], 'second': []}
+        self.round_moves = {'first': [], 'second': []}
 
         # TODO clarify what are these
         self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
@@ -92,7 +92,7 @@ class GameEnv(object):
     def step(self):
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
-        self.move_history[self.acting_player_id].append(move)
+        self.round_moves[self.acting_player_id].append(move)
         if move[0] == TYPE_0_STASH:
             pass
         if move[1] == TYPE_1_TRASH:
@@ -105,6 +105,7 @@ class GameEnv(object):
             pass
         if move[5] == TYPE_5_RESOLVE_2_2:
             pass
+        self.acting_player_id = 'first' if self.acting_player_id == 'second' else 'second'
 
 
         if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
