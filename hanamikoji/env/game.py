@@ -77,7 +77,7 @@ class GameEnv(object):
             return 'second'
         return None
 
-    def game_done(self):
+    def set_winner(self):
         winner_player = self.is_game_ended()
         if winner_player:
             self.winner = winner_player
@@ -99,7 +99,7 @@ class GameEnv(object):
 
         if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
             self.update_geisha_preferences()
-            self.game_done()
+            self.set_winner()
             if not self.winner:
                 # TODO fix
                 self.game_infoset = self.get_infoset()
