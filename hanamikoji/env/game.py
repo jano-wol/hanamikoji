@@ -36,12 +36,12 @@ class GameEnv(object):
         self.round_moves = {'first': [], 'second': []}
 
         # TODO clarify what are these
-        self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
+        self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
         self.game_infoset = None
 
     def card_play_init(self, card_play_data):
-        self.info_sets['first'].player_hand_cards = card_play_data['first']
-        self.info_sets['second'].player_hand_cards = card_play_data['second']
+        self.info_sets['first'].hand_cards = card_play_data['first']
+        self.info_sets['second'].hand_cards = card_play_data['second']
         self.deck = card_play_data['deck']
         self.game_infoset = self.get_infoset()
 
@@ -89,7 +89,7 @@ class GameEnv(object):
             self.num_wins[self.winner] += 1
 
     def get_moves(self):
-        mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
+        mg = MovesGener(self.info_sets[self.acting_player_id].hand_cards,
                         self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
         moves = mg.gen_moves()
         return moves
