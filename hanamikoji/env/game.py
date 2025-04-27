@@ -99,8 +99,10 @@ class GameEnv(object):
         assert move in self.game_infoset.moves
         self.round_moves[self.acting_player_id].append(move)
         if move[0] == TYPE_0_STASH:
+            self.action_cards[self.acting_player_id][0] = 0
             info = self.info_sets[self.acting_player_id]
-            pass
+            info.player_hand_cards = _sub_cards(info.player_hand_cards, move[1])
+            info.player_stashed_cards = move[1]
         if move[1] == TYPE_1_TRASH:
             pass
         if move[2] == TYPE_2_CHOOSE_1_2:
