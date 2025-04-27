@@ -24,7 +24,7 @@ class GameEnv(object):
         # + 0.5 if current player is preferred, -0.5 if opp, otherwise 0
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         # The number of cards left for each player. It is a dict with str-->int
-        self.num_cards_left_dict = {'first': 7, 'second': 6}
+        self.num_cards_left = {'first': 7, 'second': 6}
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
         self.round_actions = {'first': [], 'second': []}
 
@@ -38,12 +38,9 @@ class GameEnv(object):
         self.game_infoset = self.get_infoset()
 
     def game_done(self):
-        if len(self.info_sets['first'].move_history[1]) == 6:
+        if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
             self.winner = 'first' # TODO
-            self.update_num_wins()
-
-    def update_num_wins(self):
-        self.num_wins[self.winner] += 1
+            self.num_wins[self.winner] += 1
 
     def get_winner(self):
         return self.winner
