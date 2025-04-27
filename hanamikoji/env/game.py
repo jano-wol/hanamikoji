@@ -40,12 +40,6 @@ class GameEnv(object):
         self.deck = card_play_data['deck']
         self.game_infoset = self.get_infoset()
 
-    def game_done(self):
-        winner_player = self.is_game_ended()
-        if winner_player:
-            self.winner = winner_player
-            self.num_wins[self.winner] += 1
-
     def get_winner(self):
         return self.winner
 
@@ -83,6 +77,18 @@ class GameEnv(object):
             return 'second'
         return None
 
+    def game_done(self):
+        winner_player = self.is_game_ended()
+        if winner_player:
+            self.winner = winner_player
+            self.num_wins[self.winner] += 1
+
+    def get_moves(self):
+        mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
+                        self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
+        moves = mg.gen_moves()
+        return moves
+
     def step(self):
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
@@ -97,12 +103,6 @@ class GameEnv(object):
             if not self.winner:
                 # TODO fix
                 self.game_infoset = self.get_infoset()
-
-    def get_moves(self):
-        mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
-                        self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
-        moves = mg.gen_moves()
-        return moves
 
     def reset(self):
         self.move_history = {'first': [], 'second': []}
