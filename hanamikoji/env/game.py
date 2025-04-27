@@ -1,21 +1,21 @@
 from copy import deepcopy
 from .move_generator import *
 
+
 def _add_cards(a, b):
     return [a + b for a, b in zip(a, b)]
+
 
 def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
 
-class GameEnv(object):
 
-    def __init__(self, players):
-        self.players = players
-        self.deck = None
-        self.winner = None
-        self.num_wins = {'first': 0, 'second': 0}
-        self.round = 1
+class GameState(object):
+    """
+    GameState contains the public data of the game.
+    """
 
+    def __init__(self):
         # 'first' and 'second' mean global first and second player unless otherwise stated
         self.acting_player_id = 'first'
         # Here keys mean global 'first' and 'second', values mean round local first and second (indicating eval model)
@@ -37,6 +37,17 @@ class GameEnv(object):
         # Contains the moves of the first and second players
         self.round_moves = {'first': [], 'second': []}
 
+
+class GameEnv(object):
+
+    def __init__(self, players):
+        self.players = players
+        self.deck = None
+        self.winner = None
+        self.num_wins = {'first': 0, 'second': 0}
+        self.round = 1
+        self.state = GameState()
+
         # TODO clarify what are these
         self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
         self.game_infoset = None
@@ -51,16 +62,16 @@ class GameEnv(object):
         return self.winner
 
     def update_geisha_preferences(self):
-        first_gifts = _add_cards(self.gift_cards['first'], self.info_sets['first'].stashed_card)
-        second_gifts = _add_cards(self.gift_cards['second'], self.info_sets['second'].stashed_card)
-        self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
+        first_gifts = _add_cards(self.state.gift_cards['first'], self.info_sets['first'].stashed_card)
+        second_gifts = _add_cards(self.state.gift_cards['second'], self.info_sets['second'].stashed_card)
+        self.state.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         for i in range(7):
             if first_gifts[i] > second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['first'] == 1):
-                self.geisha_preferences['first'][i] = 1
+                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['first'] == 1):
+                self.state.geisha_preferences['first'][i] = 1
             if first_gifts[i] < second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['second'] == 1):
-                self.geisha_preferences['second'][i] = 1
+                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['second'] == 1):
+                self.state.geisha_preferences['second'][i] = 1
 
     def is_game_ended(self):
         first_geisha_win = 0
@@ -68,12 +79,12 @@ class GameEnv(object):
         second_geisha_win = 0
         second_geisha_points = 0
         for i in range(7):
-            if self.geisha_preferences['first'][i] == 1:
+            if self.state.geisha_preferences['first'][i] == 1:
                 first_geisha_win += 1
-                first_geisha_points += self.points[i]
-            if self.geisha_preferences['second'][i] == 1:
+                first_geisha_points += self.state.points[i]
+            if self.state.geisha_preferences['second'][i] == 1:
                 second_geisha_win += 1
-                second_geisha_points += self.points[i]
+                second_geisha_points += self.state.points[i]
         if 11 <= first_geisha_points:
             return 'first'
         if 11 <= second_geisha_points:
@@ -92,54 +103,58 @@ class GameEnv(object):
 
     def get_moves(self):
         mg = MovesGener(self.info_sets[self.acting_player_id].hand_cards,
-                        self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
+                        self.state.action_cards[self.acting_player_id],
+                        self.state.decision_cards_1_2,
+                        self.state.decision_cards_2_2)
         moves = mg.gen_moves()
         return moves
 
     def step(self):
         info = self.info_sets[self.acting_player_id]
         opp = 'first' if self.acting_player_id == 'second' else 'second'
-        if self.decision_cards_1_2 is None and self.decision_cards_2_2 is None:
+        if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
-            self.num_cards[self.acting_player_id] += 1
+            self.state.num_cards[self.acting_player_id] += 1
             self.deck.pop(0)
 
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
 
-        self.round_moves[self.acting_player_id].append(move)
+        self.state.round_moves[self.acting_player_id].append(move)
         if move[0] == TYPE_0_STASH:
-            self.action_cards[self.acting_player_id][0] = 0
+            self.state.action_cards[self.acting_player_id][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_cards = move[1]
-            self.num_cards[self.acting_player_id] -= 1
+            self.state.num_cards[self.acting_player_id] -= 1
         if move[1] == TYPE_1_TRASH:
-            self.action_cards[self.acting_player_id][1] = 0
+            self.state.action_cards[self.acting_player_id][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]
-            self.num_cards[self.acting_player_id] -= 2
+            self.state.num_cards[self.acting_player_id] -= 2
         if move[2] == TYPE_2_CHOOSE_1_2:
-            self.action_cards[self.acting_player_id][2] = 0
+            self.state.action_cards[self.acting_player_id][2] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
-            self.decision_cards_1_2 = move[1]
-            self.num_cards[self.acting_player_id] -= 3
+            self.state.decision_cards_1_2 = move[1]
+            self.state.num_cards[self.acting_player_id] -= 3
         if move[3] == TYPE_3_CHOOSE_2_2:
-            self.action_cards[self.acting_player_id][3] = 0
+            self.state.action_cards[self.acting_player_id][3] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
             info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
-            self.decision_cards_2_2 = move[1]
-            self.num_cards[self.acting_player_id] -= 4
+            self.state.decision_cards_2_2 = move[1]
+            self.state.num_cards[self.acting_player_id] -= 4
         if move[4] == TYPE_4_RESOLVE_1_2:
-            self.decision_cards_1_2 = None
-            self.gift_cards[self.acting_player_id] = _add_cards(self.gift_cards[self.acting_player_id], move[1][0])
-            self.gift_cards[opp] = _add_cards(self.gift_cards[opp], move[1][1])
+            self.state.decision_cards_1_2 = None
+            self.state.gift_cards[self.acting_player_id] = (
+                _add_cards(self.state.gift_cards[self.acting_player_id], move[1][0]))
+            self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
         if move[5] == TYPE_5_RESOLVE_2_2:
-            self.decision_cards_2_2 = None
-            self.gift_cards[self.acting_player_id] = _add_cards(self.gift_cards[self.acting_player_id], move[1][0])
-            self.gift_cards[opp] = _add_cards(self.gift_cards[opp], move[1][1])
-        self.acting_player_id = opp
+            self.state.decision_cards_2_2 = None
+            self.state.gift_cards[self.acting_player_id] = (
+                _add_cards(self.state.gift_cards[self.acting_player_id], move[1][0]))
+            self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
+        self.state.acting_player_id = opp
 
-        if len(self.round_moves['first']) + len(self.round_moves['second']) == 12:
+        if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             self.update_geisha_preferences()
             self.set_winner()
 
@@ -175,7 +190,7 @@ class GameEnv(object):
 
 class InfoSet(object):
     """
-    The game state is described as infoset, which contains the private data of the players.
+    InfoSet contains the private data of the players.
     """
 
     def __init__(self):
