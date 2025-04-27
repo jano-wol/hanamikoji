@@ -21,10 +21,10 @@ class Env:
         self.objective = objective
 
         # Initialize players
-        # We use three dummy player for the target position
+        # We use two dummy players
         self.players = {}
-        for position in ['first', 'second']:
-            self.players[position] = DummyAgent(position)
+        for id in ['first', 'second']:
+            self.players[id] = DummyAgent(id)
 
         # Initialize the internal environment
         self._env = GameEnv(self.players)
@@ -46,14 +46,14 @@ class Env:
 
     def step(self, move):
         """
-        Step function takes as input the action, which
+        Step function takes as input the move, which
         is a list of integers, and output the next observation,
         reward, and a Boolean variable indicating whether the
         current game is finished. It also returns an empty
         dictionary that is reserved to pass useful information.
         """
         assert move in self.infoset[1].moves
-        self.players[self._acting_player_id()].set_action(move)
+        self.players[self._acting_player_id()].set_move(move)
         self._env.step()
         self.infoset = self._active_player_info_set()
         done = False
@@ -87,7 +87,8 @@ class Env:
 
     @property
     def _game_winner(self):
-        """ A string of landlord/peasants
+        """
+        A string of landlord/peasants
         """
         return self._env.get_winner()
 
@@ -108,29 +109,28 @@ class Env:
 class DummyAgent(object):
     """
     Dummy agent is designed to easily interact with the
-    game engine. The agent will first be told what action
+    game engine. The agent will first be told what move
     to perform. Then the environment will call this agent
-    to perform the actual action. This can help us to
+    to perform the actual move. This can help us to
     isolate environment and agents towards a gym like
     interface.
     """
-    def __init__(self, position):
-        self.position = position
-        self.action = None
+    def __init__(self, player_id):
+        self.player_id = player_id
+        self.move = None
 
     def act(self, infoset):
         """
-        Simply return the action that is set previously.
+        Simply return the move that is set previously.
         """
-        assert self.action in infoset.legal_actions
-        return self.action
+        assert self.move in infoset[1].moves
+        return self.move
 
-    def set_action(self, action):
+    def set_move(self, move):
         """
-        The environment uses this function to tell
-        the dummy agent what to do.
+        The environment uses this function to tell the dummy agent what to do.
         """
-        self.action = action
+        self.move = move
 
 def get_obs(infoset):
     """
