@@ -1,6 +1,7 @@
 from copy import deepcopy
 from .move_generator import MovesGener
 
+
 class GameEnv(object):
 
     def __init__(self, players):
@@ -12,6 +13,7 @@ class GameEnv(object):
         self.id_to_round_position = {'first': 'first', 'second': 'second'}
         self.round = 1
         self.num_wins = {'first': 0, 'second': 0}
+        self.points = [2, 2, 2, 3, 3, 4, 5]
 
         # The already played and public geisha gift cards
         self.gift_cards = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
@@ -21,7 +23,7 @@ class GameEnv(object):
         self.decision_cards_1_2 = None
         # decision cards 2 - 2
         self.decision_cards_2_2 = None
-        # + 0.5 if current player is preferred, -0.5 if opp, otherwise 0
+        # +1 if player is preferred
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         # The number of cards left for each player.
         self.num_cards_left = {'first': 7, 'second': 6}
@@ -39,11 +41,39 @@ class GameEnv(object):
 
     def game_done(self):
         if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
-            self.winner = 'first' # TODO
-            self.num_wins[self.winner] += 1
+            winner_player = self.is_game_ended()
+            if winner_player:
+                self.winner = winner_player
+                self.num_wins[self.winner] += 1
 
     def get_winner(self):
         return self.winner
+
+    def is_game_ended(self):
+        first_gifts = [a + b for a, b in zip(self.gift_cards['first'], self.info_sets['first'].player_stashed_card)]
+        second_gifts = [a + b for a, b in zip(self.gift_cards['second'], self.info_sets['second'].player_stashed_card)]
+        first_geisha_win = 0
+        first_geisha_points = 0
+        second_geisha_win = 0
+        second_geisha_points = 0
+        for i in range(7):
+            if first_gifts[i] > second_gifts[i] or (
+                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['first'] == 1):
+                first_geisha_win += 1
+                first_geisha_points += self.points[i]
+            if first_gifts[i] < second_gifts[i] or (
+                    first_gifts[i] == second_gifts[i] and self.geisha_preferences['second'] == 1):
+                second_geisha_win += 1
+                second_geisha_points += self.points[i]
+        if 11 <= first_geisha_points:
+            return 'first'
+        if 11 <= second_geisha_points:
+            return 'second'
+        if 4 <= first_geisha_win:
+            return 'first'
+        if 4 <= second_geisha_win:
+            return 'second'
+        return None
 
     def step(self):
         action = self.players[self.acting_player_position].act(self.game_infoset)
@@ -57,7 +87,7 @@ class GameEnv(object):
             # TODO fix
             self.game_infoset = self.get_infoset()
 
-    #def update_acting_player_hand_cards(self, action):
+    # def update_acting_player_hand_cards(self, action):
     #    if action != []:
     #        for card in action:
     #            self.info_sets[
@@ -65,7 +95,8 @@ class GameEnv(object):
     #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
     def get_legal_actions(self):
-        mg = MovesGener(self.info_sets[self.acting_player_position].player_hand_cards, self.info_sets[self.acting_player_position].legal_actions, )
+        mg = MovesGener(self.info_sets[self.acting_player_position].player_hand_cards,
+                        self.info_sets[self.acting_player_position].legal_actions, )
         moves = mg.gen_moves()
         return moves
 
@@ -98,10 +129,12 @@ class GameEnv(object):
 
         return deepcopy(self.info_sets[self.acting_player_position])
 
+
 class InfoSet(object):
     """
     The game state is described as infoset, which contains the private data of the players.
     """
+
     def __init__(self, player_id, player_round_position):
         # The hand cards of the current player. A list.
         self.player_hand_cards = None
