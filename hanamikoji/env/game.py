@@ -2,8 +2,6 @@ from copy import deepcopy
 from .move_generator import *
 import numpy as np
 
-deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
-
 
 def _add_cards(a, b):
     return [a + b for a, b in zip(a, b)]
@@ -11,6 +9,9 @@ def _add_cards(a, b):
 
 def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
+
+
+deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 
 
 def get_card_play_data():
