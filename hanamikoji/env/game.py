@@ -1,5 +1,8 @@
 from copy import deepcopy
 from .move_generator import *
+import numpy as np
+
+deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 
 
 def _add_cards(a, b):
@@ -8,6 +11,15 @@ def _add_cards(a, b):
 
 def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
+
+
+def get_card_play_data():
+    _deck = deck.copy()
+    np.random.shuffle(_deck)
+    card_play_data = {'first': _deck[:6], 'second': _deck[6:12], 'deck': _deck[12:21]}
+    for position in ['first', 'second']:
+        card_play_data[position].sort()
+    return card_play_data
 
 
 class GameState(object):

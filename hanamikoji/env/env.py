@@ -1,7 +1,7 @@
 from collections import Counter
 import numpy as np
 
-from hanamikoji.env.game import GameEnv
+from hanamikoji.env.game import GameEnv, get_card_play_data
 
 deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 
@@ -41,15 +41,7 @@ class Env:
         """
         self._env.reset()
 
-        # Randomly shuffle the deck
-        _deck = deck.copy()
-        np.random.shuffle(_deck)
-        card_play_data = {'first': _deck[:6],
-                          'second': _deck[6:12],
-                          'deck': _deck[12:21]}
-
-        for position in ['first', 'second']:
-            card_play_data[position].sort()
+        card_play_data = get_card_play_data()
 
         # Initialize the cards
         self._env.card_play_init(card_play_data)
