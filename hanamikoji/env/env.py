@@ -3,8 +3,6 @@ import numpy as np
 
 from hanamikoji.env.game import GameEnv, get_card_play_data
 
-deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
-
 class Env:
     """
     Hanamikoji multi-agent wrapper
