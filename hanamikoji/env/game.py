@@ -172,7 +172,17 @@ class GameEnv(object):
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             self.update_geisha_preferences()
             self.set_winner()
-            # TODO init new round if needed
+            if self.winner is None:
+                next_geisha_preferences = deepcopy(self.state.geisha_preferences)
+                self.round += 1
+                self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
+                card_play_data = get_card_play_data()
+                self.card_play_init(card_play_data)
+                self.state = GameState()
+                self.state.geisha_preferences = next_geisha_preferences
+                if self.round % 2 == 0:
+                    self.state.acting_player_id = 'second'
+                    self.state.id_to_round_position = {'second': 'first', 'first': 'second'}
 
     def reset(self):
         self.deck = None
