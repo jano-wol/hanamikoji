@@ -143,27 +143,27 @@ class GameEnv(object):
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_cards = move[1]
             self.state.num_cards[curr] -= 1
-        if move[1] == TYPE_1_TRASH:
+        if move[0] == TYPE_1_TRASH:
             self.state.action_cards[curr][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]
             self.state.num_cards[curr] -= 2
-        if move[2] == TYPE_2_CHOOSE_1_2:
+        if move[0] == TYPE_2_CHOOSE_1_2:
             self.state.action_cards[curr][2] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             self.state.decision_cards_1_2 = move[1]
             self.state.num_cards[curr] -= 3
-        if move[3] == TYPE_3_CHOOSE_2_2:
+        if move[0] == TYPE_3_CHOOSE_2_2:
             self.state.action_cards[curr][3] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
             info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
             self.state.decision_cards_2_2 = move[1]
             self.state.num_cards[curr] -= 4
-        if move[4] == TYPE_4_RESOLVE_1_2:
+        if move[0] == TYPE_4_RESOLVE_1_2:
             self.state.decision_cards_1_2 = None
             self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
-        if move[5] == TYPE_5_RESOLVE_2_2:
+        if move[0] == TYPE_5_RESOLVE_2_2:
             self.state.decision_cards_2_2 = None
             self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
