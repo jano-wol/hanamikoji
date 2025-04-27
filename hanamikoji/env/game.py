@@ -137,7 +137,7 @@ class GameEnv(object):
             self.gift_cards[opp] = _add_cards(self.gift_cards[opp], move[1][1])
         self.acting_player_id = opp
 
-        if self.num_cards['first'] == 0 and self.num_cards['second'] == 0:
+        if len(self.round_moves['first']) + len(self.round_moves['second']) == 12:
             self.update_geisha_preferences()
             self.set_winner()
 
