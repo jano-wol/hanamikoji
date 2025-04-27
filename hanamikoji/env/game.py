@@ -9,9 +9,9 @@ class GameEnv(object):
         self.winner = None
 
         self.acting_player_id = 'first'
+        self.id_to_round_position = {'first': 'first', 'second': 'second'}
         self.round = 1
         self.num_wins = {'first': 0, 'second': 0}
-        self.global_to_round = {'first': 'first', 'second': 'second'}
 
         # The already played and public geisha gift cards
         self.gift_cards = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
@@ -23,7 +23,7 @@ class GameEnv(object):
         self.decision_cards_2_2 = None
         # + 0.5 if current player is preferred, -0.5 if opp, otherwise 0
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
-        # The number of cards left for each player. It is a dict with str-->int
+        # The number of cards left for each player.
         self.num_cards_left = {'first': 7, 'second': 6}
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
         self.round_actions = {'first': [], 'second': []}
