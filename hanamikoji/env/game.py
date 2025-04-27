@@ -13,13 +13,15 @@ class GameEnv(object):
         self.players = players
         self.deck = None
         self.winner = None
-
-        self.acting_player_id = 'first'
-        self.id_to_round_position = {'first': 'first', 'second': 'second'}
-        self.round = 1
         self.num_wins = {'first': 0, 'second': 0}
-        self.points = [2, 2, 2, 3, 3, 4, 5]
+        self.round = 1
 
+        # 'first' and 'second' mean global first and second player unless otherwise stated
+        self.acting_player_id = 'first'
+        # Here keys mean global 'first' and 'second', values mean round local first and second (indicating eval model)
+        self.id_to_round_position = {'first': 'first', 'second': 'second'}
+        # Constant rule list storing the geisha card numbers which coincide with their point reward
+        self.points = [2, 2, 2, 3, 3, 4, 5]
         # The already played and public geisha gift cards
         self.gift_cards = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         # The possible action cards
@@ -32,7 +34,7 @@ class GameEnv(object):
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         # The number of cards in hand
         self.num_cards = {'first': 6, 'second': 6}
-        # Contains two lists. First list is the round starter moves, the other list is for round second moves
+        # Contains the moves of the first and second players
         self.round_moves = {'first': [], 'second': []}
 
         # TODO clarify what are these
