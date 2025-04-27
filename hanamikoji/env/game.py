@@ -1,6 +1,11 @@
 from copy import deepcopy
 from .move_generator import *
 
+def _add_cards(a, b):
+    return [a + b for a, b in zip(a, b)]
+
+def _sub_cards(a, b):
+    return [a - b for a, b in zip(a, b)]
 
 class GameEnv(object):
 
@@ -44,8 +49,8 @@ class GameEnv(object):
         return self.winner
 
     def update_geisha_preferences(self):
-        first_gifts = [a + b for a, b in zip(self.gift_cards['first'], self.info_sets['first'].player_stashed_card)]
-        second_gifts = [a + b for a, b in zip(self.gift_cards['second'], self.info_sets['second'].player_stashed_card)]
+        first_gifts = _add_cards(self.gift_cards['first'], self.info_sets['first'].player_stashed_card)
+        second_gifts = _add_cards(self.gift_cards['second'], self.info_sets['second'].player_stashed_card)
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         for i in range(7):
             if first_gifts[i] > second_gifts[i] or (
@@ -94,6 +99,7 @@ class GameEnv(object):
         assert move in self.game_infoset.moves
         self.round_moves[self.acting_player_id].append(move)
         if move[0] == TYPE_0_STASH:
+            info = self.info_sets[self.acting_player_id]
             pass
         if move[1] == TYPE_1_TRASH:
             pass
