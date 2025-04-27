@@ -95,14 +95,18 @@ class GameEnv(object):
         return moves
 
     def step(self):
+        info = self.info_sets[self.acting_player_id]
+        info.hand_cards[self.deck[0]] += 1
+        self.deck.pop(0)
+
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
+
         self.round_moves[self.acting_player_id].append(move)
         if move[0] == TYPE_0_STASH:
             self.action_cards[self.acting_player_id][0] = 0
-            info = self.info_sets[self.acting_player_id]
-            info.player_hand_cards = _sub_cards(info.player_hand_cards, move[1])
-            info.player_stashed_cards = move[1]
+            info.hand_cards = _sub_cards(info.hand_cards, move[1])
+            info.stashed_cards = move[1]
         if move[1] == TYPE_1_TRASH:
             pass
         if move[2] == TYPE_2_CHOOSE_1_2:
@@ -158,12 +162,12 @@ class InfoSet(object):
     The game state is described as infoset, which contains the private data of the players.
     """
 
-    def __init__(self, player_id, player_round_position):
+    def __init__(self):
         # The hand cards of the current player. A list.
-        self.player_hand_cards = None
+        self.hand_cards = None
         # The stashed card of the current player
-        self.player_stashed_card = None
+        self.stashed_card = None
         # The two trashed cards of the current player
-        self.player_trashed_cards = None
+        self.trashed_cards = None
         # The legal moves. It is a list of list
         self.moves = None
