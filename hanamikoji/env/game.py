@@ -30,6 +30,7 @@ class GameEnv(object):
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
         self.round_actions = {'first': [], 'second': []}
 
+        # TODO clarify what are these
         self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
         self.game_infoset = None
 
