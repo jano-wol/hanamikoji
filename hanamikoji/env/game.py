@@ -50,14 +50,10 @@ class GameEnv(object):
         self.state = GameState()
         self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
 
-        # TODO clarify what is this
-        self.game_infoset = None
-
     def card_play_init(self, card_play_data):
         self.info_sets['first'].hand_cards = card_play_data['first']
         self.info_sets['second'].hand_cards = card_play_data['second']
         self.deck = card_play_data['deck']
-        self.game_infoset = self.get_infoset()
 
     def get_winner(self):
         return self.winner
@@ -110,6 +106,9 @@ class GameEnv(object):
         moves = mg.gen_moves()
         return moves
 
+    def get_infoset(self):
+        return deepcopy([self.info_sets[self.state.acting_player_id], self.state])
+
     def step(self):
         curr = self.state.acting_player_id
         opp = 'first' if curr == 'second' else 'second'
@@ -118,11 +117,10 @@ class GameEnv(object):
             info.hand_cards[self.deck[0]] += 1
             self.state.num_cards[curr] += 1
             self.deck.pop(0)
-
-        # TODO construct infoset
-
-        move = self.players[curr].act(self.game_infoset)
-        assert move in self.game_infoset.moves
+        info.moves = self.get_moves()
+        infoset = self.get_infoset()
+        move = self.players[curr].act(infoset)
+        assert move in infoset[0].moves
 
         self.state.round_moves[curr].append(move)
         if move[0] == TYPE_0_STASH:
@@ -167,29 +165,6 @@ class GameEnv(object):
         self.round = 1
         self.state = GameState()
         self.info_sets = {'first': InfoSet(), 'second': InfoSet()}
-
-    def get_infoset(self):
-        self.info_sets[self.acting_player_position].legal_actions = self.get_moves()
-
-        self.info_sets[self.acting_player_position].num_cards_left_dict = \
-            {pos: len(self.info_sets[pos].player_hand_cards)
-             for pos in ['first', 'second']}
-
-        self.info_sets[self.acting_player_position].other_hand_cards = []
-        for pos in ['landlord', 'landlord_up', 'landlord_down']:
-            if pos != self.acting_player_position:
-                self.info_sets[
-                    self.acting_player_position].other_hand_cards += \
-                    self.info_sets[pos].player_hand_cards
-
-        self.info_sets[self.acting_player_position].played_cards = \
-            self.played_cards
-        self.info_sets[
-            self.acting_player_position].all_handcards = \
-            {pos: self.info_sets[pos].player_hand_cards
-             for pos in ['first', 'second']}
-
-        return deepcopy(self.info_sets[self.acting_player_position])
 
 
 class InfoSet(object):
