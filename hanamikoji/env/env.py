@@ -44,9 +44,9 @@ class Env:
         # Randomly shuffle the deck
         _deck = deck.copy()
         np.random.shuffle(_deck)
-        card_play_data = {'first': _deck[:7],
-                          'second': _deck[7:13],
-                          'deck': _deck[13:21]}
+        card_play_data = {'first': _deck[:6],
+                          'second': _deck[6:12],
+                          'deck': _deck[12:21]}
 
         for position in ['first', 'second']:
             card_play_data[position].sort()

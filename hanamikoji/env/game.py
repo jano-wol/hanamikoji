@@ -31,7 +31,7 @@ class GameEnv(object):
         # +1 if player is preferred
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         # The number of cards in hand
-        self.num_cards = {'first': 7, 'second': 6}
+        self.num_cards = {'first': 6, 'second': 6}
         # Contains two lists. First list is the round starter moves, the other list is for round second moves
         self.round_moves = {'first': [], 'second': []}
 
