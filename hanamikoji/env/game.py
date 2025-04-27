@@ -103,7 +103,7 @@ class GameEnv(object):
     #                self.acting_player_position].player_hand_cards.remove(card)
     #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
-    def get_legal_actions(self):
+    def get_moves(self):
         mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
                         self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
         moves = mg.gen_moves()
@@ -116,7 +116,7 @@ class GameEnv(object):
         self.info_sets = {'first': InfoSet('first', 'first'), 'second': InfoSet('second', 'second')}
 
     def get_infoset(self):
-        self.info_sets[self.acting_player_position].legal_actions = self.get_legal_actions()
+        self.info_sets[self.acting_player_position].legal_actions = self.get_moves()
 
         self.info_sets[self.acting_player_position].num_cards_left_dict = \
             {pos: len(self.info_sets[pos].player_hand_cards)
@@ -151,5 +151,5 @@ class InfoSet(object):
         self.player_stashed_card = None
         # The two trashed cards of the current player
         self.player_trashed_cards = None
-        # The legal actions. It is a list of list
-        self.legal_actions = None
+        # The legal moves. It is a list of list
+        self.moves = None
