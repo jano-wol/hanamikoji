@@ -85,7 +85,7 @@ class GameEnv(object):
         return None
 
     def step(self):
-        action = self.players[self.acting_player_position].act(self.game_infoset)
+        action = self.players[self.acting_player_id].act(self.game_infoset)
         assert action in self.game_infoset.legal_actions
         self.move_history[self.acting_player_position].append(action)
         # TODO update
@@ -104,8 +104,8 @@ class GameEnv(object):
     #        self.info_sets[self.acting_player_position].player_hand_cards.sort()
 
     def get_legal_actions(self):
-        mg = MovesGener(self.info_sets[self.acting_player_position].player_hand_cards,
-                        self.info_sets[self.acting_player_position].legal_actions, )
+        mg = MovesGener(self.info_sets[self.acting_player_id].player_hand_cards,
+                        self.action_cards[self.acting_player_id], self.decision_cards_1_2, self.decision_cards_2_2)
         moves = mg.gen_moves()
         return moves
 

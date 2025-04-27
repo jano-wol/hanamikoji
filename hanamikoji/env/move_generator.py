@@ -9,7 +9,7 @@ class MovesGener(object):
     """
     This is for generating the possible combinations
     """
-    def __init__(self, cards_list, legal_actions, choose_1_2, choose_2_2):
+    def __init__(self, cards_list, action_cards, choose_1_2, choose_2_2):
         self.stash_1 = None
         self.trash_2 = None
         self.choose_1_2 = None
@@ -36,7 +36,7 @@ class MovesGener(object):
             self.resolve_2_2[1][1][1] = choose_2_2[0]
             return
 
-        if legal_actions[0] == 1:
+        if action_cards[0] == 1:
             self.stash_1 = []
             for i in range(7):
                 if cards_list[i] == 0:
@@ -45,7 +45,7 @@ class MovesGener(object):
                 vector[i] += 1
                 self.stash_1.append([TYPE_0_STASH, vector])
 
-        if legal_actions[1] == 1:
+        if action_cards[1] == 1:
             self.trash_2 = []
             for i in range(7):
                 if cards_list[i] == 0:
@@ -58,7 +58,7 @@ class MovesGener(object):
                     vector[j] += 1
                     self.trash_2.append([TYPE_1_TRASH, vector])
 
-        if legal_actions[2] == 1:
+        if action_cards[2] == 1:
             self.choose_1_2 = []
             for i in range(7):
                 if cards_list[i] == 0:
@@ -77,7 +77,7 @@ class MovesGener(object):
                         vector[k] += 1
                         self.choose_1_2.append([TYPE_2_CHOOSE_1_2, vector])
 
-        if legal_actions[3] == 1:
+        if action_cards[3] == 1:
             self.choose_2_2 = []
             for p in range(7):
                 if cards_list[p] == 0:
