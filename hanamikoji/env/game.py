@@ -17,7 +17,8 @@ deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 def get_card_play_data():
     _deck = deck.copy()
     np.random.shuffle(_deck)
-    card_play_data = {'first': _deck[:6], 'second': _deck[6:12], 'deck': _deck[12:21]}
+    # TODO card_play_data first and second should contain 7 element vecotrs of card type freqs
+    card_play_data = {'first': _deck[:7], 'second': _deck[7:13], 'deck': _deck[13:21]}
     for position in ['first', 'second']:
         card_play_data[position].sort()
     return card_play_data
@@ -60,13 +61,25 @@ class GameEnv(object):
         self.num_wins = {'first': 0, 'second': 0}
         self.round = 1
 
+        # Public game info
         self.state = GameState()
+        # Private player info
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
+        # Storing all the info of the active player. It is an object pair.
+        # First element is GameState, second element is PrivateInfo.
+        self.active_player_info_set = None
+
+    def get_opp(self):
+        return 'first' if self.state.acting_player_id == 'second' else 'second'
+
+    def get_active_player_info_set(self):
+        return deepcopy([self.state, self.private_info_sets[self.state.acting_player_id]])
 
     def card_play_init(self, card_play_data):
-        self.private_info_sets['first'].hand_cards = card_play_data['first']
-        self.private_info_sets['second'].hand_cards = card_play_data['second']
+        self.private_info_sets[self.state.acting_player_id].hand_cards = card_play_data['first']
+        self.private_info_sets[self.get_opp()].hand_cards = card_play_data['second']
         self.deck = card_play_data['deck']
+        self.active_player_info_set = self.get_active_player_info_set()
 
     def get_winner(self):
         return self.winner
@@ -119,23 +132,18 @@ class GameEnv(object):
         moves = mg.gen_moves()
         return moves
 
-    def get_infoset(self):
-        return deepcopy([self.state, self.private_info_sets[self.state.acting_player_id]])
-
     def step(self):
         curr = self.state.acting_player_id
-        opp = 'first' if curr == 'second' else 'second'
+        opp = self.get_opp()
         info = self.private_info_sets[curr]
         if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
             self.state.num_cards[curr] += 1
             self.deck.pop(0)
         info.moves = self.get_moves()
-        # 'infoset' is an object pair, containing all the info relevant to decide move.
-        # First element is GameState, second element is PrivateInfo.
-        infoset = self.get_infoset()
-        move = self.players[curr].act(infoset)
-        assert move in infoset[1].moves
+        self.active_player_info_set = self.get_active_player_info_set()
+        move = self.players[curr].act(self.active_player_info_set)
+        assert move in self.active_player_info_set[1].moves
 
         self.state.round_moves[curr].append(move)
         if move[0] == TYPE_0_STASH:
@@ -167,6 +175,7 @@ class GameEnv(object):
             self.state.decision_cards_2_2 = None
             self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
+
         self.state.acting_player_id = opp
 
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
@@ -175,14 +184,22 @@ class GameEnv(object):
             if self.winner is None:
                 next_geisha_preferences = deepcopy(self.state.geisha_preferences)
                 self.round += 1
-                self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
-                card_play_data = get_card_play_data()
-                self.card_play_init(card_play_data)
                 self.state = GameState()
                 self.state.geisha_preferences = next_geisha_preferences
                 if self.round % 2 == 0:
                     self.state.acting_player_id = 'second'
-                    self.state.id_to_round_position = {'second': 'first', 'first': 'second'}
+                    self.state.id_to_round_position = {'first': 'second', 'second': 'first'}
+                self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
+                card_play_data = get_card_play_data()
+                self.card_play_init(card_play_data)
+        else:
+            info = self.private_info_sets[self.state.acting_player_id]
+            if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
+                info.hand_cards[self.deck[0]] += 1
+                self.state.num_cards[self.state.acting_player_id] += 1
+                self.deck.pop(0)
+            info.moves = self.get_moves()
+            self.active_player_info_set = self.get_active_player_info_set()
 
     def reset(self):
         self.deck = None
@@ -190,6 +207,7 @@ class GameEnv(object):
         self.round = 1
         self.state = GameState()
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
+        self.active_player_info_set = None
 
 
 class PrivateInfoSet(object):
