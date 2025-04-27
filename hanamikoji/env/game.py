@@ -49,8 +49,8 @@ class GameEnv(object):
         return self.winner
 
     def update_geisha_preferences(self):
-        first_gifts = _add_cards(self.gift_cards['first'], self.info_sets['first'].player_stashed_card)
-        second_gifts = _add_cards(self.gift_cards['second'], self.info_sets['second'].player_stashed_card)
+        first_gifts = _add_cards(self.gift_cards['first'], self.info_sets['first'].stashed_card)
+        second_gifts = _add_cards(self.gift_cards['second'], self.info_sets['second'].stashed_card)
         self.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         for i in range(7):
             if first_gifts[i] > second_gifts[i] or (
@@ -96,6 +96,7 @@ class GameEnv(object):
 
     def step(self):
         info = self.info_sets[self.acting_player_id]
+        opp = 'first' if self.acting_player_id == 'second' else 'second'
         if self.decision_cards_1_2 is None and self.decision_cards_2_2 is None:
             info.hand_cards[self.deck[0]] += 1
             self.num_cards[self.acting_player_id] += 1
@@ -127,18 +128,18 @@ class GameEnv(object):
             self.decision_cards_2_2 = move[1]
             self.num_cards[self.acting_player_id] -= 4
         if move[4] == TYPE_4_RESOLVE_1_2:
-            pass
+            self.decision_cards_1_2 = None
+            self.gift_cards[self.acting_player_id] = _add_cards(self.gift_cards[self.acting_player_id], move[1][0])
+            self.gift_cards[opp] = _add_cards(self.gift_cards[opp], move[1][1])
         if move[5] == TYPE_5_RESOLVE_2_2:
-            pass
-        self.acting_player_id = 'first' if self.acting_player_id == 'second' else 'second'
+            self.decision_cards_2_2 = None
+            self.gift_cards[self.acting_player_id] = _add_cards(self.gift_cards[self.acting_player_id], move[1][0])
+            self.gift_cards[opp] = _add_cards(self.gift_cards[opp], move[1][1])
+        self.acting_player_id = opp
 
-
-        if self.num_cards_left['first'] == 0 and self.num_cards_left['second'] == 0:
+        if self.num_cards['first'] == 0 and self.num_cards['second'] == 0:
             self.update_geisha_preferences()
             self.set_winner()
-            if not self.winner:
-                # TODO fix
-                self.game_infoset = self.get_infoset()
 
     def reset(self):
         self.move_history = {'first': [], 'second': []}
