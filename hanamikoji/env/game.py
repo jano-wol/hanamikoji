@@ -96,8 +96,9 @@ class GameEnv(object):
 
     def step(self):
         info = self.info_sets[self.acting_player_id]
-        info.hand_cards[self.deck[0]] += 1
-        self.deck.pop(0)
+        if self.decision_cards_1_2 is None and self.decision_cards_2_2 is None:
+            info.hand_cards[self.deck[0]] += 1
+            self.deck.pop(0)
 
         move = self.players[self.acting_player_id].act(self.game_infoset)
         assert move in self.game_infoset.moves
