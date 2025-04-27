@@ -38,16 +38,13 @@ class Env:
         This function is usually called when a game is over.
         """
         self._env.reset()
-
         card_play_data = get_card_play_data()
-
-        # Initialize the cards
         self._env.card_play_init(card_play_data)
-        self.infoset = self._game_infoset
-
+        # First element is GameState, second element is PrivateInfo.
+        self.infoset = self._active_player_info_set()
         return get_obs(self.infoset)
 
-    def step(self, action):
+    def step(self, move):
         """
         Step function takes as input the action, which
         is a list of integers, and output the next observation,
@@ -55,13 +52,13 @@ class Env:
         current game is finished. It also returns an empty
         dictionary that is reserved to pass useful information.
         """
-        assert action in self.infoset.legal_actions
-        self.players[self._acting_player_position].set_action(action)
+        assert move in self.infoset[1].moves
+        self.players[self._acting_player_id()].set_action(move)
         self._env.step()
-        self.infoset = self._game_infoset
+        self.infoset = self._active_player_info_set()
         done = False
         reward = 0.0
-        if self._game_over:
+        if self._game_over():
             done = True
             reward = self._get_reward()
             obs = None
@@ -75,43 +72,18 @@ class Env:
         game. It returns either 1/-1 for win/loss,
         or ADP, i.e., every bomb will double the score.
         """
-        winner = self._game_winner
-        bomb_num = self._game_bomb_num
-        if winner == 'landlord':
-            if self.objective == 'adp':
-                return 2.0 ** bomb_num
-            elif self.objective == 'logadp':
-                return bomb_num + 1.0
-            else:
-                return 1.0
+        winner = self._game_winner()
+        if winner == 'first':
+            return 1.0
         else:
-            if self.objective == 'adp':
-                return -2.0 ** bomb_num
-            elif self.objective == 'logadp':
-                return -bomb_num - 1.0
-            else:
-                return -1.0
+            return -1.0
 
     @property
-    def _game_infoset(self):
+    def _active_player_info_set(self):
         """
-        Here, inforset is defined as all the information
-        in the current situation, incuding the hand cards
-        of all the players, all the historical moves, etc.
-        That is, it contains perferfect infomation. Later,
-        we will use functions to extract the observable
-        information from the views of the three players.
+        Here, active_player_info_set is defined as all the information available for the active player
         """
-        return self._env.game_infoset
-
-    @property
-    def _game_bomb_num(self):
-        """
-        The number of bombs played so far. This is used as
-        a feature of the neural network and is also used to
-        calculate ADP.
-        """
-        return self._env.get_bomb_num()
+        return self._env.active_player_info_set
 
     @property
     def _game_winner(self):
@@ -120,18 +92,18 @@ class Env:
         return self._env.get_winner()
 
     @property
-    def _acting_player_position(self):
+    def _acting_player_id(self):
         """
-        The player that is active. It can be landlord,
-        landlod_down, or landlord_up.
+        The player that is active. It can be 'first' or 'second'
         """
-        return self._env.acting_player_position
+        return self._env.state.acting_player_id
 
     @property
     def _game_over(self):
-        """ Returns a Boolean
         """
-        return self._env.game_over
+        Returns a Boolean
+        """
+        return self._env.winner is not None
 
 class DummyAgent(object):
     """
