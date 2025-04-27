@@ -107,7 +107,7 @@ class GameEnv(object):
         return moves
 
     def get_infoset(self):
-        return deepcopy([self.private_info_sets[self.state.acting_player_id], self.state])
+        return deepcopy([self.state, self.private_info_sets[self.state.acting_player_id]])
 
     def step(self):
         curr = self.state.acting_player_id
@@ -119,10 +119,10 @@ class GameEnv(object):
             self.deck.pop(0)
         info.moves = self.get_moves()
         # 'infoset' is an object pair, containing all the info relevant to decide move.
-        # First element is PrivateInfo, second element is GameState.
+        # First element is GameState, second element is PrivateInfo.
         infoset = self.get_infoset()
         move = self.players[curr].act(infoset)
-        assert move in infoset[0].moves
+        assert move in infoset[1].moves
 
         self.state.round_moves[curr].append(move)
         if move[0] == TYPE_0_STASH:
