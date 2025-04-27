@@ -23,8 +23,8 @@ class Env:
         # Initialize players
         # We use two dummy players
         self.players = {}
-        for id in ['first', 'second']:
-            self.players[id] = DummyAgent(id)
+        for player_id in ['first', 'second']:
+            self.players[player_id] = DummyAgent(player_id)
 
         # Initialize the internal environment
         self._env = GameEnv(self.players)
