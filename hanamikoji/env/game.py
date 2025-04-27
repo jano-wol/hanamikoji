@@ -111,11 +111,21 @@ class GameEnv(object):
             info.stashed_cards = move[1]
             self.num_cards[self.acting_player_id] -= 1
         if move[1] == TYPE_1_TRASH:
-            pass
+            self.action_cards[self.acting_player_id][1] = 0
+            info.hand_cards = _sub_cards(info.hand_cards, move[1])
+            info.trashed_cards = move[1]
+            self.num_cards[self.acting_player_id] -= 2
         if move[2] == TYPE_2_CHOOSE_1_2:
-            pass
+            self.action_cards[self.acting_player_id][2] = 0
+            info.hand_cards = _sub_cards(info.hand_cards, move[1])
+            self.decision_cards_1_2 = move[1]
+            self.num_cards[self.acting_player_id] -= 3
         if move[3] == TYPE_3_CHOOSE_2_2:
-            pass
+            self.action_cards[self.acting_player_id][3] = 0
+            info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
+            info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
+            self.decision_cards_2_2 = move[1]
+            self.num_cards[self.acting_player_id] -= 4
         if move[4] == TYPE_4_RESOLVE_1_2:
             pass
         if move[5] == TYPE_5_RESOLVE_2_2:
