@@ -35,7 +35,7 @@ class GameState(object):
         # 'first' and 'second' mean global first and second player unless otherwise stated
         self.acting_player_id = 'first'
         # Here keys mean global 'first' and 'second', values mean round local first and second (indicating eval model)
-        self.id_to_round_position = {'first': 'first', 'second': 'second'}
+        self.id_to_round_id = {'first': 'first', 'second': 'second'}
         # Constant rule list storing the geisha card numbers which coincide with their point reward
         self.points = [2, 2, 2, 3, 3, 4, 5]
         # The already played and public geisha gift cards
@@ -200,7 +200,7 @@ class GameEnv(object):
                 self.state.geisha_preferences = next_geisha_preferences
                 if self.round % 2 == 0:
                     self.state.acting_player_id = 'second'
-                    self.state.id_to_round_position = {'first': 'second', 'second': 'first'}
+                    self.state.id_to_round_id = {'first': 'second', 'second': 'first'}
                 self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
                 card_play_data = get_card_play_data()
                 self.card_play_init(card_play_data)

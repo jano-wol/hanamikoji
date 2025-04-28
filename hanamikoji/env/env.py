@@ -362,7 +362,7 @@ def _get_obs_landlord(infoset):
         num_moves, axis=0)
     obs = {
         'id' : infoset[0].state.acting_player_id,
-        'round_id' : infoset[0].state.id_to_round_position[infoset[0].state.acting_player_id],
+        'round_id' : infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
         'x_batch': x_batch.astype(np.float32),
         'z_batch': z_batch.astype(np.float32),
         'moves': infoset[1].moves,
