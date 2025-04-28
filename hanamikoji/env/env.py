@@ -2,6 +2,7 @@ from collections import Counter
 import numpy as np
 
 from hanamikoji.env.game import GameEnv, get_card_play_data
+from hanamikoji.env.move_generator import *
 
 class Env:
     """
@@ -196,6 +197,44 @@ def _cards2array(list_cards):
             jokers[1] = 1
     return np.concatenate((matrix.flatten('F'), jokers))
 
+def _my_move2array(move):
+    ret = np.zeros(63, dtype=np.int8)
+    if move[0] == TYPE_0_STASH:
+        ret[:7] = move[1]
+    if move[0] == TYPE_1_TRASH:
+        ret[7:14] = move[1]
+    if move[0] == TYPE_2_CHOOSE_1_2:
+        ret[14:21] = move[1]
+    if move[0] == TYPE_3_CHOOSE_2_2:
+        ret[21:28] = move[1][0]
+        ret[28:35] = move[1][1]
+    if move[0] == TYPE_4_RESOLVE_1_2:
+        ret[35:42] = move[1][0]
+        ret[42:49] = move[1][1]
+    if move[0] == TYPE_5_RESOLVE_2_2:
+        ret[49:56] = move[1][0]
+        ret[56:] = move[1][1]
+    return ret
+
+def _opp_move2array(move):
+    ret = np.zeros(63, dtype=np.int8)
+    if move[0] == TYPE_0_STASH:
+        ret[:7] = [1] * 7
+    if move[0] == TYPE_1_TRASH:
+        ret[7:14] = [1] * 7
+    if move[0] == TYPE_2_CHOOSE_1_2:
+        ret[14:21] = move[1]
+    if move[0] == TYPE_3_CHOOSE_2_2:
+        ret[21:28] = move[1][0]
+        ret[28:35] = move[1][1]
+    if move[0] == TYPE_4_RESOLVE_1_2:
+        ret[35:42] = move[1][0]
+        ret[42:49] = move[1][1]
+    if move[0] == TYPE_5_RESOLVE_2_2:
+        ret[49:56] = move[1][0]
+        ret[56:] = move[1][1]
+    return ret
+
 def _action_seq_list2array(action_seq_list):
     """
     A utility function to encode the historical moves.
@@ -239,7 +278,7 @@ def _get_obs_landlord(infoset):
     Obttain the landlord features. See Table 4 in
     https://arxiv.org/pdf/2106.06135.pdf
     """
-    num_legal_actions = len(infoset.legal_actions)
+    num_legal_actions = len(infoset[1].moves)
     my_handcards = _cards2array(infoset.player_hand_cards)
     my_handcards_batch = np.repeat(my_handcards[np.newaxis, :],
                                    num_legal_actions, axis=0)
@@ -253,8 +292,8 @@ def _get_obs_landlord(infoset):
                                   num_legal_actions, axis=0)
 
     my_action_batch = np.zeros(my_handcards_batch.shape)
-    for j, action in enumerate(infoset.legal_actions):
-        my_action_batch[j, :] = _cards2array(action)
+    for j, move in enumerate(infoset[1].moves):
+        my_action_batch[j, :] = _my_move2array(move)
 
     landlord_up_num_cards_left = _get_one_hot_array(
         infoset.num_cards_left_dict['landlord_up'], 17)
@@ -312,7 +351,7 @@ def _get_obs_landlord(infoset):
             'position': 'landlord',
             'x_batch': x_batch.astype(np.float32),
             'z_batch': z_batch.astype(np.float32),
-            'legal_actions': infoset.legal_actions,
+            'legal_actions': infoset[1].moves,
             'x_no_action': x_no_action.astype(np.int8),
             'z': z.astype(np.int8),
           }
@@ -323,7 +362,7 @@ def _get_obs_landlord_up(infoset):
     Obttain the landlord_up features. See Table 5 in
     https://arxiv.org/pdf/2106.06135.pdf
     """
-    num_legal_actions = len(infoset.legal_actions)
+    num_legal_actions = len(infoset[1].moves)
     my_handcards = _cards2array(infoset.player_hand_cards)
     my_handcards_batch = np.repeat(my_handcards[np.newaxis, :],
                                    num_legal_actions, axis=0)
@@ -337,7 +376,7 @@ def _get_obs_landlord_up(infoset):
                                   num_legal_actions, axis=0)
 
     my_action_batch = np.zeros(my_handcards_batch.shape)
-    for j, action in enumerate(infoset.legal_actions):
+    for j, action in enumerate(infoset[1].moves):
         my_action_batch[j, :] = _cards2array(action)
 
     last_landlord_action = _cards2array(
@@ -410,7 +449,7 @@ def _get_obs_landlord_up(infoset):
             'position': 'landlord_up',
             'x_batch': x_batch.astype(np.float32),
             'z_batch': z_batch.astype(np.float32),
-            'legal_actions': infoset.legal_actions,
+            'legal_actions': infoset[1].moves,
             'x_no_action': x_no_action.astype(np.int8),
             'z': z.astype(np.int8),
           }
@@ -421,7 +460,7 @@ def _get_obs_landlord_down(infoset):
     Obttain the landlord_down features. See Table 5 in
     https://arxiv.org/pdf/2106.06135.pdf
     """
-    num_legal_actions = len(infoset.legal_actions)
+    num_legal_actions = len(infoset[1].moves)
     my_handcards = _cards2array(infoset.player_hand_cards)
     my_handcards_batch = np.repeat(my_handcards[np.newaxis, :],
                                    num_legal_actions, axis=0)
@@ -435,7 +474,7 @@ def _get_obs_landlord_down(infoset):
                                   num_legal_actions, axis=0)
 
     my_action_batch = np.zeros(my_handcards_batch.shape)
-    for j, action in enumerate(infoset.legal_actions):
+    for j, action in enumerate(infoset[1].moves):
         my_action_batch[j, :] = _cards2array(action)
 
     last_landlord_action = _cards2array(
@@ -514,7 +553,7 @@ def _get_obs_landlord_down(infoset):
             'position': 'landlord_down',
             'x_batch': x_batch.astype(np.float32),
             'z_batch': z_batch.astype(np.float32),
-            'legal_actions': infoset.legal_actions,
+            'legal_actions': infoset[1].moves,
             'x_no_action': x_no_action.astype(np.int8),
             'z': z.astype(np.int8),
           }
