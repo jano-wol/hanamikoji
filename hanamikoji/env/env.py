@@ -138,40 +138,6 @@ class DummyAgent(object):
         self.move = move
 
 
-def get_obs(infoset):
-    """
-    This function obtains observations with imperfect information
-    from the infoset. It has three branches since we encode
-    different features for different positions.
-    
-    This function will return dictionary named `obs`. It contains
-    several fields. These fields will be used to train the model.
-    One can play with those features to improve the performance.
-
-    `position` is a string that can be landlord/landlord_down/landlord_up
-
-    `x_batch` is a batch of features (excluding the hisorical moves).
-    It also encodes the action feature
-
-    `z_batch` is a batch of features with hisorical moves only.
-
-    `legal_actions` is the legal moves
-
-    `x_no_action`: the features (exluding the hitorical moves and
-    the action features). It does not have the batch dim.
-
-    `z`: same as z_batch but not a batch.
-    """
-    if infoset.player_position == 'landlord':
-        return _get_obs_landlord(infoset)
-    elif infoset.player_position == 'landlord_up':
-        return _get_obs_landlord_up(infoset)
-    elif infoset.player_position == 'landlord_down':
-        return _get_obs_landlord_down(infoset)
-    else:
-        raise ValueError('')
-
-
 def _get_one_hot_array(num_left_cards):
     one_hot = np.zeros(7, dtype=np.int8)
     one_hot[num_left_cards - 1] = 1
@@ -222,7 +188,7 @@ def _opp_move2array(move):
     return ret
 
 
-def encode_opp_round_moves(round_moves):
+def _encode_opp_round_moves(round_moves):
     """
     We encode the historical 6 moves of the opponent in the given round. If there is
     not yet 6 moves, we pad the features with 0. We encode so that the most recent move is on
@@ -236,14 +202,31 @@ def encode_opp_round_moves(round_moves):
     return z
 
 
-def create_batch(arr, num):
+def _create_batch(arr, num):
     return np.repeat(arr[np.newaxis, :], num, axis=0)
 
 
-def _get_obs_landlord(infoset):
+def get_obs(infoset):
     """
-    Obttain the landlord features. See Table 4 in
-    https://arxiv.org/pdf/2106.06135.pdf
+    This function obtains observations with imperfect information
+    from the infoset.
+    
+    This function will return dictionary named `obs`. It contains
+    several fields. These fields will be used to train the model.
+    One can play with those features to improve the performance.
+
+    `id` is a string defining the global role of player (first or second)
+
+    'round_id' is a string defining the round local role of the player (first or second)
+
+    `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
+
+    `z_batch` is a batch of features encoding opponent historical moves.
+
+    `z`: same as z_batch but not a batch.
+
+    'moves' is the legal moves
+
     """
     num_moves = len(infoset[1].moves)
     curr = infoset[0].state.acting_player_id
@@ -251,70 +234,70 @@ def _get_obs_landlord(infoset):
 
     # FEATURE 1 -- Geisha points
     geisha_points = np.array([2, 2, 2, 3, 3, 4, 5], dtype=np.int8)
-    geisha_points_batch = create_batch(geisha_points, num_moves)
+    geisha_points_batch = _create_batch(geisha_points, num_moves)
 
     # FEATURE 2 -- Geisha preferences
     geisha_preferences = _cards2array(infoset[0].state.geisha_preferences[curr]) - _cards2array(
         infoset[0].state.geisha_preferences[opp])
-    geisha_preferences_batch = create_batch(geisha_preferences, num_moves)
+    geisha_preferences_batch = _create_batch(geisha_preferences, num_moves)
 
     # FEATURE 3 -- Hand cards
     hand_cards = _cards2array(infoset[1].hand_cards)
-    hand_cards_batch = create_batch(hand_cards, num_moves)
+    hand_cards_batch = _create_batch(hand_cards, num_moves)
 
     # FEATURE 4 -- Stashed card
     stashed_card = _cards2array(infoset[1].stashed_card or [0] * 7)
-    stashed_card_batch = create_batch(stashed_card, num_moves)
+    stashed_card_batch = _create_batch(stashed_card, num_moves)
 
     # FEATURE 5 -- Trashed cards
     trashed_cards = _cards2array(infoset[1].trashed_cards or [0] * 7)
-    trashed_cards_batch = create_batch(trashed_cards, num_moves)
+    trashed_cards_batch = _create_batch(trashed_cards, num_moves)
 
     # FEATURE 6 -- Decision cards 1_2
     decision_cards_1_2 = _cards2array(infoset[0].state.decision_cards_1_2 or [0] * 7)
-    decision_cards_1_2_batch = create_batch(decision_cards_1_2, num_moves)
+    decision_cards_1_2_batch = _create_batch(decision_cards_1_2, num_moves)
 
     # FEATURE 7 -- Decision cards 2_2 first
     decision_cards_2_2_1 = _cards2array(
         (infoset[0].state.decision_cards_2_2[0] if infoset[0].state.decision_cards_2_2 else [0] * 7))
-    decision_cards_2_2_1_batch = create_batch(decision_cards_2_2_1, num_moves)
+    decision_cards_2_2_1_batch = _create_batch(decision_cards_2_2_1, num_moves)
 
     # FEATURE 8 -- Decision cards 2_2 second
     decision_cards_2_2_2 = _cards2array(
         (infoset[0].state.decision_cards_2_2[1] if infoset[0].state.decision_cards_2_2 else [0] * 7))
-    decision_cards_2_2_2_batch = create_batch(decision_cards_2_2_2, num_moves)
+    decision_cards_2_2_2_batch = _create_batch(decision_cards_2_2_2, num_moves)
 
     # FEATURE 9 -- Action cards
     action_cards = np.array(infoset[0].state.action_cards[curr], dtype=np.int8)
-    action_cards_batch = create_batch(action_cards, num_moves)
+    action_cards_batch = _create_batch(action_cards, num_moves)
 
     # FEATURE 10 -- Action cards opp
     action_cards_opp = np.array(infoset[0].state.action_cards[opp], dtype=np.int8)
-    action_cards_opp_batch = create_batch(action_cards_opp, num_moves)
+    action_cards_opp_batch = _create_batch(action_cards_opp, num_moves)
 
     # FEATURE 11 -- Gift cards
     gift_cards = _cards2array(infoset[0].state.gift_cards[curr])
-    gift_cards_batch = create_batch(gift_cards, num_moves)
+    gift_cards_batch = _create_batch(gift_cards, num_moves)
 
     # FEATURE 12 -- Gift cards opp
     gift_cards_opp = _cards2array(infoset[0].state.gift_cards[opp])
-    gift_cards_opp_batch = create_batch(gift_cards_opp, num_moves)
+    gift_cards_opp_batch = _create_batch(gift_cards_opp, num_moves)
 
     # FEATURE 13 -- All gift cards
     all_gift_cards = gift_cards + stashed_card
-    all_gift_cards_batch = create_batch(all_gift_cards, num_moves)
+    all_gift_cards_batch = _create_batch(all_gift_cards, num_moves)
 
     # FEATURE 14 -- Number of cards (one-hot)
     num_cards = _get_one_hot_array(infoset[0].state.num_cards[curr])
-    num_cards_batch = create_batch(num_cards, num_moves)
+    num_cards_batch = _create_batch(num_cards, num_moves)
 
     # FEATURE 15 -- Number of cards opp (one-hot)
     num_cards_opp = _get_one_hot_array(infoset[0].state.num_cards[opp])
-    num_cards_opp_batch = create_batch(num_cards_opp, num_moves)
+    num_cards_opp_batch = _create_batch(num_cards_opp, num_moves)
 
     # FEATURE 16 -- Unknown cards
     unknown_cards = geisha_points - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
-    unknown_cards_batch = create_batch(unknown_cards, num_moves)
+    unknown_cards_batch = _create_batch(unknown_cards, num_moves)
 
     move_batch = np.zeros((num_moves, 63))
     for j, move in enumerate(infoset[1].moves):
@@ -337,7 +320,7 @@ def _get_obs_landlord(infoset):
                          num_cards_opp_batch,
                          unknown_cards_batch,
                          move_batch))
-    z = encode_opp_round_moves(infoset[0].state.round_moves[opp])
+    z = _encode_opp_round_moves(infoset[0].state.round_moves[opp])
     z_batch = np.repeat(z[np.newaxis, :, :], num_moves, axis=0)
     obs = {
         'id': infoset[0].state.acting_player_id,
