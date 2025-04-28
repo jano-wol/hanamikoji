@@ -1,4 +1,3 @@
-from collections import Counter
 import numpy as np
 
 from hanamikoji.env.game import GameEnv, get_card_play_data
@@ -188,17 +187,20 @@ def _opp_move2array(move):
     return ret
 
 
-def _encode_opp_round_moves(round_moves):
+def _encode_round_moves(round_moves_curr, round_moves_opp):
     """
-    We encode the historical 6 moves of the opponent in the given round. If there is
-    not yet 6 moves, we pad the features with 0. We encode so that the most recent move is on
-    fixed position (5), and older decision are on index 4, 3,... (so padding goes to the front).
-    Finally, we obtain a 6x63 matrix, which will be fed into LSTM for encoding.
+    We encode the historical moves of the given round. If there is
+    not yet 6 moves on either side then we pad the features with zeros. We encode so that the most recent moves are on
+    fixed positions (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
+    (So padding goes to the front). Finally, we obtain a 12x63 matrix, which will be fed into LSTM for encoding.
     """
-    z = np.zeros((6, 63))
-    l = len(round_moves)
-    for i in range(6 - l, 6):
-        z[i, :] = _opp_move2array(round_moves[i - (6 - l)])
+    z = np.zeros((12, 63))
+    l_curr = len(round_moves_curr)
+    for i in range(6 - l_curr, 6):
+        z[i, :] = _my_move2array(round_moves_curr[i - (6 - l_curr)])
+    l_opp = len(round_moves_opp)
+    for i in range(12 - l_opp, 12):
+        z[i, :] = _opp_move2array(round_moves_opp[i - (12 - l_opp)])
     return z
 
 
@@ -223,7 +225,7 @@ def get_obs(infoset):
 
     `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
 
-    `z_batch` is a batch of features encoding opponent historical moves.
+    `z_batch` is a batch of features encoding the historical moves of the round.
 
     `z`: same as z_batch but not a batch.
 
@@ -320,7 +322,7 @@ def get_obs(infoset):
                          num_cards_opp_batch,
                          unknown_cards_batch,
                          move_batch))
-    z = _encode_opp_round_moves(infoset[0].state.round_moves[opp])
+    z = _encode_round_moves(infoset[0].state.round_moves[curr], infoset[0].state.round_moves[opp])
     z_batch = np.repeat(z[np.newaxis, :, :], num_moves, axis=0)
     obs = {
         'id': infoset[0].state.acting_player_id,
