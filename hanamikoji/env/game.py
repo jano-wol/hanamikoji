@@ -89,14 +89,17 @@ class GameEnv(object):
     def update_geisha_preferences(self):
         first_gifts = _add_cards(self.state.gift_cards['first'], self.private_info_sets['first'].stashed_card)
         second_gifts = _add_cards(self.state.gift_cards['second'], self.private_info_sets['second'].stashed_card)
-        self.state.geisha_preferences = {'first': [0, 0, 0, 0, 0, 0, 0], 'second': [0, 0, 0, 0, 0, 0, 0]}
         for i in range(7):
             if first_gifts[i] > second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['first'] == 1):
+                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['first'][i] == 1):
                 self.state.geisha_preferences['first'][i] = 1
+            else:
+                self.state.geisha_preferences['first'][i] = 0
             if first_gifts[i] < second_gifts[i] or (
-                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['second'] == 1):
+                    first_gifts[i] == second_gifts[i] and self.state.geisha_preferences['second'][i] == 1):
                 self.state.geisha_preferences['second'][i] = 1
+            else:
+                self.state.geisha_preferences['second'][i] = 0
 
     def is_game_ended(self):
         first_geisha_win = 0
