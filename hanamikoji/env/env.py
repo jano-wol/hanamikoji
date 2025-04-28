@@ -3,6 +3,7 @@ import numpy as np
 from hanamikoji.env.game import GameEnv, get_card_play_data
 from hanamikoji.env.move_generator import *
 
+MOVE_VECTOR_SIZE = 63
 
 class Env:
     """
@@ -139,7 +140,8 @@ class DummyAgent(object):
 
 def _get_one_hot_array(num_left_cards):
     one_hot = np.zeros(7, dtype=np.int8)
-    one_hot[num_left_cards - 1] = 1
+    if num_left_cards > 0:
+        one_hot[num_left_cards - 1] = 1
     return one_hot
 
 
@@ -148,7 +150,7 @@ def _cards2array(list_cards):
 
 
 def _my_move2array(move):
-    ret = np.zeros(63, dtype=np.int8)
+    ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
     if move[0] == TYPE_0_STASH:
         ret[:7] = move[1]
     if move[0] == TYPE_1_TRASH:
@@ -168,10 +170,12 @@ def _my_move2array(move):
 
 
 def _opp_move2array(move):
-    ret = np.zeros(63, dtype=np.int8)
+    ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
     if move[0] == TYPE_0_STASH:
+        # Opponent move is not known, still we pad this to 7 feature
         ret[:7] = [1] * 7
     if move[0] == TYPE_1_TRASH:
+        # Opponent move is not known, still we pad this to 7 feature
         ret[7:14] = [1] * 7
     if move[0] == TYPE_2_CHOOSE_1_2:
         ret[14:21] = move[1]
@@ -192,9 +196,9 @@ def _encode_round_moves(round_moves_curr, round_moves_opp):
     We encode the historical moves of the given round. If there is
     not yet 6 moves on either side then we pad the features with zeros. We encode so that the most recent moves are on
     fixed positions (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
-    (So padding goes to the front). Finally, we obtain a 12x63 matrix, which will be fed into LSTM for encoding.
+    (So padding goes to the front). Finally, we obtain a 12 x MOVE_VECTOR_SIZE matrix, which will be fed into LSTM for encoding.
     """
-    z = np.zeros((12, 63))
+    z = np.zeros((12, MOVE_VECTOR_SIZE))
     l_curr = len(round_moves_curr)
     for i in range(6 - l_curr, 6):
         z[i, :] = _my_move2array(round_moves_curr[i - (6 - l_curr)])
@@ -224,84 +228,87 @@ def get_obs(infoset):
     'moves' is the legal moves
 
     `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
+    shape = (num_moves, 169)
 
     `z_batch` is a batch of features encoding the historical moves of the round.
+    shape = (num_moves, 12, 63)
 
     `z`: same as z_batch but not a batch.
+    shape = (12, 63)
 
     """
     num_moves = len(infoset[1].moves)
     curr = infoset[0].state.acting_player_id
     opp = 'second' if curr == 'first' else 'first'
 
-    # FEATURE 1 -- Geisha points
+    # FEATURE 1 -- Geisha points. SIZE=7
     geisha_points = np.array([2, 2, 2, 3, 3, 4, 5], dtype=np.int8)
     geisha_points_batch = _create_batch(geisha_points, num_moves)
 
-    # FEATURE 2 -- Geisha preferences
+    # FEATURE 2 -- Geisha preferences. SIZE=7
     geisha_preferences = _cards2array(infoset[0].state.geisha_preferences[curr]) - _cards2array(
         infoset[0].state.geisha_preferences[opp])
     geisha_preferences_batch = _create_batch(geisha_preferences, num_moves)
 
-    # FEATURE 3 -- Hand cards
+    # FEATURE 3 -- Hand cards. SIZE=7
     hand_cards = _cards2array(infoset[1].hand_cards)
     hand_cards_batch = _create_batch(hand_cards, num_moves)
 
-    # FEATURE 4 -- Stashed card
+    # FEATURE 4 -- Stashed card. SIZE=7
     stashed_card = _cards2array(infoset[1].stashed_card or [0] * 7)
     stashed_card_batch = _create_batch(stashed_card, num_moves)
 
-    # FEATURE 5 -- Trashed cards
+    # FEATURE 5 -- Trashed cards. SIZE=7
     trashed_cards = _cards2array(infoset[1].trashed_cards or [0] * 7)
     trashed_cards_batch = _create_batch(trashed_cards, num_moves)
 
-    # FEATURE 6 -- Decision cards 1_2
+    # FEATURE 6 -- Decision cards 1_2. SIZE=7
     decision_cards_1_2 = _cards2array(infoset[0].state.decision_cards_1_2 or [0] * 7)
     decision_cards_1_2_batch = _create_batch(decision_cards_1_2, num_moves)
 
-    # FEATURE 7 -- Decision cards 2_2 first
+    # FEATURE 7 -- Decision cards 2_2 first. SIZE=7
     decision_cards_2_2_1 = _cards2array(
         (infoset[0].state.decision_cards_2_2[0] if infoset[0].state.decision_cards_2_2 else [0] * 7))
     decision_cards_2_2_1_batch = _create_batch(decision_cards_2_2_1, num_moves)
 
-    # FEATURE 8 -- Decision cards 2_2 second
+    # FEATURE 8 -- Decision cards 2_2 second. SIZE=7
     decision_cards_2_2_2 = _cards2array(
         (infoset[0].state.decision_cards_2_2[1] if infoset[0].state.decision_cards_2_2 else [0] * 7))
     decision_cards_2_2_2_batch = _create_batch(decision_cards_2_2_2, num_moves)
 
-    # FEATURE 9 -- Action cards
+    # FEATURE 9 -- Action cards. SIZE=4
     action_cards = np.array(infoset[0].state.action_cards[curr], dtype=np.int8)
     action_cards_batch = _create_batch(action_cards, num_moves)
 
-    # FEATURE 10 -- Action cards opp
+    # FEATURE 10 -- Action cards opp. SIZE=4
     action_cards_opp = np.array(infoset[0].state.action_cards[opp], dtype=np.int8)
     action_cards_opp_batch = _create_batch(action_cards_opp, num_moves)
 
-    # FEATURE 11 -- Gift cards
+    # FEATURE 11 -- Gift cards. SIZE=7
     gift_cards = _cards2array(infoset[0].state.gift_cards[curr])
     gift_cards_batch = _create_batch(gift_cards, num_moves)
 
-    # FEATURE 12 -- Gift cards opp
+    # FEATURE 12 -- Gift cards opp. SIZE=7
     gift_cards_opp = _cards2array(infoset[0].state.gift_cards[opp])
     gift_cards_opp_batch = _create_batch(gift_cards_opp, num_moves)
 
-    # FEATURE 13 -- All gift cards
+    # FEATURE 13 -- All gift cards. SIZE=7
     all_gift_cards = gift_cards + stashed_card
     all_gift_cards_batch = _create_batch(all_gift_cards, num_moves)
 
-    # FEATURE 14 -- Number of cards (one-hot)
+    # FEATURE 14 -- Number of cards (one-hot). SIZE=7
     num_cards = _get_one_hot_array(infoset[0].state.num_cards[curr])
     num_cards_batch = _create_batch(num_cards, num_moves)
 
-    # FEATURE 15 -- Number of cards opp (one-hot)
+    # FEATURE 15 -- Number of cards opp (one-hot). SIZE=7
     num_cards_opp = _get_one_hot_array(infoset[0].state.num_cards[opp])
     num_cards_opp_batch = _create_batch(num_cards_opp, num_moves)
 
-    # FEATURE 16 -- Unknown cards
-    unknown_cards = geisha_points - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
+    # FEATURE 16 -- Unknown cards. (Calc uses that geisha points == number of geisha cards in the deck.) SIZE=7
+    unknown_cards = geisha_points - hand_cards - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
     unknown_cards_batch = _create_batch(unknown_cards, num_moves)
 
-    move_batch = np.zeros((num_moves, 63))
+    move_batch = np.zeros((num_moves, MOVE_VECTOR_SIZE))
     for j, move in enumerate(infoset[1].moves):
         move_batch[j, :] = _my_move2array(move)
 
