@@ -301,39 +301,35 @@ def _get_obs_landlord(infoset):
         (infoset[0].state.decision_cards_2_2[1] if infoset[0].state.decision_cards_2_2 else [0] * 7))
     decision_cards_2_2_2_batch = create_batch(decision_cards_2_2_2, num_moves)
 
-    # FEATURE 9 -- Trashed cards
-    trashed_cards = _cards2array(infoset[1].trashed_cards or [0] * 7)
-    trashed_cards_batch = create_batch(trashed_cards, num_moves)
-
-    # FEATURE 10 -- Action cards
+    # FEATURE 9 -- Action cards
     action_cards = np.array(infoset[0].state.action_cards[curr], dtype=np.int8)
     action_cards_batch = create_batch(action_cards, num_moves)
 
-    # FEATURE 11 -- Action cards opp
+    # FEATURE 10 -- Action cards opp
     action_cards_opp = np.array(infoset[0].state.action_cards[opp], dtype=np.int8)
     action_cards_opp_batch = create_batch(action_cards_opp, num_moves)
 
-    # FEATURE 12 -- Gift cards
+    # FEATURE 11 -- Gift cards
     gift_cards = _cards2array(infoset[0].state.gift_cards[curr])
     gift_cards_batch = create_batch(gift_cards, num_moves)
 
-    # FEATURE 13 -- Gift cards opp
+    # FEATURE 12 -- Gift cards opp
     gift_cards_opp = _cards2array(infoset[0].state.gift_cards[opp])
     gift_cards_opp_batch = create_batch(gift_cards_opp, num_moves)
 
-    # FEATURE 14 -- All gift cards
+    # FEATURE 13 -- All gift cards
     all_gift_cards = gift_cards + stashed_card
     all_gift_cards_batch = create_batch(all_gift_cards, num_moves)
 
-    # FEATURE 15 -- Number of cards (one-hot)
+    # FEATURE 14 -- Number of cards (one-hot)
     num_cards = _get_one_hot_array(infoset[0].state.num_cards[curr])
     num_cards_batch = create_batch(num_cards, num_moves)
 
-    # FEATURE 16 -- Number of cards opp (one-hot)
+    # FEATURE 15 -- Number of cards opp (one-hot)
     num_cards_opp = _get_one_hot_array(infoset[0].state.num_cards[opp])
     num_cards_opp_batch = create_batch(num_cards_opp, num_moves)
 
-    # FEATURE 17 -- Unknown cards
+    # FEATURE 16 -- Unknown cards
     unknown_cards = geisha_points - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
     unknown_cards_batch = create_batch(unknown_cards, num_moves)
 
@@ -341,15 +337,24 @@ def _get_obs_landlord(infoset):
     for j, move in enumerate(infoset[1].moves):
         move_batch[j, :] = _my_move2array(move)
 
-    x_batch = np.hstack((my_handcards_batch,
-                         other_handcards_batch,
-                         last_action_batch,
-                         landlord_up_played_cards_batch,
-                         landlord_down_played_cards_batch,
-                         landlord_up_num_cards_left_batch,
-                         landlord_down_num_cards_left_batch,
-                         bomb_num_batch,
+    x_batch = np.hstack((geisha_points_batch,
+                         geisha_preferences_batch,
+                         hand_cards_batch,
+                         stashed_card_batch,
+                         trashed_cards_batch,
+                         decision_cards_1_2_batch,
+                         decision_cards_2_2_1_batch,
+                         decision_cards_2_2_2_batch,
+                         action_cards_batch,
+                         action_cards_opp_batch,
+                         gift_cards_batch,
+                         gift_cards_opp_batch,
+                         all_gift_cards_batch,
+                         num_cards_batch,
+                         num_cards_opp_batch,
+                         unknown_cards_batch,
                          move_batch))
+
     z = _action_seq_list2array(_process_action_seq(
         infoset.card_play_action_seq))
     z_batch = np.repeat(
