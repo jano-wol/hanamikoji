@@ -222,35 +222,18 @@ def _opp_move2array(move):
     return ret
 
 
-def _action_seq_list2array(action_seq_list):
+def encode_opp_round_moves(round_moves):
     """
-    A utility function to encode the historical moves.
-    We encode the historical 15 actions. If there is
-    no 15 actions, we pad the features with 0. Since
-    three moves is a round in DouDizhu, we concatenate
-    the representations for each consecutive three moves.
-    Finally, we obtain a 5x162 matrix, which will be fed
-    into LSTM for encoding.
+    We encode the historical 6 moves of the opponent in the given round. If there is
+    not yet 6 moves, we pad the features with 0. We encode so that the most recent move is on
+    fixed position (5), and older decision are on index 4, 3,... (so padding goes to the front).
+    Finally, we obtain a 6x63 matrix, which will be fed into LSTM for encoding.
     """
-    action_seq_array = np.zeros((len(action_seq_list), 54))
-    for row, list_cards in enumerate(action_seq_list):
-        action_seq_array[row, :] = _cards2array(list_cards)
-    action_seq_array = action_seq_array.reshape(5, 162)
-    return action_seq_array
-
-
-def _process_action_seq(sequence, length=15):
-    """
-    A utility function encoding historical moves. We
-    encode 15 moves. If there is no 15 moves, we pad
-    with zeros.
-    """
-    sequence = sequence[-length:].copy()
-    if len(sequence) < length:
-        empty_sequence = [[] for _ in range(length - len(sequence))]
-        empty_sequence.extend(sequence)
-        sequence = empty_sequence
-    return sequence
+    z = np.zeros((6, 63))
+    l = len(round_moves)
+    for i in range(6 - l, 6):
+        z[i, :] = _opp_move2array(round_moves[i - (6 - l)])
+    return z
 
 
 def create_batch(arr, num):
@@ -354,18 +337,14 @@ def _get_obs_landlord(infoset):
                          num_cards_opp_batch,
                          unknown_cards_batch,
                          move_batch))
-    # TODO
-    z = _action_seq_list2array(_process_action_seq(
-        infoset.card_play_action_seq))
-    z_batch = np.repeat(
-        z[np.newaxis, :, :],
-        num_moves, axis=0)
+    z = encode_opp_round_moves(infoset[0].state.round_moves[opp])
+    z_batch = np.repeat(z[np.newaxis, :, :], num_moves, axis=0)
     obs = {
-        'id' : infoset[0].state.acting_player_id,
-        'round_id' : infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
+        'id': infoset[0].state.acting_player_id,
+        'round_id': infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
         'x_batch': x_batch.astype(np.float32),
+        'z': z.astype(np.int8),
         'z_batch': z_batch.astype(np.float32),
         'moves': infoset[1].moves,
-        'z': z.astype(np.int8),
     }
     return obs
