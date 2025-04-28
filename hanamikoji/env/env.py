@@ -4,6 +4,7 @@ from hanamikoji.env.game import GameEnv, get_card_play_data
 from hanamikoji.env.move_generator import *
 
 MOVE_VECTOR_SIZE = 63
+X_FEATURE_SIZE = 169
 
 class Env:
     """
@@ -13,7 +14,7 @@ class Env:
     def __init__(self, objective):
         """
         Objective is wp/adp/logadp. Here, we use dummy agents.
-        This is because, in the orignial game, the players
+        This is because, in the original game, the players
         are `in` the game. Here, we want to isolate
         players and environments to have a more gym style
         interface. To achieve this, we use dummy players
@@ -208,8 +209,8 @@ def _encode_round_moves(round_moves_curr, round_moves_opp):
     return z
 
 
-def _create_batch(arr, num):
-    return np.repeat(arr[np.newaxis, :], num, axis=0)
+def _create_batch(a_list, num):
+    return np.broadcast_to(a_list, (num, len(a_list)))
 
 
 def get_obs(infoset):
@@ -228,13 +229,13 @@ def get_obs(infoset):
     'moves' is the legal moves
 
     `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
-    shape = (num_moves, 169)
+    shape = (num_moves, X_FEATURE_SIZE)
 
     `z_batch` is a batch of features encoding the historical moves of the round.
-    shape = (num_moves, 12, 63)
+    shape = (num_moves, 12, MOVE_VECTOR_SIZE)
 
     `z`: same as z_batch but not a batch.
-    shape = (12, 63)
+    shape = (12, MOVE_VECTOR_SIZE)
 
     """
     num_moves = len(infoset[1].moves)
@@ -312,25 +313,27 @@ def get_obs(infoset):
     for j, move in enumerate(infoset[1].moves):
         move_batch[j, :] = _my_move2array(move)
 
-    x_batch = np.hstack((geisha_points_batch,
-                         geisha_preferences_batch,
-                         hand_cards_batch,
-                         stashed_card_batch,
-                         trashed_cards_batch,
-                         decision_cards_1_2_batch,
-                         decision_cards_2_2_1_batch,
-                         decision_cards_2_2_2_batch,
-                         action_cards_batch,
-                         action_cards_opp_batch,
-                         gift_cards_batch,
-                         gift_cards_opp_batch,
-                         all_gift_cards_batch,
-                         num_cards_batch,
-                         num_cards_opp_batch,
-                         unknown_cards_batch,
-                         move_batch))
+    x_batch = np.empty((num_moves, X_FEATURE_SIZE), dtype=np.int8)
+    x_batch[:, 0:7] = geisha_points_batch
+    x_batch[:, 7:14] = geisha_preferences_batch
+    x_batch[:, 14:21] = hand_cards_batch
+    x_batch[:, 21:28] = stashed_card_batch
+    x_batch[:, 28:35] = trashed_cards_batch
+    x_batch[:, 35:42] = decision_cards_1_2_batch
+    x_batch[:, 42:49] = decision_cards_2_2_1_batch
+    x_batch[:, 49:56] = decision_cards_2_2_2_batch
+    x_batch[:, 56:60] = action_cards_batch
+    x_batch[:, 60:64] = action_cards_opp_batch
+    x_batch[:, 64:71] = gift_cards_batch
+    x_batch[:, 71:78] = gift_cards_opp_batch
+    x_batch[:, 78:85] = all_gift_cards_batch
+    x_batch[:, 85:92] = num_cards_batch
+    x_batch[:, 92:99] = num_cards_opp_batch
+    x_batch[:, 99:106] = unknown_cards_batch
+    x_batch[:, 106:] = move_batch
+
     z = _encode_round_moves(infoset[0].state.round_moves[curr], infoset[0].state.round_moves[opp])
-    z_batch = np.repeat(z[np.newaxis, :, :], num_moves, axis=0)
+    z_batch = np.broadcast_to(z, (num_moves, *z.shape))
     obs = {
         'id': infoset[0].state.acting_player_id,
         'round_id': infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
