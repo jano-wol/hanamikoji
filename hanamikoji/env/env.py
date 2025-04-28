@@ -215,17 +215,17 @@ def get_obs(infoset):
     several fields. These fields will be used to train the model.
     One can play with those features to improve the performance.
 
-    `id` is a string defining the global role of player (first or second)
+    `id` is a string defining the global role of player encoding the infoset ('first' or 'second')
 
-    'round_id' is a string defining the round local role of the player (first or second)
+    'round_id' is a string defining the round local role of the player encoding the infoset ('first' or 'second')
+
+    'moves' is the legal moves
 
     `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
 
     `z_batch` is a batch of features encoding opponent historical moves.
 
     `z`: same as z_batch but not a batch.
-
-    'moves' is the legal moves
 
     """
     num_moves = len(infoset[1].moves)
@@ -325,9 +325,9 @@ def get_obs(infoset):
     obs = {
         'id': infoset[0].state.acting_player_id,
         'round_id': infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
+        'moves': infoset[1].moves,
         'x_batch': x_batch.astype(np.float32),
         'z': z.astype(np.int8),
-        'z_batch': z_batch.astype(np.float32),
-        'moves': infoset[1].moves,
+        'z_batch': z_batch.astype(np.float32)
     }
     return obs
