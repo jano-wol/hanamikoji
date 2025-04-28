@@ -354,17 +354,18 @@ def _get_obs_landlord(infoset):
                          num_cards_opp_batch,
                          unknown_cards_batch,
                          move_batch))
-
+    # TODO
     z = _action_seq_list2array(_process_action_seq(
         infoset.card_play_action_seq))
     z_batch = np.repeat(
         z[np.newaxis, :, :],
-        num_legal_actions, axis=0)
+        num_moves, axis=0)
     obs = {
-        'position': 'landlord',
+        'id' : infoset[0].state.acting_player_id,
+        'round_id' : infoset[0].state.id_to_round_position[infoset[0].state.acting_player_id],
         'x_batch': x_batch.astype(np.float32),
         'z_batch': z_batch.astype(np.float32),
-        'legal_actions': infoset[1].moves,
+        'moves': infoset[1].moves,
         'z': z.astype(np.int8),
     }
     return obs
