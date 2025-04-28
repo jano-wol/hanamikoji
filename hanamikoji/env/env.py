@@ -4,10 +4,12 @@ import numpy as np
 from hanamikoji.env.game import GameEnv, get_card_play_data
 from hanamikoji.env.move_generator import *
 
+
 class Env:
     """
     Hanamikoji multi-agent wrapper
     """
+
     def __init__(self, objective):
         """
         Objective is wp/adp/logadp. Here, we use dummy agents.
@@ -107,6 +109,7 @@ class Env:
         """
         return self._env.winner is not None
 
+
 class DummyAgent(object):
     """
     Dummy agent is designed to easily interact with the
@@ -116,6 +119,7 @@ class DummyAgent(object):
     isolate environment and agents towards a gym like
     interface.
     """
+
     def __init__(self, player_id):
         self.player_id = player_id
         self.move = None
@@ -132,6 +136,7 @@ class DummyAgent(object):
         The environment uses this function to tell the dummy agent what to do.
         """
         self.move = move
+
 
 def get_obs(infoset):
     """
@@ -166,17 +171,16 @@ def get_obs(infoset):
     else:
         raise ValueError('')
 
-def _get_one_hot_array(num_left_cards, max_num_cards):
-    """
-    A utility function to obtain one-hot endoding
-    """
-    one_hot = np.zeros(max_num_cards)
-    one_hot[num_left_cards - 1] = 1
 
+def _get_one_hot_array(num_left_cards):
+    one_hot = np.zeros(7, dtype=np.int8)
+    one_hot[num_left_cards - 1] = 1
     return one_hot
 
+
 def _cards2array(list_cards):
-        return np.array(list_cards, dtype=np.int8)
+    return np.array(list_cards, dtype=np.int8)
+
 
 def _my_move2array(move):
     ret = np.zeros(63, dtype=np.int8)
@@ -197,6 +201,7 @@ def _my_move2array(move):
         ret[56:] = move[1][1]
     return ret
 
+
 def _opp_move2array(move):
     ret = np.zeros(63, dtype=np.int8)
     if move[0] == TYPE_0_STASH:
@@ -216,6 +221,7 @@ def _opp_move2array(move):
         ret[56:] = move[1][1]
     return ret
 
+
 def _action_seq_list2array(action_seq_list):
     """
     A utility function to encode the historical moves.
@@ -232,6 +238,7 @@ def _action_seq_list2array(action_seq_list):
     action_seq_array = action_seq_array.reshape(5, 162)
     return action_seq_array
 
+
 def _process_action_seq(sequence, length=15):
     """
     A utility function encoding historical moves. We
@@ -245,15 +252,72 @@ def _process_action_seq(sequence, length=15):
         sequence = empty_sequence
     return sequence
 
+
 def _get_obs_landlord(infoset):
     """
     Obttain the landlord features. See Table 4 in
     https://arxiv.org/pdf/2106.06135.pdf
     """
     num_legal_actions = len(infoset[1].moves)
-    my_handcards = _cards2array(infoset.player_hand_cards)
-    my_handcards_batch = np.repeat(my_handcards[np.newaxis, :],
-                                   num_legal_actions, axis=0)
+    curr = infoset[0].state.acting_player_id
+    opp = 'second' if curr == 'first' else 'first'
+
+    # FEATURE 1 -- Geisha points
+    geisha_points = np.array([2, 2, 2, 3, 3, 4, 5], dtype=np.int8)
+
+    # FEATURE 2 -- Geisha preferences
+    geisha_preferences = _cards2array(infoset[0].state.geisha_preferences[curr]) - _cards2array(
+        infoset[0].state.geisha_preferences[opp])
+
+    # FEATURE 3 -- Hand cards
+    hand_cards = _cards2array(infoset[1].hand_cards)
+
+    # FEATURE 4 -- Stashed card
+    stashed_card = _cards2array(infoset[1].stashed_card or [0] * 7)
+
+    # FEATURE 5 -- Trashed cards
+    trashed_cards = _cards2array(infoset[1].trashed_cards or [0] * 7)
+
+    # FEATURE 6 -- Decision cards 1_2
+    decision_cards_1_2 = _cards2array(infoset[0].state.decision_cards_1_2 or [0] * 7)
+
+    # FEATURE 7 -- Decision cards 2_2 first
+    decision_cards_2_2_1 = _cards2array(
+        (infoset[0].state.decision_cards_2_2[0] if infoset[0].state.decision_cards_2_2 else [0] * 7))
+
+    # FEATURE 8 -- Decision cards 2_2 second
+    decision_cards_2_2_2 = _cards2array(
+        (infoset[0].state.decision_cards_2_2[1] if infoset[0].state.decision_cards_2_2 else [0] * 7))
+
+    # FEATURE 9 -- Trashed cards
+    trashed_cards = _cards2array(infoset[1].trashed_cards or [0] * 7)
+
+    # FEATURE 10 -- Action cards
+    action_cards = np.array(infoset[0].state.action_cards[curr], dtype=np.int8)
+
+    # FEATURE 11 -- Action cards opp
+    action_cards_opp = np.array(infoset[0].state.action_cards[opp], dtype=np.int8)
+
+    # FEATURE 12 -- Gift cards
+    gift_cards = _cards2array(infoset[0].state.gift_cards[curr])
+
+    # FEATURE 13 -- Gift cards opp
+    gift_cards_opp = _cards2array(infoset[0].state.gift_cards[opp])
+
+    # FEATURE 14 -- All gift cards
+    all_gift_cards = gift_cards + stashed_card
+
+    # FEATURE 15 -- Number of cards (one-hot)
+    num_cards = _get_one_hot_array(infoset[0].state.num_cards[curr])
+
+    # FEATURE 16 -- Number of cards opp (one-hot)
+    num_cards_opp = _get_one_hot_array(infoset[0].state.num_cards[opp])
+
+    # FEATURE 17 -- Unknown cards
+    unknown_cards = geisha_points - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
+
+    my_handcards = _cards2array(infoset[1].hand_cards)
+    my_handcards_batch = np.repeat(my_handcards[np.newaxis, :], num_legal_actions, axis=0)
 
     other_handcards = _cards2array(infoset.other_hand_cards)
     other_handcards_batch = np.repeat(other_handcards[np.newaxis, :],
@@ -320,11 +384,11 @@ def _get_obs_landlord(infoset):
         z[np.newaxis, :, :],
         num_legal_actions, axis=0)
     obs = {
-            'position': 'landlord',
-            'x_batch': x_batch.astype(np.float32),
-            'z_batch': z_batch.astype(np.float32),
-            'legal_actions': infoset[1].moves,
-            'x_no_action': x_no_action.astype(np.int8),
-            'z': z.astype(np.int8),
-          }
+        'position': 'landlord',
+        'x_batch': x_batch.astype(np.float32),
+        'z_batch': z_batch.astype(np.float32),
+        'legal_actions': infoset[1].moves,
+        'x_no_action': x_no_action.astype(np.int8),
+        'z': z.astype(np.int8),
+    }
     return obs
