@@ -245,15 +245,6 @@ def _process_action_seq(sequence, length=15):
         sequence = empty_sequence
     return sequence
 
-def _get_one_hot_bomb(bomb_num):
-    """
-    A utility function to encode the number of bombs
-    into one-hot representation.
-    """
-    one_hot = np.zeros(15)
-    one_hot[bomb_num] = 1
-    return one_hot
-
 def _get_obs_landlord(infoset):
     """
     Obttain the landlord features. See Table 4 in
