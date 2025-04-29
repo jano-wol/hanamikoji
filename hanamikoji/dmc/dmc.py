@@ -142,12 +142,12 @@ def train(flags):
             actor.start()
             actor_processes.append(actor)
 
-    def batch_and_learn(i, device, round_id, local_lock, position_lock, lock=threading.Lock()):
+    def batch_and_learn(i, device, round_id, local_lock, round_id_lock, lock=threading.Lock()):
         """Thread target for the learning process."""
         nonlocal frames, round_id_frames, stats
         while frames < flags.total_frames:
             batch = get_batch(free_queue[device][round_id], full_queue[device][round_id], buffers[device][round_id], flags, local_lock)
-            _stats = learn(round_id, models, learner_model.get_model(round_id), batch, optimizers[round_id], flags, position_lock)
+            _stats = learn(round_id, models, learner_model.get_model(round_id), batch, optimizers[round_id], flags, round_id_lock)
 
             with lock:
                 for k in _stats:

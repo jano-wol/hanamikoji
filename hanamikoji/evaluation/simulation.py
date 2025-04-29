@@ -6,13 +6,13 @@ from hanamikoji.env.game import GameEnv
 def load_card_play_models(card_play_model_path_dict):
     players = {}
 
-    for position in ['landlord', 'landlord_up', 'landlord_down']:
-        if card_play_model_path_dict[position] == 'random':
+    for player_id in ['first', 'second']:
+        if card_play_model_path_dict[player_id] == 'random':
             from .random_agent import RandomAgent
-            players[position] = RandomAgent()
+            players[player_id] = RandomAgent()
         else:
             from .deep_agent import DeepAgent
-            players[position] = DeepAgent(position, card_play_model_path_dict[position])
+            players[player_id] = DeepAgent(player_id, card_play_model_path_dict[player_id])
     return players
 
 def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
@@ -26,10 +26,8 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
             env.step()
         env.reset()
 
-    q.put((env.num_wins['landlord'],
-           env.num_wins['farmer'],
-           env.num_scores['landlord'],
-           env.num_scores['farmer']
+    q.put((env.num_wins['first'],
+           env.num_wins['second']
          ))
 
 def data_allocation_per_worker(card_play_data_list, num_workers):
@@ -39,7 +37,7 @@ def data_allocation_per_worker(card_play_data_list, num_workers):
 
     return card_play_data_list_each_worker
 
-def evaluate(landlord, landlord_up, landlord_down, eval_data, num_workers):
+def evaluate(first, second, eval_data, num_workers):
 
     with open(eval_data, 'rb') as f:
         card_play_data_list = pickle.load(f)
@@ -49,14 +47,12 @@ def evaluate(landlord, landlord_up, landlord_down, eval_data, num_workers):
     del card_play_data_list
 
     card_play_model_path_dict = {
-        'landlord': landlord,
-        'landlord_up': landlord_up,
-        'landlord_down': landlord_down}
+        'first': first,
+        'second': second
+    }
 
-    num_landlord_wins = 0
-    num_farmer_wins = 0
-    num_landlord_scores = 0
-    num_farmer_scores = 0
+    num_first_wins = 0
+    num_second_wins = 0
 
     ctx = mp.get_context('spawn')
     q = ctx.SimpleQueue()
@@ -73,13 +69,9 @@ def evaluate(landlord, landlord_up, landlord_down, eval_data, num_workers):
 
     for i in range(num_workers):
         result = q.get()
-        num_landlord_wins += result[0]
-        num_farmer_wins += result[1]
-        num_landlord_scores += result[2]
-        num_farmer_scores += result[3]
+        num_first_wins += result[0]
+        num_second_wins += result[1]
 
-    num_total_wins = num_landlord_wins + num_farmer_wins
-    print('WP results:')
-    print('landlord : Farmers - {} : {}'.format(num_landlord_wins / num_total_wins, num_farmer_wins / num_total_wins))
-    print('ADP results:')
-    print('landlord : Farmers - {} : {}'.format(num_landlord_scores / num_total_wins, 2 * num_farmer_scores / num_total_wins)) 
+    num_total_wins = num_first_wins + num_second_wins
+    print('Results:')
+    print('first : second - {} : {}'.format(num_first_wins / num_total_wins, num_second_wins / num_total_wins))
