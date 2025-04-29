@@ -30,9 +30,9 @@ def learn(round_id,
         device = torch.device('cuda:'+str(flags.training_device))
     else:
         device = torch.device('cpu')
-    obs_x_no_action = batch['obs_x_no_action'].to(device)
-    obs_action = batch['obs_action'].to(device)
-    obs_x = torch.cat((obs_x_no_action, obs_action), dim=2).float()
+    obs_x_no_move = batch['obs_x_no_move'].to(device)
+    obs_move = batch['obs_move'].to(device)
+    obs_x = torch.cat((obs_x_no_move, obs_move), dim=2).float()
     obs_x = torch.flatten(obs_x, 0, 1)
     obs_z = torch.flatten(batch['obs_z'].to(device), 0, 1).float()
     target = torch.flatten(batch['target'].to(device), 0, 1)
@@ -219,7 +219,7 @@ def train(flags):
             fps_avg = np.mean(fps_log)
 
             round_id_fps = {k:(round_id_frames[k]-round_id_start_frames[k])/(end_time-start_time) for k in round_id_frames}
-            log.info('After %i (L:%i U:%i D:%i) frames: @ %.1f fps (avg@ %.1f fps) (L:%.1f U:%.1f D:%.1f) Stats:\n%s',
+            log.info('After %i (F:%i S:%i) frames: @ %.1f fps (avg@ %.1f fps) (F:%.1f S:%.1f) Stats:\n%s',
                      frames,
                      round_id_frames['first'],
                      round_id_frames['second'],
