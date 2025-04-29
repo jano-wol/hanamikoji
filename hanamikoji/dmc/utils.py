@@ -9,25 +9,15 @@ import time
 import torch 
 from torch import multiprocessing as mp
 
-from .env_utils import Environment
-from douzero.env import Env
-from douzero.env.env import _cards2array
-
-Card2Column = {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5, 9: 6, 10: 7,
-               11: 8, 12: 9, 13: 10, 14: 11, 17: 12}
-
-NumOnes2Array = {0: np.array([0, 0, 0, 0]),
-                 1: np.array([1, 0, 0, 0]),
-                 2: np.array([1, 1, 0, 0]),
-                 3: np.array([1, 1, 1, 0]),
-                 4: np.array([1, 1, 1, 1])}
+from hanamikoji.dmc.env_utils import Environment
+from hanamikoji.env import Env
 
 shandle = logging.StreamHandler()
 shandle.setFormatter(
     logging.Formatter(
         '[%(levelname)s:%(process)d %(module)s:%(lineno)d %(asctime)s] '
         '%(message)s'))
-log = logging.getLogger('doudzero')
+log = logging.getLogger('hanamikojizero')
 log.propagate = False
 log.addHandler(shandle)
 log.setLevel(logging.INFO)
@@ -61,18 +51,18 @@ def get_batch(free_queue,
 
 def create_optimizers(flags, learner_model):
     """
-    Create three optimizers for the three positions
+    Create two optimizers for the two round positions.
     """
-    positions = ['landlord', 'landlord_up', 'landlord_down']
+    round_ids = ['first', 'second']
     optimizers = {}
-    for position in positions:
+    for round_id in round_ids:
         optimizer = torch.optim.RMSprop(
-            learner_model.parameters(position),
+            learner_model.parameters(round_id),
             lr=flags.learning_rate,
             momentum=flags.momentum,
             eps=flags.epsilon,
             alpha=flags.alpha)
-        optimizers[position] = optimizer
+        optimizers[round_id] = optimizer
     return optimizers
 
 def create_buffers(flags, device_iterator):
