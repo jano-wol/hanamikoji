@@ -20,7 +20,7 @@ def get_card_play_data():
     f = [0] * 7
     for num in _deck[:7]:
         f[num] += 1
-    s = [0] * 6
+    s = [0] * 7
     for num in _deck[7:13]:
         s[num] += 1
     return {'first': f, 'second': s, 'deck': _deck[13:21]}
