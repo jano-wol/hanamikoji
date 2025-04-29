@@ -190,6 +190,7 @@ class GameEnv(object):
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
 
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
+            assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
             self.update_geisha_preferences()
             self.set_winner()
             if self.winner is None:
@@ -200,6 +201,7 @@ class GameEnv(object):
                 if self.round % 2 == 0:
                     self.state.acting_player_id = 'second'
                     self.state.id_to_round_id = {'first': 'second', 'second': 'first'}
+                    self.state.num_cards = {'first': 6, 'second': 7}
                 self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
                 card_play_data = get_card_play_data()
                 self.card_play_init(card_play_data)
