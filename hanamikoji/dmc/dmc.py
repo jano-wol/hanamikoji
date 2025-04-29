@@ -115,7 +115,7 @@ def train(flags):
         'loss_second'
     ]
     frames, stats = 0, {k: 0 for k in stat_keys}
-    position_frames = {'first':0, 'second':0}
+    round_id_frames = {'first':0, 'second':0}
 
     # Load models if any
     if flags.load_model and os.path.exists(checkpointpath):
@@ -142,13 +142,12 @@ def train(flags):
             actor.start()
             actor_processes.append(actor)
 
-    def batch_and_learn(i, device, position, local_lock, position_lock, lock=threading.Lock()):
+    def batch_and_learn(i, device, round_id, local_lock, position_lock, lock=threading.Lock()):
         """Thread target for the learning process."""
-        nonlocal frames, position_frames, stats
+        nonlocal frames, round_id_frames, stats
         while frames < flags.total_frames:
-            batch = get_batch(free_queue[device][position], full_queue[device][position], buffers[device][position], flags, local_lock)
-            _stats = learn(position, models, learner_model.get_model(position), batch, 
-                optimizers[position], flags, position_lock)
+            batch = get_batch(free_queue[device][round_id], full_queue[device][round_id], buffers[device][round_id], flags, local_lock)
+            _stats = learn(round_id, models, learner_model.get_model(round_id), batch, optimizers[round_id], flags, position_lock)
 
             with lock:
                 for k in _stats:
@@ -157,25 +156,24 @@ def train(flags):
                 to_log.update({k: stats[k] for k in stat_keys})
                 plogger.log(to_log)
                 frames += T * B
-                position_frames[position] += T * B
+                round_id_frames[round_id] += T * B
 
     for device in device_iterator:
         for m in range(flags.num_buffers):
-            free_queue[device]['landlord'].put(m)
-            free_queue[device]['landlord_up'].put(m)
-            free_queue[device]['landlord_down'].put(m)
+            free_queue[device]['first'].put(m)
+            free_queue[device]['second'].put(m)
 
     threads = []
     locks = {}
     for device in device_iterator:
-        locks[device] = {'landlord': threading.Lock(), 'landlord_up': threading.Lock(), 'landlord_down': threading.Lock()}
-    position_locks = {'landlord': threading.Lock(), 'landlord_up': threading.Lock(), 'landlord_down': threading.Lock()}
+        locks[device] = {'first': threading.Lock(), 'second': threading.Lock()}
+    round_id_locks = {'first': threading.Lock(), 'second': threading.Lock()}
 
     for device in device_iterator:
         for i in range(flags.num_threads):
-            for position in ['landlord', 'landlord_up', 'landlord_down']:
+            for round_id in ['first', 'second']:
                 thread = threading.Thread(
-                    target=batch_and_learn, name='batch-and-learn-%d' % i, args=(i,device,position,locks[device][position],position_locks[position]))
+                    target=batch_and_learn, name='batch-and-learn-%d' % i, args=(i,device,round_id,locks[device][round_id],round_id_locks[round_id]))
                 thread.start()
                 threads.append(thread)
     
@@ -194,10 +192,10 @@ def train(flags):
         }, checkpointpath)
 
         # Save the weights for evaluation purpose
-        for position in ['landlord', 'landlord_up', 'landlord_down']:
+        for round_id in ['first', 'second']:
             model_weights_dir = os.path.expandvars(os.path.expanduser(
-                '%s/%s/%s' % (flags.savedir, flags.xpid, position+'_weights_'+str(frames)+'.ckpt')))
-            torch.save(learner_model.get_model(position).state_dict(), model_weights_dir)
+                '%s/%s/%s' % (flags.savedir, flags.xpid, round_id + '_weights_'+str(frames)+'.ckpt')))
+            torch.save(learner_model.get_model(round_id).state_dict(), model_weights_dir)
 
     fps_log = []
     timer = timeit.default_timer
@@ -205,7 +203,7 @@ def train(flags):
         last_checkpoint_time = timer() - flags.save_interval * 60
         while frames < flags.total_frames:
             start_frames = frames
-            position_start_frames = {k: position_frames[k] for k in position_frames}
+            round_id_start_frames = {k: round_id_frames[k] for k in round_id_frames}
             start_time = timer()
             time.sleep(5)
 
@@ -220,17 +218,15 @@ def train(flags):
                 fps_log = fps_log[1:]
             fps_avg = np.mean(fps_log)
 
-            position_fps = {k:(position_frames[k]-position_start_frames[k])/(end_time-start_time) for k in position_frames}
+            round_id_fps = {k:(round_id_frames[k]-round_id_start_frames[k])/(end_time-start_time) for k in round_id_frames}
             log.info('After %i (L:%i U:%i D:%i) frames: @ %.1f fps (avg@ %.1f fps) (L:%.1f U:%.1f D:%.1f) Stats:\n%s',
                      frames,
-                     position_frames['landlord'],
-                     position_frames['landlord_up'],
-                     position_frames['landlord_down'],
+                     round_id_frames['first'],
+                     round_id_frames['second'],
                      fps,
                      fps_avg,
-                     position_fps['landlord'],
-                     position_fps['landlord_up'],
-                     position_fps['landlord_down'],
+                     round_id_fps['first'],
+                     round_id_fps['second'],
                      pprint.pformat(stats))
 
     except KeyboardInterrupt:
