@@ -18,7 +18,7 @@ def compute_loss(logits, targets):
     loss = ((logits.squeeze(-1) - targets)**2).mean()
     return loss
 
-def learn(position,
+def learn(round_id,
           actor_models,
           model,
           batch,
@@ -41,7 +41,7 @@ def learn(position,
         learner_outputs = model(obs_z, obs_x, return_value=True)
         loss = compute_loss(learner_outputs['values'], target)
         stats = {
-            'loss_'+position: loss.item()
+            'loss_'+round_id: loss.item()
         }
         
         optimizer.zero_grad()
@@ -50,7 +50,7 @@ def learn(position,
         optimizer.step()
 
         for actor_model in actor_models.values():
-            actor_model.get_model(position).load_state_dict(model.state_dict())
+            actor_model.get_model(round_id).load_state_dict(model.state_dict())
         return stats
 
 def train(flags):  
@@ -129,7 +129,7 @@ def train(flags):
                 models[device].get_model(k).load_state_dict(learner_model.get_model(k).state_dict())
         stats = checkpoint_states["stats"]
         frames = checkpoint_states["frames"]
-        position_frames = checkpoint_states["position_frames"]
+        round_id_frames = checkpoint_states["round_id_frames"]
         log.info(f"Resuming preempted job, current stats:\n{stats}")
 
     # Starting actor processes
@@ -188,7 +188,7 @@ def train(flags):
             "stats": stats,
             'flags': vars(flags),
             'frames': frames,
-            'position_frames': position_frames
+            'round_id_frames': round_id_frames
         }, checkpointpath)
 
         # Save the weights for evaluation purpose
