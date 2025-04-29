@@ -46,8 +46,8 @@ class Environment:
             obs_z=z
             )
         
-    def step(self, action):
-        obs, reward, done, _ = self.env.step(action)
+    def step(self, move):
+        obs, reward, done, _ = self.env.step(move)
         self.episode_return += reward
         episode_return = self.episode_return 
 
