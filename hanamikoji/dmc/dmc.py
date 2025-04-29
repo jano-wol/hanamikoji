@@ -14,8 +14,6 @@ from .file_writer import FileWriter
 from .models import Model
 from .utils import get_batch, log, create_env, create_buffers, create_optimizers, act
 
-mean_episode_return_buf = {p:deque(maxlen=100) for p in ['first', 'second']}
-
 def compute_loss(logits, targets):
     loss = ((logits.squeeze(-1) - targets)**2).mean()
     return loss
@@ -38,15 +36,12 @@ def learn(position,
     obs_x = torch.flatten(obs_x, 0, 1)
     obs_z = torch.flatten(batch['obs_z'].to(device), 0, 1).float()
     target = torch.flatten(batch['target'].to(device), 0, 1)
-    episode_returns = batch['episode_return'][batch['done']]
-    mean_episode_return_buf[position].append(torch.mean(episode_returns).to(device))
-        
+
     with lock:
         learner_outputs = model(obs_z, obs_x, return_value=True)
         loss = compute_loss(learner_outputs['values'], target)
         stats = {
-            'mean_episode_return_'+position: torch.mean(torch.stack([_r for _r in mean_episode_return_buf[position]])).item(),
-            'loss_'+position: loss.item(),
+            'loss_'+position: loss.item()
         }
         
         optimizer.zero_grad()
@@ -116,9 +111,7 @@ def train(flags):
 
     # Stat Keys
     stat_keys = [
-        'mean_episode_return_landlord',
         'loss_first',
-        'mean_episode_return_second',
         'loss_second'
     ]
     frames, stats = 0, {k: 0 for k in stat_keys}

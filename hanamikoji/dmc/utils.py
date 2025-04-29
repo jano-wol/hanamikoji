@@ -87,7 +87,6 @@ def create_buffers(flags, device_iterator):
         for player_id in player_ids:
             specs = dict(
                 done=dict(size=(T,), dtype=torch.bool),
-                episode_return=dict(size=(T,), dtype=torch.float32),
                 target=dict(size=(T,), dtype=torch.float32),
                 obs_x_no_move=dict(size=(T, X_FEATURE_SIZE), dtype=torch.int8),
                 obs_move=dict(size=(T, MOVE_VECTOR_SIZE), dtype=torch.int8),
@@ -120,7 +119,6 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
         env = Environment(env, device)
 
         done_buf = {p: [] for p in player_ids}
-        episode_return_buf = {p: [] for p in player_ids}
         target_buf = {p: [] for p in player_ids}
         obs_x_no_move_buf = {p: [] for p in player_ids}
         obs_move_buf = {p: [] for p in player_ids}
@@ -146,11 +144,9 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                         if diff > 0:
                             done_buf[p].extend([False for _ in range(diff - 1)])
                             done_buf[p].append(True)
-                            episode_return = env_output['episode_return'] if p == 'first' else -env_output[
-                                'episode_return']
-                            episode_return_buf[p].extend([0.0 for _ in range(diff - 1)])
-                            episode_return_buf[p].append(episode_return)
-                            target_buf[p].extend([episode_return for _ in range(diff)])
+                            # TODO fix
+                            #env_output['episode_result']
+                            #target_buf[p].extend([episode_return for _ in range(diff)])
                     break
 
             for p in player_ids:
@@ -160,14 +156,12 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                         break
                     for t in range(T):
                         buffers[p]['done'][index][t, ...] = done_buf[p][t]
-                        buffers[p]['episode_return'][index][t, ...] = episode_return_buf[p][t]
                         buffers[p]['target'][index][t, ...] = target_buf[p][t]
                         buffers[p]['obs_x_no_move'][index][t, ...] = obs_x_no_move_buf[p][t]
                         buffers[p]['obs_move'][index][t, ...] = obs_move_buf[p][t]
                         buffers[p]['obs_z'][index][t, ...] = obs_z_buf[p][t]
                     full_queue[p].put(index)
                     done_buf[p] = done_buf[p][T:]
-                    episode_return_buf[p] = episode_return_buf[p][T:]
                     target_buf[p] = target_buf[p][T:]
                     obs_x_no_move_buf[p] = obs_x_no_move_buf[p][T:]
                     obs_move_buf[p] = obs_move_buf[p][T:]

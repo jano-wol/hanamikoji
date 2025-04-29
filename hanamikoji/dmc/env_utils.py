@@ -32,35 +32,35 @@ class Environment:
         """
         self.env = env
         self.device = device
-        self.episode_return = None
+        self.episode_result = None
 
     def initial(self):
         acting_player_id, round_id, initial_obs, x_no_move, z = _format_observation(self.env.reset(), self.device)
-        self.episode_return = torch.zeros(1, 1)
+        self.episode_result = torch.zeros(1, 1)
         initial_done = torch.ones(1, 1, dtype=torch.bool)
 
         return acting_player_id, round_id, initial_obs, dict(
             done=initial_done,
-            episode_return=self.episode_return,
+            episode_result=self.episode_result,
             obs_x_no_move=x_no_move,
             obs_z=z
             )
         
     def step(self, move):
         obs, reward, done, _ = self.env.step(move)
-        self.episode_return += reward
-        episode_return = self.episode_return 
+        self.episode_result += reward
+        episode_result = self.episode_result
 
         if done:
             obs = self.env.reset()
-            self.episode_return = torch.zeros(1, 1)
+            self.episode_result = torch.zeros(1, 1)
 
         acting_player_id, round_id, obs, x_no_move, z = _format_observation(obs, self.device)
         done = torch.tensor(done).view(1, 1)
         
         return acting_player_id, round_id, obs, dict(
             done=done,
-            episode_return=episode_return,
+            episode_result=episode_result,
             obs_x_no_move=x_no_move,
             obs_z=z
             )
