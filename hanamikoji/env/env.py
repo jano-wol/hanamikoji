@@ -5,6 +5,7 @@ from hanamikoji.env.move_generator import *
 
 MOVE_VECTOR_SIZE = 63
 X_FEATURE_SIZE = 169
+X_NO_MOVE_FEATURE_SIZE = (X_FEATURE_SIZE - MOVE_VECTOR_SIZE)
 
 class Env:
     """
@@ -231,6 +232,9 @@ def get_obs(infoset):
     `x_batch` is a batch of features (excluding opponent historical moves). It also encodes the available move features.
     shape = (num_moves, X_FEATURE_SIZE)
 
+    `x_no_move`: the features (excluding the historical moves and the action features). It is not a batch.
+    shape = (X_NO_MOVE_FEATURE_SIZE)
+
     `z_batch` is a batch of features encoding the historical moves of the round.
     shape = (num_moves, 12, MOVE_VECTOR_SIZE)
 
@@ -332,6 +336,24 @@ def get_obs(infoset):
     x_batch[:, 99:106] = unknown_cards_batch
     x_batch[:, 106:] = move_batch
 
+    x_no_move = np.empty(X_NO_MOVE_FEATURE_SIZE, dtype=np.int8)
+    x_no_move[0:7] = geisha_points
+    x_no_move[7:14] = geisha_preferences
+    x_no_move[14:21] = hand_cards
+    x_no_move[21:28] = stashed_card
+    x_no_move[28:35] = trashed_cards
+    x_no_move[35:42] = decision_cards_1_2
+    x_no_move[42:49] = decision_cards_2_2_1
+    x_no_move[49:56] = decision_cards_2_2_2
+    x_no_move[56:60] = action_cards
+    x_no_move[60:64] = action_cards_opp
+    x_no_move[64:71] = gift_cards
+    x_no_move[71:78] = gift_cards_opp
+    x_no_move[78:85] = all_gift_cards
+    x_no_move[85:92] = num_cards
+    x_no_move[92:99] = num_cards_opp
+    x_no_move[99:106] = unknown_cards
+
     z = _encode_round_moves(infoset[0].state.round_moves[curr], infoset[0].state.round_moves[opp])
     z_batch = np.broadcast_to(z, (num_moves, *z.shape))
     obs = {
@@ -339,6 +361,7 @@ def get_obs(infoset):
         'round_id': infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
         'moves': infoset[1].moves,
         'x_batch': x_batch.astype(np.float32),
+        'x_no_move': x_no_move.astype(np.int8),
         'z': z.astype(np.int8),
         'z_batch': z_batch.astype(np.float32)
     }
