@@ -196,7 +196,7 @@ def _encode_round_moves(round_moves_curr, round_moves_opp):
     """
     We encode the historical moves of the given round. If there is
     not yet 6 moves on either side then we pad the features with zeros. We encode so that the most recent moves are on
-    fixed positions (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
+    fixed indices (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
     (So padding goes to the front). Finally, we obtain a ROUND_MOVES x MOVE_VECTOR_SIZE matrix, which will be fed into
     LSTM for encoding.
     """

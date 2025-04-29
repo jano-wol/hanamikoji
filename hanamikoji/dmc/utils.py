@@ -60,7 +60,7 @@ def get_batch(free_queue,
 
 def create_optimizers(flags, learner_model):
     """
-    Create two optimizers for the two round positions.
+    Create two optimizers for the two round ids.
     """
     round_ids = ['first', 'second']
     optimizers = {}
@@ -77,9 +77,9 @@ def create_optimizers(flags, learner_model):
 
 def create_buffers(flags, device_iterator):
     """
-    We create buffers for different positions as well as
+    We create buffers for different player ids as well as
     for different devices (i.e., GPU). That is, each device
-    will have three buffers for the three positions.
+    will have two buffers for the two player ids.
     """
     T = flags.unroll_length
     player_ids = ['first', 'second']
@@ -145,7 +145,7 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                 if env_output['done']:
                     result_glob = env_output['episode_result']
                     for p in player_ids:
-                        # diff is the number of new positions evaluated by p
+                        # diff is the number of new training data valuated by model p
                         diff = size[p] - len(target_buf[p])
                         if diff > 0:
                             done_buf[p].extend([False for _ in range(diff - 1)])
