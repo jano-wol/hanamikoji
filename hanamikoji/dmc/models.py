@@ -9,6 +9,7 @@ import torch
 from torch import nn
 from hanamikoji.env.env import MOVE_VECTOR_SIZE, X_FEATURE_SIZE
 
+
 class LstmModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -22,8 +23,8 @@ class LstmModel(nn.Module):
 
     def forward(self, z, x, return_value=False, flags=None):
         lstm_out, (h_n, _) = self.lstm(z)
-        lstm_out = lstm_out[:,-1,:]
-        x = torch.cat([lstm_out,x], dim=-1)
+        lstm_out = lstm_out[:, -1, :]
+        x = torch.cat([lstm_out, x], dim=-1)
         x = self.dense1(x)
         x = torch.relu(x)
         x = self.dense2(x)
@@ -39,21 +40,22 @@ class LstmModel(nn.Module):
             return dict(values=x)
         else:
             if flags is not None and flags.exp_epsilon > 0 and np.random.rand() < flags.exp_epsilon:
-                action = torch.randint(x.shape[0], (1,))[0]
+                move = torch.randint(x.shape[0], (1,))[0]
             else:
-                action = torch.argmax(x,dim=0)[0]
-            return dict(action=action)
+                move = torch.argmax(x, dim=0)[0]
+            return dict(move=move)
+
 
 # Model dict is only used in evaluation but not training
-model_dict = {}
-model_dict['first'] = LstmModel
-model_dict['second'] = LstmModel
+model_dict = {'first': LstmModel, 'second': LstmModel}
+
 
 class Model:
     """
     The wrapper for the three models. We also wrap several
     interfaces such as share_memory, eval, etc.
     """
+
     def __init__(self, device=0):
         self.models = {}
         if not device == "cpu":
@@ -61,9 +63,9 @@ class Model:
         self.models['first'] = LstmModel().to(torch.device(device))
         self.models['second'] = LstmModel().to(torch.device(device))
 
-    def forward(self, position, z, x, training=False, flags=None):
-        # here player_round_position should help decide which model to call
-        model = self.models[position]
+    def forward(self, player_id, z, x, training=False, flags=None):
+        # TODO be sure the correct player_id is called
+        model = self.models[player_id]
         return model.forward(z, x, training, flags)
 
     def share_memory(self):
