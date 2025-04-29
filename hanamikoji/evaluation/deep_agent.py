@@ -3,9 +3,9 @@ import numpy as np
 
 from hanamikoji.env.env import get_obs
 
-def _load_model(position, model_path):
+def _load_model(round_id, model_path):
     from hanamikoji.dmc.models import model_dict
-    model = model_dict[position]()
+    model = model_dict[round_id]()
     model_state_dict = model.state_dict()
     if torch.cuda.is_available():
         pretrained = torch.load(model_path, map_location='cuda:0')
@@ -22,11 +22,12 @@ def _load_model(position, model_path):
 class DeepAgent:
 
     def __init__(self, position, model_path):
-        self.model = _load_model(position, model_path)
+        self.model_first = _load_model('first', model_path)
+        self.model_second = _load_model('second', model_path)
 
     def act(self, infoset):
-        if len(infoset.legal_actions) == 1:
-            return infoset.legal_actions[0]
+        if len(infoset[1].moves) == 1:
+            return infoset.moves[0]
 
         obs = get_obs(infoset) 
 
@@ -34,10 +35,13 @@ class DeepAgent:
         x_batch = torch.from_numpy(obs['x_batch']).float()
         if torch.cuda.is_available():
             z_batch, x_batch = z_batch.cuda(), x_batch.cuda()
-        y_pred = self.model.forward(z_batch, x_batch, return_value=True)['values']
+        if infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id] == 'first':
+            y_pred = self.model_first.forward(z_batch, x_batch, return_value=True)['values']
+        else:
+            y_pred = self.model_second.forward(z_batch, x_batch, return_value=True)['values']
         y_pred = y_pred.detach().cpu().numpy()
 
-        best_action_index = np.argmax(y_pred, axis=0)[0]
-        best_action = infoset.legal_actions[best_action_index]
+        best_move_index = np.argmax(y_pred, axis=0)[0]
+        best_move = infoset[1].moves[best_move_index]
 
-        return best_action
+        return best_move
