@@ -6,4 +6,4 @@ class RandomAgent:
         self.name = 'Random'
 
     def act(self, infoset):
-        return random.choice(infoset.legal_actions)
+        return random.choice(infoset[1].moves)
