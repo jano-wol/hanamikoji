@@ -141,10 +141,6 @@ class GameEnv(object):
         curr = self.state.acting_player_id
         opp = self.get_opp()
         info = self.private_info_sets[curr]
-        if self.state.decision_cards_1_2 is None and self.state.decision_cards_2_2 is None:
-            info.hand_cards[self.deck[0]] += 1
-            self.state.num_cards[curr] += 1
-            self.deck.pop(0)
         info.moves = self.get_moves()
         self.active_player_info_set = self.get_active_player_info_set()
         move = self.players[curr].act(self.active_player_info_set)
