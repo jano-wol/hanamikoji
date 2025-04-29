@@ -81,6 +81,7 @@ class GameEnv(object):
         self.private_info_sets[self.state.acting_player_id].hand_cards = card_play_data['first']
         self.private_info_sets[self.get_opp()].hand_cards = card_play_data['second']
         self.deck = card_play_data['deck']
+        self.private_info_sets[self.state.acting_player_id].moves = self.get_moves()
         self.active_player_info_set = self.get_active_player_info_set()
 
     def get_winner(self):
@@ -141,7 +142,6 @@ class GameEnv(object):
         curr = self.state.acting_player_id
         opp = self.get_opp()
         info = self.private_info_sets[curr]
-        info.moves = self.get_moves()
         self.active_player_info_set = self.get_active_player_info_set()
         move = self.players[curr].act(self.active_player_info_set)
         assert move in self.active_player_info_set[1].moves
