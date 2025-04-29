@@ -3,7 +3,6 @@ Here, we wrap the original environment to make it easier
 to use. When a game is finished, instead of mannualy reseting
 the environment, we do it automatically.
 """
-import numpy as np
 import torch 
 
 def _format_observation(obs, device):
