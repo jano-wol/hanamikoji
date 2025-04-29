@@ -103,28 +103,27 @@ class Env:
         else:
             return -1.0
 
-    @property
+
     def _active_player_info_set(self):
         """
         Here, active_player_info_set is defined as all the information available for the active player
         """
         return self._env.active_player_info_set
 
-    @property
     def _game_winner(self):
         """
         A string of landlord/peasants
         """
         return self._env.get_winner()
 
-    @property
+
     def _acting_player_id(self):
         """
         The player that is active. It can be 'first' or 'second'
         """
         return self._env.state.acting_player_id
 
-    @property
+
     def _game_over(self):
         """
         Returns a Boolean
