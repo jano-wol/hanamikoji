@@ -3,6 +3,7 @@ import numpy as np
 from hanamikoji.env.game import GameEnv, get_card_play_data
 from hanamikoji.env.move_generator import *
 
+ROUND_MOVES = 12
 MOVE_VECTOR_SIZE = 63
 X_FEATURE_SIZE = 169
 X_NO_MOVE_FEATURE_SIZE = (X_FEATURE_SIZE - MOVE_VECTOR_SIZE)
@@ -196,15 +197,16 @@ def _encode_round_moves(round_moves_curr, round_moves_opp):
     We encode the historical moves of the given round. If there is
     not yet 6 moves on either side then we pad the features with zeros. We encode so that the most recent moves are on
     fixed positions (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
-    (So padding goes to the front). Finally, we obtain a 12 x MOVE_VECTOR_SIZE matrix, which will be fed into LSTM for encoding.
+    (So padding goes to the front). Finally, we obtain a ROUND_MOVES x MOVE_VECTOR_SIZE matrix, which will be fed into
+    LSTM for encoding.
     """
-    z = np.zeros((12, MOVE_VECTOR_SIZE))
+    z = np.zeros((ROUND_MOVES, MOVE_VECTOR_SIZE))
     l_curr = len(round_moves_curr)
     for i in range(6 - l_curr, 6):
         z[i, :] = my_move2array(round_moves_curr[i - (6 - l_curr)])
     l_opp = len(round_moves_opp)
-    for i in range(12 - l_opp, 12):
-        z[i, :] = _opp_move2array(round_moves_opp[i - (12 - l_opp)])
+    for i in range(ROUND_MOVES - l_opp, ROUND_MOVES):
+        z[i, :] = _opp_move2array(round_moves_opp[i - (ROUND_MOVES - l_opp)])
     return z
 
 
@@ -234,10 +236,10 @@ def get_obs(infoset):
     shape = (X_NO_MOVE_FEATURE_SIZE)
 
     `z_batch` is a batch of features encoding the historical moves of the round.
-    shape = (num_moves, 12, MOVE_VECTOR_SIZE)
+    shape = (num_moves, ROUND_MOVES, MOVE_VECTOR_SIZE)
 
     `z`: same as z_batch but not a batch.
-    shape = (12, MOVE_VECTOR_SIZE)
+    shape = (ROUND_MOVES, MOVE_VECTOR_SIZE)
 
     """
     num_moves = len(infoset[1].moves)
