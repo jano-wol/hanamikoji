@@ -26,10 +26,12 @@ log.setLevel(logging.INFO)
 # and learner processes. They are shared tensors in GPU
 Buffers = typing.Dict[str, typing.List[torch.Tensor]]
 
+
 def my_move2tensor(list_cards):
     matrix = my_move2array(list_cards)
     matrix = torch.from_numpy(matrix)
     return matrix
+
 
 def create_env(flags):
     return Env(flags.objective)
@@ -124,29 +126,36 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
         obs_move_buf = {p: [] for p in player_ids}
         obs_z_buf = {p: [] for p in player_ids}
         size = {p: 0 for p in player_ids}
+        acting_player_ids_by_round_id = {p: [] for p in player_ids}
 
         acting_player_id, round_id, obs, env_output = env.initial()
 
         while True:
             while True:
-                obs_x_no_move_buf[acting_player_id].append(env_output['obs_x_no_move'])
-                obs_z_buf[acting_player_id].append(env_output['obs_z'])
+                acting_player_ids_by_round_id[round_id].append(acting_player_id)
+                obs_x_no_move_buf[round_id].append(env_output['obs_x_no_move'])
+                obs_z_buf[round_id].append(env_output['obs_z'])
                 with torch.no_grad():
                     agent_output = model.forward(round_id, obs['z_batch'], obs['x_batch'], flags=flags)
                 _move_idx = int(agent_output['move'].cpu().detach().numpy())
                 move = obs['moves'][_move_idx]
-                obs_move_buf[acting_player_id].append(my_move2tensor(move))
-                size[acting_player_id] += 1
+                obs_move_buf[round_id].append(my_move2tensor(move))
+                size[round_id] += 1
                 acting_player_id, round_id, obs, env_output = env.step(move)
                 if env_output['done']:
+                    result_glob = env_output['episode_result']
                     for p in player_ids:
+                        # diff is the number of new positions evaluated by p
                         diff = size[p] - len(target_buf[p])
                         if diff > 0:
                             done_buf[p].extend([False for _ in range(diff - 1)])
                             done_buf[p].append(True)
-                            # TODO fix
-                            #env_output['episode_result']
-                            #target_buf[p].extend([episode_return for _ in range(diff)])
+                            for i, player_id in enumerate(acting_player_ids_by_round_id[p]):
+                                if player_id == 'first':
+                                    result_loc = result_glob
+                                else:
+                                    result_loc = -result_glob
+                                target_buf[p].append(result_loc)
                     break
 
             for p in player_ids:
