@@ -21,7 +21,7 @@ def _load_model(round_id, model_path):
 
 class DeepAgent:
 
-    def __init__(self, position, model_path):
+    def __init__(self, model_path):
         self.model_first = _load_model('first', model_path)
         self.model_second = _load_model('second', model_path)
 

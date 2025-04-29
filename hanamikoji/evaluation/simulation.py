@@ -12,7 +12,7 @@ def load_card_play_models(card_play_model_path_dict):
             players[player_id] = RandomAgent()
         else:
             from .deep_agent import DeepAgent
-            players[player_id] = DeepAgent(player_id, card_play_model_path_dict[player_id])
+            players[player_id] = DeepAgent(card_play_model_path_dict[player_id])
     return players
 
 def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
