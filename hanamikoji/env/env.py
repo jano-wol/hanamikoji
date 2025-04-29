@@ -7,6 +7,25 @@ MOVE_VECTOR_SIZE = 63
 X_FEATURE_SIZE = 169
 X_NO_MOVE_FEATURE_SIZE = (X_FEATURE_SIZE - MOVE_VECTOR_SIZE)
 
+def my_move2array(move):
+    ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
+    if move[0] == TYPE_0_STASH:
+        ret[:7] = move[1]
+    if move[0] == TYPE_1_TRASH:
+        ret[7:14] = move[1]
+    if move[0] == TYPE_2_CHOOSE_1_2:
+        ret[14:21] = move[1]
+    if move[0] == TYPE_3_CHOOSE_2_2:
+        ret[21:28] = move[1][0]
+        ret[28:35] = move[1][1]
+    if move[0] == TYPE_4_RESOLVE_1_2:
+        ret[35:42] = move[1][0]
+        ret[42:49] = move[1][1]
+    if move[0] == TYPE_5_RESOLVE_2_2:
+        ret[49:56] = move[1][0]
+        ret[56:] = move[1][1]
+    return ret
+
 class Env:
     """
     Hanamikoji multi-agent wrapper
@@ -150,27 +169,6 @@ def _get_one_hot_array(num_left_cards):
 def _cards2array(list_cards):
     return np.array(list_cards, dtype=np.int8)
 
-
-def _my_move2array(move):
-    ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
-    if move[0] == TYPE_0_STASH:
-        ret[:7] = move[1]
-    if move[0] == TYPE_1_TRASH:
-        ret[7:14] = move[1]
-    if move[0] == TYPE_2_CHOOSE_1_2:
-        ret[14:21] = move[1]
-    if move[0] == TYPE_3_CHOOSE_2_2:
-        ret[21:28] = move[1][0]
-        ret[28:35] = move[1][1]
-    if move[0] == TYPE_4_RESOLVE_1_2:
-        ret[35:42] = move[1][0]
-        ret[42:49] = move[1][1]
-    if move[0] == TYPE_5_RESOLVE_2_2:
-        ret[49:56] = move[1][0]
-        ret[56:] = move[1][1]
-    return ret
-
-
 def _opp_move2array(move):
     ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
     if move[0] == TYPE_0_STASH:
@@ -203,7 +201,7 @@ def _encode_round_moves(round_moves_curr, round_moves_opp):
     z = np.zeros((12, MOVE_VECTOR_SIZE))
     l_curr = len(round_moves_curr)
     for i in range(6 - l_curr, 6):
-        z[i, :] = _my_move2array(round_moves_curr[i - (6 - l_curr)])
+        z[i, :] = my_move2array(round_moves_curr[i - (6 - l_curr)])
     l_opp = len(round_moves_opp)
     for i in range(12 - l_opp, 12):
         z[i, :] = _opp_move2array(round_moves_opp[i - (12 - l_opp)])
@@ -315,7 +313,7 @@ def get_obs(infoset):
 
     move_batch = np.zeros((num_moves, MOVE_VECTOR_SIZE))
     for j, move in enumerate(infoset[1].moves):
-        move_batch[j, :] = _my_move2array(move)
+        move_batch[j, :] = my_move2array(move)
 
     x_batch = np.empty((num_moves, X_FEATURE_SIZE), dtype=np.int8)
     x_batch[:, 0:7] = geisha_points_batch
