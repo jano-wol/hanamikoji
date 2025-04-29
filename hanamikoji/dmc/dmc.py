@@ -14,7 +14,7 @@ from .file_writer import FileWriter
 from .models import Model
 from .utils import get_batch, log, create_env, create_buffers, create_optimizers, act
 
-mean_episode_return_buf = {p:deque(maxlen=100) for p in ['landlord', 'landlord_up', 'landlord_down']}
+mean_episode_return_buf = {p:deque(maxlen=100) for p in ['first', 'second']}
 
 def compute_loss(logits, targets):
     loss = ((logits.squeeze(-1) - targets)**2).mean()
@@ -60,8 +60,8 @@ def learn(position,
 
 def train(flags):  
     """
-    This is the main funtion for training. It will first
-    initilize everything, such as buffers, optimizers, etc.
+    This is the main function for training. It will first
+    initialize everything, such as buffers, optimizers, etc.
     Then it will start subprocesses as actors. Then, it will call
     learning function with  multiple threads.
     """
@@ -103,8 +103,8 @@ def train(flags):
     full_queue = {}
         
     for device in device_iterator:
-        _free_queue = {'landlord': ctx.SimpleQueue(), 'landlord_up': ctx.SimpleQueue(), 'landlord_down': ctx.SimpleQueue()}
-        _full_queue = {'landlord': ctx.SimpleQueue(), 'landlord_up': ctx.SimpleQueue(), 'landlord_down': ctx.SimpleQueue()}
+        _free_queue = {'first': ctx.SimpleQueue(), 'second': ctx.SimpleQueue()}
+        _full_queue = {'first': ctx.SimpleQueue(), 'second': ctx.SimpleQueue()}
         free_queue[device] = _free_queue
         full_queue[device] = _full_queue
 
@@ -117,21 +117,19 @@ def train(flags):
     # Stat Keys
     stat_keys = [
         'mean_episode_return_landlord',
-        'loss_landlord',
-        'mean_episode_return_landlord_up',
-        'loss_landlord_up',
-        'mean_episode_return_landlord_down',
-        'loss_landlord_down',
+        'loss_first',
+        'mean_episode_return_second',
+        'loss_second'
     ]
     frames, stats = 0, {k: 0 for k in stat_keys}
-    position_frames = {'landlord':0, 'landlord_up':0, 'landlord_down':0}
+    position_frames = {'first':0, 'second':0}
 
     # Load models if any
     if flags.load_model and os.path.exists(checkpointpath):
         checkpoint_states = torch.load(
             checkpointpath, map_location=("cuda:"+str(flags.training_device) if flags.training_device != "cpu" else "cpu")
         )
-        for k in ['landlord', 'landlord_up', 'landlord_down']:
+        for k in ['first', 'second']:
             learner_model.get_model(k).load_state_dict(checkpoint_states["model_state_dict"][k])
             optimizers[k].load_state_dict(checkpoint_states["optimizer_state_dict"][k])
             for device in device_iterator:
