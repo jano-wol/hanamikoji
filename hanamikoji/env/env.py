@@ -242,7 +242,7 @@ def get_obs(infoset):
 
     """
     num_moves = len(infoset[1].moves)
-    curr = infoset[0].state.acting_player_id
+    curr = infoset[0].acting_player_id
     opp = 'second' if curr == 'first' else 'first'
 
     # FEATURE 1 -- Geisha points. SIZE=7
@@ -250,8 +250,7 @@ def get_obs(infoset):
     geisha_points_batch = _create_batch(geisha_points, num_moves)
 
     # FEATURE 2 -- Geisha preferences. SIZE=7
-    geisha_preferences = _cards2array(infoset[0].state.geisha_preferences[curr]) - _cards2array(
-        infoset[0].state.geisha_preferences[opp])
+    geisha_preferences = _cards2array(infoset[0].geisha_preferences[curr]) - _cards2array(infoset[0].geisha_preferences[opp])
     geisha_preferences_batch = _create_batch(geisha_preferences, num_moves)
 
     # FEATURE 3 -- Hand cards. SIZE=7
@@ -267,33 +266,33 @@ def get_obs(infoset):
     trashed_cards_batch = _create_batch(trashed_cards, num_moves)
 
     # FEATURE 6 -- Decision cards 1_2. SIZE=7
-    decision_cards_1_2 = _cards2array(infoset[0].state.decision_cards_1_2 or [0] * 7)
+    decision_cards_1_2 = _cards2array(infoset[0].decision_cards_1_2 or [0] * 7)
     decision_cards_1_2_batch = _create_batch(decision_cards_1_2, num_moves)
 
     # FEATURE 7 -- Decision cards 2_2 first. SIZE=7
     decision_cards_2_2_1 = _cards2array(
-        (infoset[0].state.decision_cards_2_2[0] if infoset[0].state.decision_cards_2_2 else [0] * 7))
+        (infoset[0].decision_cards_2_2[0] if infoset[0].decision_cards_2_2 else [0] * 7))
     decision_cards_2_2_1_batch = _create_batch(decision_cards_2_2_1, num_moves)
 
     # FEATURE 8 -- Decision cards 2_2 second. SIZE=7
     decision_cards_2_2_2 = _cards2array(
-        (infoset[0].state.decision_cards_2_2[1] if infoset[0].state.decision_cards_2_2 else [0] * 7))
+        (infoset[0].decision_cards_2_2[1] if infoset[0].decision_cards_2_2 else [0] * 7))
     decision_cards_2_2_2_batch = _create_batch(decision_cards_2_2_2, num_moves)
 
     # FEATURE 9 -- Action cards. SIZE=4
-    action_cards = np.array(infoset[0].state.action_cards[curr], dtype=np.int8)
+    action_cards = np.array(infoset[0].action_cards[curr], dtype=np.int8)
     action_cards_batch = _create_batch(action_cards, num_moves)
 
     # FEATURE 10 -- Action cards opp. SIZE=4
-    action_cards_opp = np.array(infoset[0].state.action_cards[opp], dtype=np.int8)
+    action_cards_opp = np.array(infoset[0].action_cards[opp], dtype=np.int8)
     action_cards_opp_batch = _create_batch(action_cards_opp, num_moves)
 
     # FEATURE 11 -- Gift cards. SIZE=7
-    gift_cards = _cards2array(infoset[0].state.gift_cards[curr])
+    gift_cards = _cards2array(infoset[0].gift_cards[curr])
     gift_cards_batch = _create_batch(gift_cards, num_moves)
 
     # FEATURE 12 -- Gift cards opp. SIZE=7
-    gift_cards_opp = _cards2array(infoset[0].state.gift_cards[opp])
+    gift_cards_opp = _cards2array(infoset[0].gift_cards[opp])
     gift_cards_opp_batch = _create_batch(gift_cards_opp, num_moves)
 
     # FEATURE 13 -- All gift cards. SIZE=7
@@ -301,11 +300,11 @@ def get_obs(infoset):
     all_gift_cards_batch = _create_batch(all_gift_cards, num_moves)
 
     # FEATURE 14 -- Number of cards (one-hot). SIZE=7
-    num_cards = _get_one_hot_array(infoset[0].state.num_cards[curr])
+    num_cards = _get_one_hot_array(infoset[0].num_cards[curr])
     num_cards_batch = _create_batch(num_cards, num_moves)
 
     # FEATURE 15 -- Number of cards opp (one-hot). SIZE=7
-    num_cards_opp = _get_one_hot_array(infoset[0].state.num_cards[opp])
+    num_cards_opp = _get_one_hot_array(infoset[0].num_cards[opp])
     num_cards_opp_batch = _create_batch(num_cards_opp, num_moves)
 
     # FEATURE 16 -- Unknown cards. (Calc uses that geisha points == number of geisha cards in the deck.) SIZE=7
@@ -353,11 +352,11 @@ def get_obs(infoset):
     x_no_move[92:99] = num_cards_opp
     x_no_move[99:106] = unknown_cards
 
-    z = _encode_round_moves(infoset[0].state.round_moves[curr], infoset[0].state.round_moves[opp])
+    z = _encode_round_moves(infoset[0].round_moves[curr], infoset[0].round_moves[opp])
     z_batch = np.broadcast_to(z, (num_moves, *z.shape))
     obs = {
-        'id': infoset[0].state.acting_player_id,
-        'round_id': infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id],
+        'id': infoset[0].acting_player_id,
+        'round_id': infoset[0].id_to_round_id[infoset[0].acting_player_id],
         'moves': infoset[1].moves,
         'x_batch': x_batch.astype(np.float32),
         'x_no_move': x_no_move.astype(np.int8),

@@ -35,7 +35,7 @@ class DeepAgent:
         x_batch = torch.from_numpy(obs['x_batch']).float()
         if torch.cuda.is_available():
             z_batch, x_batch = z_batch.cuda(), x_batch.cuda()
-        if infoset[0].state.id_to_round_id[infoset[0].state.acting_player_id] == 'first':
+        if infoset[0].id_to_round_id[infoset[0].acting_player_id] == 'first':
             y_pred = self.model_first.forward(z_batch, x_batch, return_value=True)['values']
         else:
             y_pred = self.model_second.forward(z_batch, x_batch, return_value=True)['values']
