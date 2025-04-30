@@ -3,14 +3,15 @@ import numpy as np
 
 from hanamikoji.env.env import get_obs
 
-def _load_model(round_id, model_path):
+def _load_model(round_id, ckpt_dir_path):
     from hanamikoji.dmc.models import model_dict
+    ckpt_path = ckpt_dir_path + '/' + round_id + '.ckpt'
     model = model_dict[round_id]()
     model_state_dict = model.state_dict()
     if torch.cuda.is_available():
-        pretrained = torch.load(model_path, map_location='cuda:0')
+        pretrained = torch.load(ckpt_path, map_location='cuda:0')
     else:
-        pretrained = torch.load(model_path, map_location='cpu')
+        pretrained = torch.load(ckpt_path, map_location='cpu')
     pretrained = {k: v for k, v in pretrained.items() if k in model_state_dict}
     model_state_dict.update(pretrained)
     model.load_state_dict(model_state_dict)
@@ -21,13 +22,13 @@ def _load_model(round_id, model_path):
 
 class DeepAgent:
 
-    def __init__(self, model_path):
-        self.model_first = _load_model('first', model_path)
-        self.model_second = _load_model('second', model_path)
+    def __init__(self, ckpt_dir_path):
+        self.model_first = _load_model('first', ckpt_dir_path)
+        self.model_second = _load_model('second', ckpt_dir_path)
 
     def act(self, infoset):
         if len(infoset[1].moves) == 1:
-            return infoset.moves[0]
+            return infoset[1].moves[0]
 
         obs = get_obs(infoset) 
 
