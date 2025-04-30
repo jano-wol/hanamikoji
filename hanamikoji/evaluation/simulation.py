@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import pickle
+import sys
 
 from hanamikoji.env.game import GameEnv
 
@@ -16,14 +17,17 @@ def load_card_play_models(card_play_model_path_dict):
     return players
 
 def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
-
+    sys.stdout = open("output.txt", "w")
     players = load_card_play_models(card_play_model_path_dict)
 
     env = GameEnv(players)
     for idx, card_play_data in enumerate(card_play_data_list):
+        print(idx)
         env.card_play_init(card_play_data)
         while not env.winner:
             env.step()
+        print(env.round)
+        print(f'GAME END (winner == {env.winner})\n------------------\n------------------')
         env.reset()
 
     q.put((env.num_wins['first'],

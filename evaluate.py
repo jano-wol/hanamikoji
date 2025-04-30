@@ -1,4 +1,5 @@
-import os 
+import os
+import sys
 import argparse
 
 from hanamikoji.evaluation.simulation import evaluate
@@ -18,6 +19,7 @@ if __name__ == '__main__':
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
 
+    sys.stdout = open("output.txt", "w")
     evaluate(args.first,
              args.second,
              args.eval_data,

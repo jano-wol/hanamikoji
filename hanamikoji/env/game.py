@@ -53,6 +53,18 @@ class GameState(object):
         # Contains the moves of the first and second players
         self.round_moves = {'first': [], 'second': []}
 
+    def print(self):
+        print(f'acting_player_id={self.acting_player_id} round_id={self.id_to_round_id[self.acting_player_id]}')
+        print(f'actio={self.action_cards['second']}')
+        print(f'gifts={self.gift_cards['second']}')
+        print(f'gesha={self.geisha_preferences['first']} (for second = {self.geisha_preferences['second']})')
+        print(f'gifts={self.gift_cards['first']}')
+        print(f'actio={self.action_cards['first']}')
+        print(f'decision_cards_1_2={self.decision_cards_1_2}')
+        print(f'decision_cards_2_2={self.decision_cards_2_2}')
+        print(f'{self.num_cards}')
+        print('------------')
+
 
 class GameEnv(object):
 
@@ -139,11 +151,13 @@ class GameEnv(object):
         return moves
 
     def step(self):
+        self.print()
         curr = self.state.acting_player_id
         opp = self.get_opp()
         info = self.private_info_sets[curr]
         self.active_player_info_set = self.get_active_player_info_set()
         move = self.players[curr].act(self.active_player_info_set)
+        print (f'MOVE:{move}')
         assert move in self.active_player_info_set[1].moves
 
         draw_card = True
@@ -214,6 +228,19 @@ class GameEnv(object):
             info.moves = self.get_moves()
             self.active_player_info_set = self.get_active_player_info_set()
 
+    def print(self):
+        print('----')
+        print(f'acting_player_id={self.state.acting_player_id} round_id={self.state.id_to_round_id[self.state.acting_player_id]}')
+        print(f'actio={self.state.action_cards['second']} hndcr={self.private_info_sets['second'].hand_cards} nmb={self.state.num_cards['second']}')
+        print(f'trash={self.private_info_sets['second'].trashed_cards}')
+        print(f'stash={self.private_info_sets['second'].stashed_card}')
+        print(f'gifts={self.state.gift_cards['second']}')
+        print(f'gsfst={self.state.geisha_preferences['first']} gsscnd={self.state.geisha_preferences['second']} DECK:{self.deck} decision_cards_1_2={self.state.decision_cards_1_2} decision_cards_2_2={self.state.decision_cards_2_2}')
+        print(f'gifts={self.state.gift_cards['first']}')
+        print(f'stash={self.private_info_sets['first'].stashed_card}')
+        print(f'trash={self.private_info_sets['first'].trashed_cards}')
+        print(f'actio={self.state.action_cards['first']} hndcr={self.private_info_sets['first'].hand_cards} nmb={self.state.num_cards['first']}')
+
     def reset(self):
         self.deck = None
         self.winner = None
@@ -237,3 +264,9 @@ class PrivateInfoSet(object):
         self.trashed_cards = None
         # The legal moves. It is a list of list
         self.moves = None
+
+    def print(self):
+        print(f'hndcr={self.hand_cards}')
+        print(f'stash={self.stashed_card}')
+        print(f'trash={self.trashed_cards}')
+        #print(f'moves={self.moves}')
