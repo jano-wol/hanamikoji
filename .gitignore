@@ -11,3 +11,4 @@ most_recent_model
 eval_data.pkl
 /venv/**
 /.idea/**
+*.ckpt
