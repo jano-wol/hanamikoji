@@ -4,8 +4,8 @@ pip install -r requirements.txt
 ./get_most_recent.sh ./checkpoints/hanamikojizero/       --- (copy the created first and second to baselines)
 python ./generate_eval_data.py
 python ./generate_eval_data.py --output eval_data_200 --num_games 200
-python ./evaluate.py --first ./baselines --second random
-python ./evaluate.py --first random --second ./baselines
+python ./evaluate.py --first ./baselines --second random --eval_data eval_data_200.pkl
+python ./evaluate.py --first random --second ./baselines --eval_data eval_data_200.pkl
 python ./evaluate.py --first ./baselines --second ./baselines --num_workers 1 --eval_data eval_data_200.pkl
 python ./evaluate.py--first ./baselines --second ./baselines --num_workers 1 --eval_data eval_data_200.pkl
 python ./train.py --actor_device_cpu --training_device cpu --num_actors 1
