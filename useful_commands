@@ -1,0 +1,14 @@
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+./get_most_recent.sh ./checkpoints/hanamikojizero/       --- (copy the created first and second to baselines)
+python ./generate_eval_data.py
+python ./generate_eval_data.py --output eval_data_200 --num_games 200
+python ./evaluate.py --first ./baselines --second random
+python ./evaluate.py --first random --second ./baselines
+python ./evaluate.py --first ./baselines --second ./baselines --num_workers 1 --eval_data eval_data_200.pkl
+python ./evaluate.py--first ./baselines --second ./baselines --num_workers 1 --eval_data eval_data_200.pkl
+python ./train.py --actor_device_cpu --training_device cpu --num_actors 1
+scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/checkpoints/hanamikojizero/first_weights_6457600.ckpt ~/Repositories/
+scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/checkpoints/hanamikojizero/second_weights_6457600.ckpt ~/Repositories/
+
