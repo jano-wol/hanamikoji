@@ -139,6 +139,7 @@ class GameEnv(object):
     def set_winner(self):
         winner_player = self.is_game_ended()
         if winner_player:
+            print(f'GAME ENDED WINNER={winner_player}')
             self.winner = winner_player
             self.num_wins[self.winner] += 1
 
@@ -151,13 +152,13 @@ class GameEnv(object):
         return moves
 
     def step(self):
-        self.print()
+        #self.print()
         curr = self.state.acting_player_id
         opp = self.get_opp()
         info = self.private_info_sets[curr]
         self.active_player_info_set = self.get_active_player_info_set()
         move = self.players[curr].act(self.active_player_info_set)
-        print (f'MOVE:{move}')
+        print (f'global_player_id={curr} round_id={self.state.id_to_round_id[curr]} MOVE:{move}')
         assert move in self.active_player_info_set[1].moves
 
         draw_card = True

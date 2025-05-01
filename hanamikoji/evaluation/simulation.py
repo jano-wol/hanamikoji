@@ -21,13 +21,17 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
     players = load_card_play_models(card_play_model_path_dict)
 
     env = GameEnv(players)
+    max_round = 1
     for idx, card_play_data in enumerate(card_play_data_list):
         print(idx)
         env.card_play_init(card_play_data)
         while not env.winner:
             env.step()
-        print(env.round)
-        print(f'GAME END (winner == {env.winner})\n------------------\n------------------')
+        if env.round > max_round:
+            max_round = env.round
+        print(f'{env.round}!!')
+        print(f'GAME END (winner (global_id) == {env.winner})\n------------------\n------------------')
+        print(max_round)
         env.reset()
 
     q.put((env.num_wins['first'],

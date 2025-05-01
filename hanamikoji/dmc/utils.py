@@ -131,6 +131,14 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
         acting_player_id, round_id, obs, env_output = env.initial()
 
         while True:
+            f_len = len(obs_move_buf['first'])
+            s_len = len(obs_move_buf['second'])
+            assert(len(obs_x_no_move_buf['first']) == f_len)
+            assert(len(obs_z_buf['first']) == f_len)
+            assert(len(obs_move_buf['first']) == f_len)
+            assert(len(obs_x_no_move_buf['second']) == s_len)
+            assert(len(obs_z_buf['second']) == s_len)
+            assert(len(obs_move_buf['second']) == s_len)
             while True:
                 acting_player_ids_by_round_id[round_id].append(acting_player_id)
                 obs_x_no_move_buf[round_id].append(env_output['obs_x_no_move'])
@@ -155,6 +163,10 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                                     result_loc = result_glob
                                 else:
                                     result_loc = -result_glob
+                                if p == 'first':
+                                    print(f'p={p} {result_loc} {obs_move_buf[p][f_len + i]}')
+                                else:
+                                    print(f'p={p} {result_loc} {obs_move_buf[p][s_len + i]}')
                                 target_buf[p].append(result_loc)
                             acting_player_ids_by_round_id[p] = []
                         assert size[p] == len(target_buf[p])
