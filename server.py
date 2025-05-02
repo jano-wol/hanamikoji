@@ -113,38 +113,45 @@ def get_human(players):
     return players[human_id]
 
 
-def tidy_up(env, players):
+def tidy_up(env, players, all_states):
     env.reset()
     env.players = players
     env.card_play_init(get_card_play_data())
     clear_environment()
+    all_states.clear()
 
-def swap_players(env, players):
+def swap_players(env, players, all_states):
     human_id = get_human_id(players)
     opp = get_opp(human_id)
     players[human_id] = players[opp]
     players[opp] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
-    tidy_up(env, players)
+    tidy_up(env, players, all_states)
 
-def reset_players(env, players):
+def reset_players(env, players, all_states):
     human_id = get_human_id(players)
     players[human_id] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
-    tidy_up(env, players)
+    tidy_up(env, players, all_states)
+
+def handle_interrupt(env, players, all_states):
+    human = get_human(env.players)
+    human.check_interrupt()
+    if human.interrupt == "swap":
+        swap_players(env, players, all_states)
+        return True
+    if human.interrupt == "reset":
+        reset_players(env, players, all_states)
+        return True
+    return False
 
 def main():
     args = parse_args()
     setup_environment(args)
 
-    players = {}
-    players['first'] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
-    players['second'] = DeepAgent(args.ckpt_folder)
+    players = {'first': Human(HUMAN_IN_PATH, POLL_INTERVAL), 'second': DeepAgent(args.ckpt_folder)}
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
     print("Agent backend started. Playing as first player.")
     all_states = {}
-
-    # Assume GameState and agent are initialized here
-    mod_time = None
 
     tick = 1
     while True:
@@ -155,18 +162,16 @@ def main():
         add_all_states(env, tick, all_states)
         tick += 1
         env.step()
+        interrupt = handle_interrupt(env, players, all_states)
+        if interrupt:
+            continue
         if env.winner:
             write_state(env, tick)
             add_all_states(env, tick, all_states)
             write_game(all_states)
             while True:
-                human = get_human(env.players)
-                human.check_interrupt()
-                if human.interrupt == "swap":
-                    swap_players(env, players)
-                    break
-                if human.interrupt == "reset":
-                    reset_players(env, players)
+                interrupt = handle_interrupt(env, players, all_states)
+                if interrupt:
                     break
 
 
