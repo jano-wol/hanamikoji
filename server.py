@@ -21,6 +21,10 @@ def parse_args():
 def setup_environment(args):
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
+    if os.path.exists(AGENT_OUT_PATH):
+        os.remove(AGENT_OUT_PATH)
+    if os.path.exists(HUMAN_IN_PATH):
+        os.remove(HUMAN_IN_PATH)
 
 
 def to_dict(env, tick):
