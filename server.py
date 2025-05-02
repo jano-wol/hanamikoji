@@ -90,13 +90,28 @@ def process_human_response(response: str):
     print(f"Processing human response: {response}")
     # Update game state here
 
+def get_human_id(players):
+    return 'first' if isinstance(players['first'], Human) else 'second'
+
+def get_opp(curr):
+    return 'second' if curr == 'first' else 'second'
+
+def swap_players(env, players):
+    human_id = get_human_id(players)
+    opp = get_opp(human_id)
+    players[human_id] = players[opp]
+    players[opp] = Human()
+    env.reset()
+    env.players = players
+    env.card_play_init(get_card_play_data())
+
 
 def main():
     args = parse_args()
     setup_environment(args)
 
     players = {}
-    players['first'] = DeepAgent(args.ckpt_folder)
+    players['first'] = Human()
     players['second'] = DeepAgent(args.ckpt_folder)
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
