@@ -104,6 +104,7 @@ def main():
         tick += 1
         env.step()
         if env.winner:
+            write_state(env, tick)
             return
 
         # Wait for human response
