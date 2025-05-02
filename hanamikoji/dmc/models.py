@@ -64,7 +64,6 @@ class Model:
         self.models['second'] = LstmModel().to(torch.device(device))
 
     def forward(self, player_id, z, x, training=False, flags=None):
-        # TODO be sure the correct player_id is called
         model = self.models[player_id]
         return model.forward(z, x, training, flags)
 
