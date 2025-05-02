@@ -108,6 +108,11 @@ def get_opp(curr):
     return 'second' if curr == 'first' else 'second'
 
 
+def get_human(players):
+    human_id = get_human_id(players)
+    return players[human_id]
+
+
 def swap_players(env, players):
     human_id = get_human_id(players)
     opp = get_opp(human_id)
@@ -146,7 +151,14 @@ def main():
             write_state(env, tick)
             add_all_states(env, tick, all_states)
             write_game(all_states)
-            return
+            while True:
+                human = get_human(env.players)
+                human.check_interrupt()
+                if human.interrupt == "swap":
+                    break
+                if human.interrupt == "reset":
+                    break
+
 
         # Wait for human response
         # response, mod_time = wait_for_human_response(mod_time)
