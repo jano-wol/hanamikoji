@@ -105,8 +105,7 @@ def get_human_id(players):
 
 
 def get_opp(curr):
-    return 'second' if curr == 'first' else 'first'
-
+    return 'first' if curr == 'second' else 'second'
 
 def get_human(players):
     human_id = get_human_id(players)
