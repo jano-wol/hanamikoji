@@ -13,3 +13,5 @@ eval_data.pkl
 /.idea/**
 *.ckpt
 *.pkl
+*.json
+
