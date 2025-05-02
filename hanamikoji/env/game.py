@@ -54,7 +54,7 @@ class GameState(object):
         self.round_moves = {'first': [], 'second': []}
 
     def to_dict(self):
-        return {
+        return deepcopy({
             "acting_player_id": self.acting_player_id,
             "id_to_round_id": self.id_to_round_id,
             "points": self.points,
@@ -65,7 +65,7 @@ class GameState(object):
             "geisha_preferences": self.geisha_preferences,
             "num_cards": self.num_cards,
             "round_moves": self.round_moves
-        }
+        })
 
 class GameEnv(object):
 
@@ -252,8 +252,8 @@ class PrivateInfoSet(object):
         self.moves = None
 
     def to_dict(self):
-        return {
+        return deepcopy({
             "hand_cards": self.hand_cards,
             "stashed_card": self.stashed_card,
             "trashed_cards": self.trashed_cards
-        }
+        })

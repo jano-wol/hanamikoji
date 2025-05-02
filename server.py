@@ -1,4 +1,5 @@
 import argparse
+from copy import deepcopy
 import os
 import time
 import json
@@ -8,6 +9,7 @@ from hanamikoji.evaluation.human import Human
 from hanamikoji.env.game import GameEnv, get_card_play_data
 
 AGENT_OUT_PATH = "agent_out.json"
+GAME_PATH = "game_out.json"
 HUMAN_IN_PATH = "human_in.json"
 POLL_INTERVAL = 0.5  # seconds
 
@@ -25,9 +27,11 @@ def setup_environment(args):
         os.remove(AGENT_OUT_PATH)
     if os.path.exists(HUMAN_IN_PATH):
         os.remove(HUMAN_IN_PATH)
+    if os.path.exists(GAME_PATH):
+        os.remove(GAME_PATH)
 
 
-def to_dict(env, tick):
+def to_dict(env):
     def player_repr(p):
         if isinstance(p, DeepAgent):
             return "DeepAgent"
@@ -35,8 +39,7 @@ def to_dict(env, tick):
             return "Human"
         else:
             return str(p)
-    return {
-        "tick": tick,
+    return deepcopy({
         "players": {
             role: player_repr(p)
             for role, p in env.players.items()
@@ -47,13 +50,21 @@ def to_dict(env, tick):
         "state": env.state.to_dict(),
         "private_info_sets": {"first" : env.private_info_sets["first"].to_dict(),
                               "second" : env.private_info_sets["second"].to_dict()}
-    }
+    })
 
 def write_state(env, tick):
-    with open(AGENT_OUT_PATH, 'a') as f:
-        f.write(json.dumps(to_dict(env, tick)))
-        f.write("\n")
+    with open(AGENT_OUT_PATH, 'w') as f:
+        d = {tick: to_dict(env)}
+        f.write(json.dumps(d))
     print(f"State written.")
+
+def write_game(all_states):
+    with open(GAME_PATH, 'w') as f:
+        f.write(json.dumps(all_states))
+    print(f"Game written.")
+
+def add_all_states(env, tick, all_states):
+    all_states[tick] = to_dict(env)
 
 
 def wait_for_human_response(last_mod_time=None):
@@ -90,7 +101,7 @@ def main():
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
     print("Agent backend started. Playing as first player.")
-
+    all_states = {}
 
     # Assume GameState and agent are initialized here
     mod_time = None
@@ -101,10 +112,13 @@ def main():
         #move = agent_play_turn()
         #env.step(move)
         write_state(env, tick)
+        add_all_states(env, tick, all_states)
         tick += 1
         env.step()
         if env.winner:
             write_state(env, tick)
+            add_all_states(env, tick, all_states)
+            write_game(all_states)
             return
 
         # Wait for human response
