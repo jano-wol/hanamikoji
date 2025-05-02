@@ -114,6 +114,8 @@ def get_opp(curr):
 
 def get_human(players):
     human_id = get_human_id(players)
+    if human_id is None:
+        return None
     return players[human_id]
 
 
@@ -157,7 +159,7 @@ def main():
     args = parse_args()
     setup_environment(args)
 
-    players = {'first': Human(HUMAN_IN_PATH, POLL_INTERVAL), 'second': DeepAgent(args.ckpt_folder)}
+    players = {'first': DeepAgent(args.ckpt_folder), 'second': DeepAgent(args.ckpt_folder)}
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
     print("Agent backend started. Playing as first player.")
