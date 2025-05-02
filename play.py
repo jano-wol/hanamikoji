@@ -2,7 +2,7 @@ import os
 import argparse
 
 from hanamikoji.evaluation.deep_agent import DeepAgent
-from hanamikoji.env.game import GameState
+from hanamikoji.env.game import GameState, PrivateInfoSet
 
 
 def parse_args():
@@ -15,6 +15,22 @@ def parse_args():
 def setup_environment(args):
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
+
+
+def card_list_to_inner(l):
+    ret = [0] * 7
+    for c in l:
+        ret[c - 1] += 1
+    return ret
+
+
+def inner_to_card_list(inner):
+    ret = []
+    for i, val in enumerate(inner):
+        while val > 0:
+            ret.append(i)
+            val -= 1
+    return ret
 
 
 def parse_agent_player_id():
@@ -41,13 +57,19 @@ def parse_starting_hand(agent_player_id):
 def main():
     args = parse_args()
     setup_environment(args)
+    active_player = 'first'
     agent = DeepAgent(args.ckpt_folder)
 
-    # STEP1 PARSE PLAYER ID
+    # STEP_1 PARSE PLAYER ID
     agent_player_id = parse_agent_player_id()
 
-    # STEP2 PARSE STARTING HAND
-    hand_list = parse_starting_hand(agent_player_id)
+    # STEP_2 PARSE STARTING HAND
+    card_list = parse_starting_hand(agent_player_id)
+
+    # STEP_3 Init state and private info set
+    state = GameState()
+    private = PrivateInfoSet()
+    private.hand_cards = card_list_to_inner(card_list)
 
 
 if __name__ == '__main__':
