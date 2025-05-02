@@ -159,6 +159,7 @@ def main():
     args = parse_args()
     setup_environment(args)
 
+    # players = {'first': Human(HUMAN_IN_PATH, POLL_INTERVAL), 'second': DeepAgent(args.ckpt_folder)}
     players = {'first': DeepAgent(args.ckpt_folder), 'second': DeepAgent(args.ckpt_folder)}
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
