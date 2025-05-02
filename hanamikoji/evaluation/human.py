@@ -1,6 +1,7 @@
 class Human:
-    def __init__(self):
-        pass
+    def __init__(self, human_in, poll_interval):
+        self.human_in = human_in
+        self.poll_interval = poll_interval
 
 
     def act(self, infoset):

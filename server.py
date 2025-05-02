@@ -100,7 +100,7 @@ def swap_players(env, players):
     human_id = get_human_id(players)
     opp = get_opp(human_id)
     players[human_id] = players[opp]
-    players[opp] = Human()
+    players[opp] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
     env.reset()
     env.players = players
     env.card_play_init(get_card_play_data())
@@ -111,7 +111,7 @@ def main():
     setup_environment(args)
 
     players = {}
-    players['first'] = Human()
+    players['first'] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
     players['second'] = DeepAgent(args.ckpt_folder)
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
