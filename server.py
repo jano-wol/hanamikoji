@@ -101,7 +101,11 @@ def process_human_response(response: str):
 
 
 def get_human_id(players):
-    return 'first' if isinstance(players['first'], Human) else 'second'
+    if isinstance(players['first'], Human):
+        return 'first'
+    if isinstance(players['second'], Human):
+        return 'second'
+    return None
 
 
 def get_opp(curr):
@@ -135,8 +139,10 @@ def reset_players(env, players, all_states):
     tidy_up(env, players, all_states)
 
 
-def handle_interrupt(env, players, all_states):
+def handle_human_interrupt(env, players, all_states):
     human = get_human(env.players)
+    if human is None:
+        return False
     human.check_interrupt()
     if human.interrupt == "swap":
         swap_players(env, players, all_states)
@@ -166,7 +172,7 @@ def main():
         add_all_states(env, tick, all_states)
         tick += 1
         env.step()
-        interrupt = handle_interrupt(env, players, all_states)
+        interrupt = handle_human_interrupt(env, players, all_states)
         if interrupt:
             continue
         if env.winner:
@@ -174,9 +180,13 @@ def main():
             add_all_states(env, tick, all_states)
             write_game(all_states)
             while True:
-                interrupt = handle_interrupt(env, players, all_states)
-                if interrupt:
-                    break
+                human_id = get_human_id(players)
+                if human_id is not None:
+                    interrupt = handle_human_interrupt(env, players, all_states)
+                    if interrupt:
+                        break
+                else:
+                    return
 
         # Wait for human response
         # response, mod_time = wait_for_human_response(mod_time)
