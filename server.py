@@ -23,7 +23,7 @@ def setup_environment(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
 
 
-def to_dict(env):
+def to_dict(env, tick):
     def player_repr(p):
         if isinstance(p, DeepAgent):
             return "DeepAgent"
@@ -32,6 +32,7 @@ def to_dict(env):
         else:
             return str(p)  # fallback for unknown types
     return {
+        "tick": tick,
         "players": {
             player_repr(p): role
             for role, p in env.players.items()
@@ -44,9 +45,9 @@ def to_dict(env):
                               "second" : env.private_info_sets["second"].to_dict()}
     }
 
-def write_state(env):
+def write_state(env, tick):
     with open(AGENT_OUT_PATH, 'w') as f:
-        f.write(json.dumps(to_dict(env)))
+        f.write(json.dumps(to_dict(env, tick)))
     print(f"State written.")
 
 
@@ -89,11 +90,13 @@ def main():
     # Assume GameState and agent are initialized here
     mod_time = None
 
+    tick = 1
     while True:
         # Agent makes a move
         #move = agent_play_turn()
         #env.step(move)
-        write_state(env)
+        write_state(env, tick)
+        tick += 1
 
         # Wait for human response
         response, mod_time = wait_for_human_response(mod_time)
