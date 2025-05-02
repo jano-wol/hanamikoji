@@ -53,6 +53,19 @@ class GameState(object):
         # Contains the moves of the first and second players
         self.round_moves = {'first': [], 'second': []}
 
+    def to_dict(self):
+        return {
+            "acting_player_id": self.acting_player_id,
+            "id_to_round_id": self.id_to_round_id,
+            "points": self.points,
+            "gift_cards": self.gift_cards,
+            "action_cards": self.action_cards,
+            "decision_cards_1_2": self.decision_cards_1_2,
+            "decision_cards_2_2": self.decision_cards_2_2,
+            "geisha_preferences": self.geisha_preferences,
+            "num_cards": self.num_cards,
+            "round_moves": self.round_moves
+        }
 
 class GameEnv(object):
 
@@ -237,3 +250,10 @@ class PrivateInfoSet(object):
         self.trashed_cards = None
         # The legal moves. It is a list of list
         self.moves = None
+
+    def to_dict(self):
+        return {
+            "hand_cards": self.hand_cards,
+            "stashed_card": self.stashed_card,
+            "trashed_cards": self.trashed_cards
+        }

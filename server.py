@@ -5,7 +5,7 @@ import json
 
 from hanamikoji.evaluation.deep_agent import DeepAgent
 from hanamikoji.evaluation.human import Human
-from hanamikoji.env.game import GameEnv
+from hanamikoji.env.game import GameEnv, get_card_play_data
 
 AGENT_OUT_PATH = "agent_out.json"
 HUMAN_IN_PATH = "human_in.json"
@@ -35,7 +35,13 @@ def to_dict(env):
         "players": {
             player_repr(p): role
             for role, p in env.players.items()
-        }
+        },
+        "deck": env.deck,
+        "round": env.round,
+        "winner": env.winner,
+        "state": env.state.to_dict(),
+        "private_info_sets": {"first" : env.private_info_sets["first"].to_dict(),
+                              "second" : env.private_info_sets["second"].to_dict()}
     }
 
 def write_state(env):
@@ -76,6 +82,7 @@ def main():
     players['first'] = DeepAgent(args.ckpt_folder)
     players['second'] = Human()
     env = GameEnv(players)
+    env.card_play_init(get_card_play_data())
     print("Agent backend started. Playing as first player.")
 
 
