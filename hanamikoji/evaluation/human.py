@@ -4,7 +4,7 @@ import time
 
 
 def parse_move(response):
-    return 0
+    return None, None
 
 
 class Human:
@@ -26,9 +26,12 @@ class Human:
                     self.interrupt = "reset"
                     return random.choice(infoset[1].moves)
                 else:
-                    move = parse_move(response)
-                    assert move in infoset[1].moves
-                    return move
+                    move, tick = parse_move(response)
+                    if move is not None and tick is not None:
+                        if tick != self.last_tick:
+                            self.last_tick = tick
+                            assert move in infoset[1].moves
+                            return move
             time.sleep(self.poll_interval)
 
     def check_interrupt(self):
