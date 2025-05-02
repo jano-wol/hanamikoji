@@ -13,6 +13,7 @@ GAME_PATH = "game_out.json"
 HUMAN_IN_PATH = "human_in.json"
 POLL_INTERVAL = 0.5  # seconds
 
+
 def parse_args():
     parser = argparse.ArgumentParser('Hanamikoji Play')
     parser.add_argument('--ckpt_folder', type=str, default='baselines/')
@@ -20,15 +21,19 @@ def parse_args():
     return parser.parse_args()
 
 
-def setup_environment(args):
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
+def clear_environment():
     if os.path.exists(AGENT_OUT_PATH):
         os.remove(AGENT_OUT_PATH)
     if os.path.exists(HUMAN_IN_PATH):
         os.remove(HUMAN_IN_PATH)
     if os.path.exists(GAME_PATH):
         os.remove(GAME_PATH)
+
+
+def setup_environment(args):
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
+    clear_environment()
 
 
 def to_dict(env):
@@ -39,6 +44,7 @@ def to_dict(env):
             return "Human"
         else:
             return str(p)
+
     return deepcopy({
         "players": {
             role: player_repr(p)
@@ -48,9 +54,10 @@ def to_dict(env):
         "round": env.round,
         "winner": env.winner,
         "state": env.state.to_dict(),
-        "private_info_sets": {"first" : env.private_info_sets["first"].to_dict(),
-                              "second" : env.private_info_sets["second"].to_dict()}
+        "private_info_sets": {"first": env.private_info_sets["first"].to_dict(),
+                              "second": env.private_info_sets["second"].to_dict()}
     })
+
 
 def write_state(env, tick):
     with open(AGENT_OUT_PATH, 'w') as f:
@@ -58,10 +65,12 @@ def write_state(env, tick):
         f.write(json.dumps(d))
     print(f"State written.")
 
+
 def write_game(all_states):
     with open(GAME_PATH, 'w') as f:
         f.write(json.dumps(all_states))
     print(f"Game written.")
+
 
 def add_all_states(env, tick, all_states):
     all_states[tick] = to_dict(env)
@@ -90,11 +99,14 @@ def process_human_response(response: str):
     print(f"Processing human response: {response}")
     # Update game state here
 
+
 def get_human_id(players):
     return 'first' if isinstance(players['first'], Human) else 'second'
 
+
 def get_opp(curr):
     return 'second' if curr == 'first' else 'second'
+
 
 def swap_players(env, players):
     human_id = get_human_id(players)
@@ -124,8 +136,8 @@ def main():
     tick = 1
     while True:
         # Agent makes a move
-        #move = agent_play_turn()
-        #env.step(move)
+        # move = agent_play_turn()
+        # env.step(move)
         write_state(env, tick)
         add_all_states(env, tick, all_states)
         tick += 1
@@ -137,8 +149,8 @@ def main():
             return
 
         # Wait for human response
-        #response, mod_time = wait_for_human_response(mod_time)
-        #process_human_response(response)
+        # response, mod_time = wait_for_human_response(mod_time)
+        # process_human_response(response)
 
         # Game over check can go here
         # if game.is_over(): break
