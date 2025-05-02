@@ -113,15 +113,23 @@ def get_human(players):
     return players[human_id]
 
 
+def tidy_up(env, players):
+    env.reset()
+    env.players = players
+    env.card_play_init(get_card_play_data())
+    clear_environment()
+
 def swap_players(env, players):
     human_id = get_human_id(players)
     opp = get_opp(human_id)
     players[human_id] = players[opp]
     players[opp] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
-    env.reset()
-    env.players = players
-    env.card_play_init(get_card_play_data())
+    tidy_up(env, players)
 
+def reset_players(env, players):
+    human_id = get_human_id(players)
+    players[human_id] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
+    tidy_up(env, players)
 
 def main():
     args = parse_args()
@@ -155,8 +163,10 @@ def main():
                 human = get_human(env.players)
                 human.check_interrupt()
                 if human.interrupt == "swap":
+                    swap_players(env, players)
                     break
                 if human.interrupt == "reset":
+                    reset_players(env, players)
                     break
 
 
