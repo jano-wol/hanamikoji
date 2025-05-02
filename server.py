@@ -31,14 +31,14 @@ def to_dict(env, tick):
     def player_repr(p):
         if isinstance(p, DeepAgent):
             return "DeepAgent"
-        elif isinstance(p, Human):  # assuming you have a Human class
+        elif isinstance(p, Human):
             return "Human"
         else:
-            return str(p)  # fallback for unknown types
+            return str(p)
     return {
         "tick": tick,
         "players": {
-            player_repr(p): role
+            role: player_repr(p)
             for role, p in env.players.items()
         },
         "deck": env.deck,
@@ -50,8 +50,9 @@ def to_dict(env, tick):
     }
 
 def write_state(env, tick):
-    with open(AGENT_OUT_PATH, 'w') as f:
+    with open(AGENT_OUT_PATH, 'a') as f:
         f.write(json.dumps(to_dict(env, tick)))
+        f.write("\n")
     print(f"State written.")
 
 
@@ -85,7 +86,7 @@ def main():
 
     players = {}
     players['first'] = DeepAgent(args.ckpt_folder)
-    players['second'] = Human()
+    players['second'] = DeepAgent(args.ckpt_folder)
     env = GameEnv(players)
     env.card_play_init(get_card_play_data())
     print("Agent backend started. Playing as first player.")
@@ -101,10 +102,13 @@ def main():
         #env.step(move)
         write_state(env, tick)
         tick += 1
+        env.step()
+        if env.winner:
+            return
 
         # Wait for human response
-        response, mod_time = wait_for_human_response(mod_time)
-        process_human_response(response)
+        #response, mod_time = wait_for_human_response(mod_time)
+        #process_human_response(response)
 
         # Game over check can go here
         # if game.is_over(): break
