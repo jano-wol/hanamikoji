@@ -107,6 +107,7 @@ def get_human_id(players):
 def get_opp(curr):
     return 'first' if curr == 'second' else 'second'
 
+
 def get_human(players):
     human_id = get_human_id(players)
     return players[human_id]
@@ -119,6 +120,7 @@ def tidy_up(env, players, all_states):
     clear_environment()
     all_states.clear()
 
+
 def swap_players(env, players, all_states):
     human_id = get_human_id(players)
     opp = get_opp(human_id)
@@ -126,10 +128,12 @@ def swap_players(env, players, all_states):
     players[opp] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
     tidy_up(env, players, all_states)
 
+
 def reset_players(env, players, all_states):
     human_id = get_human_id(players)
     players[human_id] = Human(HUMAN_IN_PATH, POLL_INTERVAL)
     tidy_up(env, players, all_states)
+
 
 def handle_interrupt(env, players, all_states):
     human = get_human(env.players)
@@ -141,6 +145,7 @@ def handle_interrupt(env, players, all_states):
         reset_players(env, players, all_states)
         return True
     return False
+
 
 def main():
     args = parse_args()
@@ -172,7 +177,6 @@ def main():
                 interrupt = handle_interrupt(env, players, all_states)
                 if interrupt:
                     break
-
 
         # Wait for human response
         # response, mod_time = wait_for_human_response(mod_time)
