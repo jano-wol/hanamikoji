@@ -205,11 +205,9 @@ class GameEnvExternal(object):
 
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
-            round_end_env = self.to_dict()
             self.update_geisha_preferences()
             self.set_winner()
             if self.winner is None:
-                self.round_end_env = round_end_env
                 next_geisha_preferences = deepcopy(self.state.geisha_preferences)
                 self.round += 1
                 self.state = GameState()
@@ -221,7 +219,6 @@ class GameEnvExternal(object):
                 self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
                 self.card_play_init()
         else:
-            self.round_end_env = None
             info = self.private_info_sets[self.state.acting_player_id]
             if draw_card:
                 info.hand_cards[self.deck[0]] += 1
@@ -229,28 +226,6 @@ class GameEnvExternal(object):
                 self.deck.pop(0)
             info.moves = self.get_moves()
             self.active_player_info_set = self.get_active_player_info_set()
-
-    def reset(self):
-        self.deck = None
-        self.winner = None
-        self.round = 1
-        self.state = GameState()
-        self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
-        self.active_player_info_set = None
-
-    def to_dict(self):
-        return deepcopy({
-            "players": {
-                role: str(p) for role, p in self.players.items()
-            },
-            "deck": self.deck,
-            "round": self.round,
-            "winner": self.winner,
-            "state": self.state.to_dict(),
-            "private_info_sets": {"first": self.private_info_sets["first"].to_dict(),
-                                  "second": self.private_info_sets["second"].to_dict()},
-            "round_end_env": self.round_end_env
-        })
 
 
 class PrivateInfoSet(object):
