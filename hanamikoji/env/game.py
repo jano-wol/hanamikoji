@@ -92,6 +92,16 @@ class GameEnvExternal(object):
                 return hand
             print("Invalid card values. All digits must be between 1 and 7.")
 
+    def parse_card(self):
+        while True:
+            hand_str = input(f"Draw a card and enter it here. Possible values 1–7: ").strip()
+            if len(hand_str) != 1 or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly 1 digits.")
+                continue
+            if 1 <= int(hand_str) <= 7:
+                return int(hand_str)
+            print("Invalid card value. PLease enter a digit between 1 and 7.")
+
     def card_play_init(self):
         self.private_info_sets[self.agent].hand_cards = self.parse_starting_hand()
         if self.state.acting_player_id == self.agent:
@@ -221,11 +231,13 @@ class GameEnvExternal(object):
         else:
             info = self.private_info_sets[self.state.acting_player_id]
             if draw_card:
-                info.hand_cards[self.deck[0]] += 1
                 self.state.num_cards[self.state.acting_player_id] += 1
-                self.deck.pop(0)
-            info.moves = self.get_moves()
-            self.active_player_info_set = self.get_active_player_info_set()
+                if self.state.acting_player_id == self.agent:
+                    card = self.parse_card()
+                    info.hand_cards[card - 1] += 1
+            if self.state.acting_player_id == self.agent:
+                info.moves = self.get_moves()
+                self.active_player_info_set = self.get_active_player_info_set()
 
 
 class PrivateInfoSet(object):
