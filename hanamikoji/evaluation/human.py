@@ -13,13 +13,17 @@ def inner_to_card_list(inner):
             val -= 1
     return ret
 
+
+def _sub_cards(a, b):
+    return [a - b for a, b in zip(a, b)]
+
+
 class Human:
     def __init__(self):
         pass
 
     def __str__(self):
         return "Human"
-
 
     def parse_move_1_2(self):
         expected_length = 3
@@ -67,10 +71,22 @@ class Human:
                 return int(hand_str)
             print("Invalid action type. Please enter a digit between 1 and 4.")
 
+    def parse_1_2_resolve(self):
+        while True:
+            hand_str = input(f"Provide the card you would like to get. Possible values 1–7: ").strip()
+            if len(hand_str) != 1 or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly 1 digits.")
+                continue
+            if 1 <= int(hand_str) <= 7:
+                return int(hand_str)
+            print("Invalid action type. Please enter a digit between 1 and 7.")
+
     def act(self, infoset):
         if infoset[0].decision_cards_1_2 is not None:
-            pass
-            return
+            g = self.parse_1_2_resolve()
+            h = [0] * 7
+            h[g - 1] = 1
+            return [4, h, _sub_cards(infoset[0].decision_cards_1_2, h)]
         if infoset[0].decision_cards_2_2 is not None:
             pass
             return
@@ -91,4 +107,3 @@ class Human:
                 return [3, [l1, l2]]
             else:
                 return [3, [l2, l1]]
-
