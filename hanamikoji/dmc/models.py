@@ -48,39 +48,3 @@ class LstmModel(nn.Module):
 
 # Model dict is only used in evaluation but not training
 model_dict = {'first': LstmModel, 'second': LstmModel}
-
-
-class Model:
-    """
-    The wrapper for the three models. We also wrap several
-    interfaces such as share_memory, eval, etc.
-    """
-
-    def __init__(self, device=0):
-        self.models = {}
-        if not device == "cpu":
-            device = 'cuda:' + str(device)
-        self.models['first'] = LstmModel().to(torch.device(device))
-        self.models['second'] = LstmModel().to(torch.device(device))
-
-    def forward(self, player_id, z, x, training=False, flags=None):
-        # TODO be sure the correct player_id is called
-        model = self.models[player_id]
-        return model.forward(z, x, training, flags)
-
-    def share_memory(self):
-        self.models['first'].share_memory()
-        self.models['second'].share_memory()
-
-    def eval(self):
-        self.models['first'].eval()
-        self.models['second'].eval()
-
-    def parameters(self, player_id):
-        return self.models[player_id].parameters()
-
-    def get_model(self, player_id):
-        return self.models[player_id]
-
-    def get_models(self):
-        return self.models
