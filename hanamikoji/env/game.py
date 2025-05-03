@@ -88,7 +88,7 @@ class GameEnvExternal(object):
         return deepcopy([self.state, self.private_info_sets[self.state.acting_player_id]])
 
     def parse_starting_hand(self):
-        expected_length = 7 if self.agent == 'first' else 6
+        expected_length = 7 if (self.agent == 'first' and self.round % 2 == 1) or (self.agent == 'second' and self.round % 2 == 0) else 6
         while True:
             hand_str = input(f"Enter the agent's starting hand ({expected_length} digits, each 1–7): ").strip()
             if len(hand_str) != expected_length or not hand_str.isdigit():

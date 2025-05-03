@@ -73,7 +73,7 @@ class Human:
 
     def parse_1_2_resolve(self):
         while True:
-            hand_str = input(f"Provide the card you would like to get. Possible values 1–7: ").strip()
+            hand_str = input(f"Provide the card human would like to get. Possible values 1–7: ").strip()
             if len(hand_str) != 1 or not hand_str.isdigit():
                 print(f"Invalid input. Please enter exactly 1 digits.")
                 continue
@@ -83,7 +83,7 @@ class Human:
 
     def parse_2_2_resolve(self):
         while True:
-            hand_str = input(f"Provide the cards index you would like to get. Possible values 1–2: ").strip()
+            hand_str = input(f"Provide the cards index human would like to get. Possible values 1–2: ").strip()
             if len(hand_str) != 1 or not hand_str.isdigit():
                 print(f"Invalid input. Please enter exactly 1 digits.")
                 continue
