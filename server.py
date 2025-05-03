@@ -177,6 +177,7 @@ def main():
         env.step()
         interrupt = handle_human_interrupt(env, players, all_states)
         if interrupt:
+            tick = 1
             continue
         if env.winner:
             write_state(env, tick)
@@ -187,6 +188,7 @@ def main():
                 if human_id is not None:
                     interrupt = handle_human_interrupt(env, players, all_states)
                     if interrupt:
+                        tick = 1
                         break
                 else:
                     return
