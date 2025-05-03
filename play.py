@@ -18,21 +18,6 @@ def setup_environment(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
 
 
-def card_list_to_inner(l):
-    ret = [0] * 7
-    for c in l:
-        ret[c - 1] += 1
-    return ret
-
-
-def inner_to_card_list(inner):
-    ret = []
-    for i, val in enumerate(inner):
-        while val > 0:
-            ret.append(i)
-            val -= 1
-    return ret
-
 
 def parse_agent_player_id():
     while True:

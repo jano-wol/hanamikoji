@@ -10,6 +10,13 @@ def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
 
 
+def card_list_to_inner(l):
+    ret = [0] * 7
+    for c in l:
+        ret[c - 1] += 1
+    return ret
+
+
 class GameState(object):
     """
     GameState contains the public data of the game.
@@ -113,7 +120,7 @@ class GameEnvExternal(object):
             print("Invalid card value. PLease enter a digit between 1 and 7.")
 
     def card_play_init(self):
-        self.private_info_sets[self.agent].hand_cards = self.parse_starting_hand()
+        self.private_info_sets[self.agent].hand_cards = card_list_to_inner(self.parse_starting_hand())
         if self.state.acting_player_id == self.agent:
             self.private_info_sets[self.state.acting_player_id].moves = self.get_moves()
             self.active_player_info_set = self.get_active_player_info_set()
