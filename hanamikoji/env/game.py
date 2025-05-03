@@ -1,6 +1,5 @@
 from copy import deepcopy
 from .move_generator import *
-import numpy as np
 
 
 def _add_cards(a, b):
@@ -9,21 +8,6 @@ def _add_cards(a, b):
 
 def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
-
-
-deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
-
-
-def get_card_play_data():
-    _deck = deck.copy()
-    np.random.shuffle(_deck)
-    f = [0] * 7
-    for num in _deck[:7]:
-        f[num] += 1
-    s = [0] * 7
-    for num in _deck[7:13]:
-        s[num] += 1
-    return {'first': f, 'second': s, 'deck': _deck[13:21]}
 
 
 class GameState(object):
@@ -68,15 +52,19 @@ class GameState(object):
         })
 
 
-class GameEnv(object):
+class GameEnvExternal(object):
 
     def __init__(self, players):
         self.players = players
-        self.deck = None
+        if str(players['first']) == 'Human':
+            self.human = 'first'
+            self.agent = 'second'
+        else:
+            self.human = 'second'
+            self.agent = 'first'
         self.winner = None
         self.num_wins = {'first': 0, 'second': 0}
         self.round = 1
-        self.round_end_env = None
 
         # Public game info
         self.state = GameState()

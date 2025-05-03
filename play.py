@@ -1,8 +1,9 @@
 import os
 import argparse
 
+from hanamikoji.evaluation.human import Human
 from hanamikoji.evaluation.deep_agent import DeepAgent
-from hanamikoji.env.game import GameState, PrivateInfoSet
+from hanamikoji.env.game import GameEnvExternal
 
 
 def parse_args():
@@ -54,14 +55,20 @@ def parse_starting_hand(agent_player_id):
         print("Invalid card values. All digits must be between 1 and 7.")
 
 
+def get_opp(curr):
+    return 'first' if curr == 'second' else 'second'
+
+
 def main():
     args = parse_args()
     setup_environment(args)
-    active_player = 'first'
+
     agent = DeepAgent(args.ckpt_folder)
 
     # STEP_1 PARSE PLAYER ID
     agent_player_id = parse_agent_player_id()
+    players = {agent_player_id: agent, get_opp(agent_player_id): Human()}
+    env = GameEnvExternal(players)
 
     # STEP_2 PARSE STARTING HAND
     card_list = parse_starting_hand(agent_player_id)

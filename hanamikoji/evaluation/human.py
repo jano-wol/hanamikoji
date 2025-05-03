@@ -8,11 +8,8 @@ def parse_move(response):
 
 
 class Human:
-    def __init__(self, human_in, poll_interval):
-        self.human_in = human_in
-        self.poll_interval = poll_interval
-        self.last_tick = -1
-        self.interrupt = None
+    def __init__(self):
+        pass
 
     def __str__(self):
         return "Human"
