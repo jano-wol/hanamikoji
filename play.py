@@ -69,15 +69,10 @@ def main():
     agent_player_id = parse_agent_player_id()
     players = {agent_player_id: agent, get_opp(agent_player_id): Human()}
     env = GameEnvExternal(players)
-
-    # STEP_2 PARSE STARTING HAND
-    card_list = parse_starting_hand(agent_player_id)
-
-    # STEP_3 Init state and private info set
-    state = GameState()
-    private = PrivateInfoSet()
-    private.hand_cards = card_list_to_inner(card_list)
-
+    env.card_play_init()
+    while env.winner is None:
+        env.step()
+    print(f'winner={players[env.winner]}')
 
 if __name__ == '__main__':
     main()

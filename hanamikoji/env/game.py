@@ -80,12 +80,23 @@ class GameEnvExternal(object):
     def get_active_player_info_set(self):
         return deepcopy([self.state, self.private_info_sets[self.state.acting_player_id]])
 
-    def card_play_init(self, card_play_data):
-        self.private_info_sets[self.state.acting_player_id].hand_cards = card_play_data['first']
-        self.private_info_sets[self.get_opp()].hand_cards = card_play_data['second']
-        self.deck = card_play_data['deck']
-        self.private_info_sets[self.state.acting_player_id].moves = self.get_moves()
-        self.active_player_info_set = self.get_active_player_info_set()
+    def parse_starting_hand(self):
+        expected_length = 7 if self.agent == 'first' else 6
+        while True:
+            hand_str = input(f"Enter the agent's starting hand ({expected_length} digits, each 1–7): ").strip()
+            if len(hand_str) != expected_length or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly {expected_length} digits.")
+                continue
+            hand = [int(c) for c in hand_str]
+            if all(1 <= card <= 7 for card in hand):
+                return hand
+            print("Invalid card values. All digits must be between 1 and 7.")
+
+    def card_play_init(self):
+        self.private_info_sets[self.agent].hand_cards = self.parse_starting_hand()
+        if self.state.acting_player_id == self.agent:
+            self.private_info_sets[self.state.acting_player_id].moves = self.get_moves()
+            self.active_player_info_set = self.get_active_player_info_set()
 
     def get_winner(self):
         return self.winner
@@ -208,8 +219,7 @@ class GameEnvExternal(object):
                     self.state.id_to_round_id = {'first': 'second', 'second': 'first'}
                     self.state.num_cards = {'first': 6, 'second': 7}
                 self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
-                card_play_data = get_card_play_data()
-                self.card_play_init(card_play_data)
+                self.card_play_init()
         else:
             self.round_end_env = None
             info = self.private_info_sets[self.state.acting_player_id]
