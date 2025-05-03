@@ -67,6 +67,7 @@ class GameState(object):
             "round_moves": self.round_moves
         })
 
+
 class GameEnv(object):
 
     def __init__(self, players):
@@ -234,6 +235,27 @@ class GameEnv(object):
         self.state = GameState()
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
         self.active_player_info_set = None
+
+    def to_dict(self):
+        def player_repr(p):
+            if isinstance(p, DeepAgent):
+                return "DeepAgent"
+            elif isinstance(p, Human):
+                return "Human"
+            else:
+                return str(p)
+
+        return deepcopy({
+            "players": {
+                role: str(p) for role, p in self.players.items()
+            },
+            "deck": self.deck,
+            "round": self.round,
+            "winner": self.winner,
+            "state": self.state.to_dict(),
+            "private_info_sets": {"first": self.private_info_sets["first"].to_dict(),
+                                  "second": self.private_info_sets["second"].to_dict()}
+        })
 
 
 class PrivateInfoSet(object):

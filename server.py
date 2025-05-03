@@ -36,32 +36,9 @@ def setup_environment(args):
     clear_environment()
 
 
-def to_dict(env):
-    def player_repr(p):
-        if isinstance(p, DeepAgent):
-            return "DeepAgent"
-        elif isinstance(p, Human):
-            return "Human"
-        else:
-            return str(p)
-
-    return deepcopy({
-        "players": {
-            role: player_repr(p)
-            for role, p in env.players.items()
-        },
-        "deck": env.deck,
-        "round": env.round,
-        "winner": env.winner,
-        "state": env.state.to_dict(),
-        "private_info_sets": {"first": env.private_info_sets["first"].to_dict(),
-                              "second": env.private_info_sets["second"].to_dict()}
-    })
-
-
 def write_state(env, tick):
     with open(AGENT_OUT_PATH, 'w') as f:
-        d = {tick: to_dict(env)}
+        d = {tick: env.to_dict()}
         f.write(json.dumps(d))
     print(f"State written.")
 
@@ -73,7 +50,7 @@ def write_game(all_states, game):
 
 
 def add_all_states(env, tick, all_states):
-    all_states[tick] = to_dict(env)
+    all_states[tick] = env.to_dict()
 
 
 def wait_for_human_response(last_mod_time=None):

@@ -14,6 +14,9 @@ class Human:
         self.last_tick = -1
         self.interrupt = None
 
+    def __str__(self):
+        return "Human"
+
     def act(self, infoset):
         while True:
             if os.path.exists(self.human_in):
