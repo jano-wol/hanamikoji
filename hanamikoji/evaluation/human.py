@@ -9,7 +9,7 @@ def inner_to_card_list(inner):
     ret = []
     for i, val in enumerate(inner):
         while val > 0:
-            ret.append(i)
+            ret.append(i + 1)
             val -= 1
     return ret
 
@@ -81,15 +81,32 @@ class Human:
                 return int(hand_str)
             print("Invalid action type. Please enter a digit between 1 and 7.")
 
+    def parse_2_2_resolve(self):
+        while True:
+            hand_str = input(f"Provide the cards index you would like to get. Possible values 1–2: ").strip()
+            if len(hand_str) != 1 or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly 1 digits.")
+                continue
+            if 1 <= int(hand_str) <= 2:
+                return int(hand_str)
+            print("Invalid action type. Please enter digit 1 or 2.")
+
     def act(self, infoset):
         if infoset[0].decision_cards_1_2 is not None:
+            print(f'Resolve 1_2. cards={inner_to_card_list(infoset[0].decision_cards_1_2)}')
             g = self.parse_1_2_resolve()
             h = [0] * 7
             h[g - 1] = 1
-            return [4, h, _sub_cards(infoset[0].decision_cards_1_2, h)]
+            assert infoset[0].decision_cards_1_2[g - 1] > 0
+            return [4, [h, _sub_cards(infoset[0].decision_cards_1_2, h)]]
         if infoset[0].decision_cards_2_2 is not None:
-            pass
-            return
+            print(
+                f'Resolve 2_2. cards1={inner_to_card_list(infoset[0].decision_cards_2_2[0])} cards2={inner_to_card_list(infoset[0].decision_cards_2_2[1])}')
+            g = self.parse_2_2_resolve()
+            if g == 1:
+                return [5, [infoset[0].decision_cards_2_2[0], infoset[0].decision_cards_2_2[1]]]
+            else:
+                return [5, [infoset[0].decision_cards_2_2[1], infoset[0].decision_cards_2_2[0]]]
         t = self.parse_action_type()
         t -= 1
         assert infoset[0].action_cards[infoset[0].acting_player_id][t] == 1
