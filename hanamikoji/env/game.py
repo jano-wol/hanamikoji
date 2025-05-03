@@ -190,26 +190,29 @@ class GameEnvExternal(object):
         move = self.players[curr].act(self.active_player_info_set)
         if curr == self.agent:
             assert move in self.active_player_info_set[1].moves
-
+            print(f'Move={move}')
         draw_card = True
         if move[0] == TYPE_0_STASH:
             self.state.round_moves[curr].append([move[0], [0] * 7])
             self.state.action_cards[curr][0] = 0
-            info.hand_cards = _sub_cards(info.hand_cards, move[1])
-            info.stashed_card = move[1]
+            if curr == self.agent:
+                info.hand_cards = _sub_cards(info.hand_cards, move[1])
+                info.stashed_card = move[1]
             self.state.num_cards[curr] -= 1
             self.state.acting_player_id = opp
         if move[0] == TYPE_1_TRASH:
             self.state.round_moves[curr].append([move[0], [0] * 7])
             self.state.action_cards[curr][1] = 0
-            info.hand_cards = _sub_cards(info.hand_cards, move[1])
-            info.trashed_cards = move[1]
+            if curr == self.agent:
+                info.hand_cards = _sub_cards(info.hand_cards, move[1])
+                info.trashed_cards = move[1]
             self.state.num_cards[curr] -= 2
             self.state.acting_player_id = opp
         if move[0] == TYPE_2_CHOOSE_1_2:
             self.state.round_moves[curr].append(move)
             self.state.action_cards[curr][2] = 0
-            info.hand_cards = _sub_cards(info.hand_cards, move[1])
+            if curr == self.agent:
+                info.hand_cards = _sub_cards(info.hand_cards, move[1])
             self.state.decision_cards_1_2 = move[1]
             self.state.num_cards[curr] -= 3
             self.state.acting_player_id = opp
@@ -217,8 +220,9 @@ class GameEnvExternal(object):
         if move[0] == TYPE_3_CHOOSE_2_2:
             self.state.round_moves[curr].append(move)
             self.state.action_cards[curr][3] = 0
-            info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
-            info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
+            if curr == self.agent:
+                info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
+                info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
             self.state.decision_cards_2_2 = move[1]
             self.state.num_cards[curr] -= 4
             self.state.acting_player_id = opp

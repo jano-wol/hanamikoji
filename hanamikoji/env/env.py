@@ -1,6 +1,6 @@
 import numpy as np
 
-from hanamikoji.env.game import GameEnv, get_card_play_data
+from hanamikoji.env.game import GameEnvExternal
 from hanamikoji.env.move_generator import *
 
 ROUND_MOVES = 12
@@ -52,7 +52,7 @@ class Env:
             self.players[player_id] = DummyAgent(player_id)
 
         # Initialize the internal environment
-        self._env = GameEnv(self.players)
+        self._env = GameEnvExternal(self.players)
 
         self.infoset = None
 
@@ -62,12 +62,7 @@ class Env:
         will be re-initialized with a new deck of cards.
         This function is usually called when a game is over.
         """
-        self._env.reset()
-        card_play_data = get_card_play_data()
-        self._env.card_play_init(card_play_data)
-        # First element is GameState, second element is PrivateInfo.
-        self.infoset = self._active_player_info_set()
-        return get_obs(self.infoset)
+        ValueError("reset should not be called")
 
     def step(self, move):
         """
