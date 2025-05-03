@@ -76,6 +76,7 @@ class GameEnv(object):
         self.winner = None
         self.num_wins = {'first': 0, 'second': 0}
         self.round = 1
+        self.round_end_env = None
 
         # Public game info
         self.state = GameState()
@@ -205,9 +206,11 @@ class GameEnv(object):
 
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
+            round_end_env = self.to_dict()
             self.update_geisha_preferences()
             self.set_winner()
             if self.winner is None:
+                self.round_end_env = round_end_env
                 next_geisha_preferences = deepcopy(self.state.geisha_preferences)
                 self.round += 1
                 self.state = GameState()
@@ -220,6 +223,7 @@ class GameEnv(object):
                 card_play_data = get_card_play_data()
                 self.card_play_init(card_play_data)
         else:
+            self.round_end_env = None
             info = self.private_info_sets[self.state.acting_player_id]
             if draw_card:
                 info.hand_cards[self.deck[0]] += 1
@@ -246,7 +250,8 @@ class GameEnv(object):
             "winner": self.winner,
             "state": self.state.to_dict(),
             "private_info_sets": {"first": self.private_info_sets["first"].to_dict(),
-                                  "second": self.private_info_sets["second"].to_dict()}
+                                  "second": self.private_info_sets["second"].to_dict()},
+            "round_end_env": self.round_end_env
         })
 
 
