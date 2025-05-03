@@ -92,9 +92,19 @@ class GameEnvExternal(object):
                 return hand
             print("Invalid card values. All digits must be between 1 and 7.")
 
-    def parse_card(self):
+    def draw_card(self):
         while True:
             hand_str = input(f"Draw a card and enter it here. Possible values 1–7: ").strip()
+            if len(hand_str) != 1 or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly 1 digits.")
+                continue
+            if 1 <= int(hand_str) <= 7:
+                return int(hand_str)
+            print("Invalid card value. PLease enter a digit between 1 and 7.")
+
+    def reveal_human_stash(self):
+        while True:
+            hand_str = input(f"PLease let me know human cash. Possible values 1–7: ").strip()
             if len(hand_str) != 1 or not hand_str.isdigit():
                 print(f"Invalid input. Please enter exactly 1 digits.")
                 continue
@@ -112,6 +122,9 @@ class GameEnvExternal(object):
         return self.winner
 
     def update_geisha_preferences(self):
+        human_stash = self.reveal_human_stash()
+        self.private_info_sets[self.human].stashed_card = [0, 0, 0, 0, 0, 0, 0]
+        self.private_info_sets[self.human].stashed_card[human_stash - 1] += 1
         first_gifts = _add_cards(self.state.gift_cards['first'], self.private_info_sets['first'].stashed_card)
         second_gifts = _add_cards(self.state.gift_cards['second'], self.private_info_sets['second'].stashed_card)
         for i in range(7):
@@ -168,7 +181,8 @@ class GameEnvExternal(object):
         info = self.private_info_sets[curr]
         self.active_player_info_set = self.get_active_player_info_set()
         move = self.players[curr].act(self.active_player_info_set)
-        assert move in self.active_player_info_set[1].moves
+        if curr == self.agent:
+            assert move in self.active_player_info_set[1].moves
 
         draw_card = True
         if move[0] == TYPE_0_STASH:
@@ -233,7 +247,7 @@ class GameEnvExternal(object):
             if draw_card:
                 self.state.num_cards[self.state.acting_player_id] += 1
                 if self.state.acting_player_id == self.agent:
-                    card = self.parse_card()
+                    card = self.draw_card()
                     info.hand_cards[card - 1] += 1
             if self.state.acting_player_id == self.agent:
                 info.moves = self.get_moves()
