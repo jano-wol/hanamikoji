@@ -1,5 +1,4 @@
 import argparse
-from copy import deepcopy
 import os
 import time
 import json

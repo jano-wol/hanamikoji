@@ -1,4 +1,5 @@
 torch>=1.6.0
 GitPython
 gitdb2
-rlcard
+setuptools~=79.0.1
+numpy~=2.2.5
