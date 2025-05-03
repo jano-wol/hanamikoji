@@ -66,8 +66,8 @@ def write_state(env, tick):
     print(f"State written.")
 
 
-def write_game(all_states):
-    with open(GAME_PATH, 'w') as f:
+def write_game(all_states, game):
+    with open(GAME_PATH + '_' + str(game), 'w') as f:
         f.write(json.dumps(all_states))
     print(f"Game written.")
 
@@ -167,6 +167,7 @@ def main():
     all_states = {}
 
     tick = 1
+    game = 1
     while True:
         # Agent makes a move
         # move = agent_play_turn()
@@ -182,7 +183,8 @@ def main():
         if env.winner:
             write_state(env, tick)
             add_all_states(env, tick, all_states)
-            write_game(all_states)
+            write_game(all_states, game)
+            game += 1
             while True:
                 human_id = get_human_id(players)
                 if human_id is not None:
@@ -191,7 +193,9 @@ def main():
                         tick = 1
                         break
                 else:
-                    return
+                    tidy_up(env, players, all_states)
+                    tick = 1
+                    break
 
         # Wait for human response
         # response, mod_time = wait_for_human_response(mod_time)
