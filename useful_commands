@@ -1,13 +1,4 @@
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-./get_most_recent.sh ./checkpoints/hanamikojizero/       --- (copy the created first and second to baselines)
-python ./generate_eval_data.py
-python ./generate_eval_data.py --output eval_data_200 --num_games 200
-python ./evaluate.py --first ./baselines_new --second ./baselines --eval_data eval_data.pkl --num_workers 1
-python ./evaluate.py --first ./baselines --second random --eval_data eval_data.pkl --num_workers 1
-python ./evaluate.py --first random --second ./baselines --eval_data eval_data_200.pkl --num_workers 1
-python ./train.py --actor_device_cpu --training_device cpu --num_actors 1
-python ./train.py --gpu_devices 0,1,2,3 --num_actor_devices 3 --num_actors 15 --training_device 3
-scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_recent_model/first.ckpt ~/Repositories/
-scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_recent_model/second.ckpt ~/Repositories/
+python ./server.py
