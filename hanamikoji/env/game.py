@@ -237,14 +237,6 @@ class GameEnv(object):
         self.active_player_info_set = None
 
     def to_dict(self):
-        def player_repr(p):
-            if isinstance(p, DeepAgent):
-                return "DeepAgent"
-            elif isinstance(p, Human):
-                return "Human"
-            else:
-                return str(p)
-
         return deepcopy({
             "players": {
                 role: str(p) for role, p in self.players.items()
