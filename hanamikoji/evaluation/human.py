@@ -33,6 +33,30 @@ class Human:
                 return hand
             print("Invalid card values. All digits must be between 1 and 7.")
 
+    def parse_move_2_2_a(self):
+        expected_length = 2
+        while True:
+            hand_str = input(f"Enter the 2 human cards ({expected_length} digits, each 1–7): ").strip()
+            if len(hand_str) != expected_length or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly {expected_length} digits.")
+                continue
+            hand = [int(c) for c in hand_str]
+            if all(1 <= card <= 7 for card in hand):
+                return hand
+            print("Invalid card values. All digits must be between 1 and 7.")
+
+    def parse_move_2_2_b(self):
+        expected_length = 2
+        while True:
+            hand_str = input(f"Enter the other 2 human cards ({expected_length} digits, each 1–7): ").strip()
+            if len(hand_str) != expected_length or not hand_str.isdigit():
+                print(f"Invalid input. Please enter exactly {expected_length} digits.")
+                continue
+            hand = [int(c) for c in hand_str]
+            if all(1 <= card <= 7 for card in hand):
+                return hand
+            print("Invalid card values. All digits must be between 1 and 7.")
+
     def parse_action_type(self):
         while True:
             hand_str = input(f"Provide action type. Possible values 1–4: ").strip()
@@ -61,5 +85,10 @@ class Human:
             h = self.parse_move_1_2()
             return [2, card_list_to_inner(h)]
         else:
-            return 0
+            l1 = card_list_to_inner(self.parse_move_2_2_a())
+            l2 = card_list_to_inner(self.parse_move_2_2_b())
+            if l1 < l2:
+                return [3, [l1, l2]]
+            else:
+                return [3, [l2, l1]]
 
