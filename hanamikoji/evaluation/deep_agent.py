@@ -33,6 +33,7 @@ class DeepAgent:
 
     def act(self, infoset):
         if len(infoset[1].moves) == 1:
+            print(f'MOVE={infoset[1].moves[0]} val=FORCED')
             return infoset[1].moves[0]
 
         obs = get_obs(infoset)
@@ -49,5 +50,5 @@ class DeepAgent:
 
         best_move_index = np.argmax(y_pred, axis=0)[0]
         best_move = infoset[1].moves[best_move_index]
-
+        print(f'MOVE={best_move} val={y_pred[best_move_index][0]:.4f}')
         return best_move

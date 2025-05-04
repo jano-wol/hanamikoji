@@ -190,7 +190,6 @@ class GameEnvExternal(object):
         move = self.players[curr].act(self.active_player_info_set)
         if curr == self.agent:
             assert move in self.active_player_info_set[1].moves
-            print(f'Move={move}')
         draw_card = True
         if move[0] == TYPE_0_STASH:
             self.state.round_moves[curr].append([move[0], [0] * 7])
