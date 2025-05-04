@@ -29,16 +29,15 @@ class MovesGener(object):
             return
 
         if choose_2_2:
-            if choose_2_2[0] != choose_2_2[0]:
-                self.resolve_2_2 = [[TYPE_5_RESOLVE_2_2, [[], []]], [TYPE_5_RESOLVE_2_2, [[], []]]]
-                self.resolve_2_2[0][1][0] = choose_2_2[0]
-                self.resolve_2_2[0][1][1] = choose_2_2[1]
-                self.resolve_2_2[1][1][0] = choose_2_2[1]
-                self.resolve_2_2[1][1][1] = choose_2_2[0]
+            if choose_2_2[0] != choose_2_2[1]:
+                self.resolve_2_2 = [
+                    [TYPE_5_RESOLVE_2_2, [choose_2_2[0], choose_2_2[1]]],
+                    [TYPE_5_RESOLVE_2_2, [choose_2_2[1], choose_2_2[0]]]
+                ]
             else:
-                self.resolve_2_2 = [[TYPE_5_RESOLVE_2_2, [[], []]]]
-                self.resolve_2_2[0][1][0] = choose_2_2[0]
-                self.resolve_2_2[0][1][1] = choose_2_2[1]
+                self.resolve_2_2 = [
+                    [TYPE_5_RESOLVE_2_2, [choose_2_2[0], choose_2_2[1]]]
+                ]
             return
 
         if action_cards[0] == 1:
