@@ -3,6 +3,7 @@ import pickle
 
 from hanamikoji.env.game import GameEnv
 
+
 def load_card_play_models(card_play_model_path_dict):
     players = {}
 
@@ -15,20 +16,25 @@ def load_card_play_models(card_play_model_path_dict):
             players[player_id] = DeepAgent(card_play_model_path_dict[player_id])
     return players
 
-def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
 
+def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
     players = load_card_play_models(card_play_model_path_dict)
 
+    glob = 0
     env = GameEnv(players)
     for idx, card_play_data in enumerate(card_play_data_list):
         env.card_play_init(card_play_data)
         while not env.winner:
             env.step()
         env.reset()
+        if glob % 1000 == 0:
+            print(glob)
+        glob += 1
 
     q.put((env.num_wins['first'],
            env.num_wins['second']
-         ))
+           ))
+
 
 def data_allocation_per_worker(card_play_data_list, num_workers):
     card_play_data_list_each_worker = [[] for k in range(num_workers)]
@@ -37,8 +43,8 @@ def data_allocation_per_worker(card_play_data_list, num_workers):
 
     return card_play_data_list_each_worker
 
-def evaluate(first, second, eval_data, num_workers):
 
+def evaluate(first, second, eval_data, num_workers):
     with open(eval_data, 'rb') as f:
         card_play_data_list = pickle.load(f)
 
@@ -59,8 +65,8 @@ def evaluate(first, second, eval_data, num_workers):
     processes = []
     for card_play_data in card_play_data_list_each_worker:
         p = ctx.Process(
-                target=mp_simulate,
-                args=(card_play_data, card_play_model_path_dict, q))
+            target=mp_simulate,
+            args=(card_play_data, card_play_model_path_dict, q))
         p.start()
         processes.append(p)
 
