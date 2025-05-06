@@ -6,8 +6,9 @@ from hanamikoji.env.move_generator import *
 ROUND_MOVES = 12
 MOVE_VECTOR_SIZE = 63
 HIST_MOVE_VECTOR_SIZE = 64
-X_FEATURE_SIZE = 169
+X_FEATURE_SIZE = 288
 X_NO_MOVE_FEATURE_SIZE = (X_FEATURE_SIZE - MOVE_VECTOR_SIZE)
+
 
 def my_move2array(move):
     ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
@@ -27,6 +28,7 @@ def my_move2array(move):
         ret[49:56] = move[1][0]
         ret[56:] = move[1][1]
     return ret
+
 
 class Env:
     """
@@ -104,7 +106,6 @@ class Env:
         else:
             return -1.0
 
-
     def _active_player_info_set(self):
         """
         Here, active_player_info_set is defined as all the information available for the active player
@@ -117,13 +118,11 @@ class Env:
         """
         return self._env.get_winner()
 
-
     def _acting_player_id(self):
         """
         The player that is active. It can be 'first' or 'second'
         """
         return self._env.state.acting_player_id
-
 
     def _game_over(self):
         """
@@ -169,6 +168,16 @@ def _get_one_hot_array(num_left_cards):
 
 def _cards2array(list_cards):
     return np.array(list_cards, dtype=np.int8)
+
+
+def _cards2exp_array(list_cards):
+    full = [2, 2, 2, 3, 3, 4, 5]
+    result = []
+    for have, total in zip(list_cards, full):
+        result.extend([1] * have + [0] * (total - have))
+
+    return np.array(result, dtype=np.int8)
+
 
 def hist_move2array(hist_move, round_start):
     move_id = hist_move[0]
@@ -245,7 +254,8 @@ def get_obs(infoset):
     geisha_points_batch = _create_batch(geisha_points, num_moves)
 
     # FEATURE 2 -- Geisha preferences. SIZE=7
-    geisha_preferences = _cards2array(infoset[0].geisha_preferences[curr]) - _cards2array(infoset[0].geisha_preferences[opp])
+    geisha_preferences = _cards2array(infoset[0].geisha_preferences[curr]) - _cards2array(
+        infoset[0].geisha_preferences[opp])
     geisha_preferences_batch = _create_batch(geisha_preferences, num_moves)
 
     # FEATURE 3 -- Hand cards. SIZE=7
@@ -306,6 +316,36 @@ def get_obs(infoset):
     unknown_cards = geisha_points - hand_cards - all_gift_cards - trashed_cards - gift_cards_opp - decision_cards_1_2 - decision_cards_2_2_1 - decision_cards_2_2_2
     unknown_cards_batch = _create_batch(unknown_cards, num_moves)
 
+    # New backend features
+
+    # FEATURE 17 -- Explicit 0-1 geisha preferencies. SIZE=7
+    geisha_preferencies_exp = _cards2array(infoset[0].geisha_preferences[curr])
+    geisha_preferencies_exp_batch = _create_batch(geisha_preferencies_exp, num_moves)
+
+    # FEATURE 18 -- Explicit 0-1 geisha preferencies opp. SIZE=7
+    geisha_preferencies_exp_opp = _cards2array(infoset[0].geisha_preferences[opp])
+    geisha_preferencies_exp_opp_batch = _create_batch(geisha_preferencies_exp_opp, num_moves)
+
+    # FEATURE 19 -- Explicit 0-1 hand cards. SIZE = 21
+    hand_cards_exp = _cards2exp_array(infoset[1].hand_cards)
+    hand_cards_exp_batch = _create_batch(hand_cards_exp, num_moves)
+
+    # FEATURE 20 -- Explicit 0-1 gift cards. SIZE=21
+    gift_cards_exp = _cards2exp_array(infoset[0].gift_cards[curr])
+    gift_cards_exp_batch = _create_batch(gift_cards_exp, num_moves)
+
+    # FEATURE 21 -- Explicit 0-1 gift cards opp. SIZE=21
+    gift_cards_exp_opp = _cards2exp_array(infoset[0].gift_cards[opp])
+    gift_cards_exp_opp_batch = _create_batch(gift_cards_exp_opp, num_moves)
+
+    # FEATURE 22 -- Explicit 0-1 all gift cards. SIZE=21
+    all_gift_cards_exp = _cards2exp_array(all_gift_cards)
+    all_gift_cards_exp_batch = _create_batch(all_gift_cards_exp, num_moves)
+
+    # FEATURE 23 -- Explicit 0-1 unknown cards. SIZE=21
+    unknown_cards_exp = _cards2exp_array(unknown_cards)
+    unknown_cards_exp_batch = _create_batch(unknown_cards_exp, num_moves)
+
     move_batch = np.zeros((num_moves, MOVE_VECTOR_SIZE))
     for j, move in enumerate(infoset[1].moves):
         move_batch[j, :] = my_move2array(move)
@@ -327,7 +367,14 @@ def get_obs(infoset):
     x_batch[:, 85:92] = num_cards_batch
     x_batch[:, 92:99] = num_cards_opp_batch
     x_batch[:, 99:106] = unknown_cards_batch
-    x_batch[:, 106:] = move_batch
+    x_batch[:, 106:113] = geisha_preferencies_exp_batch
+    x_batch[:, 113:120] = geisha_preferencies_exp_opp_batch
+    x_batch[:, 120:141] = hand_cards_exp_batch
+    x_batch[:, 141:162] = gift_cards_exp_batch
+    x_batch[:, 162:183] = gift_cards_exp_opp_batch
+    x_batch[:, 183:204] = all_gift_cards_exp_batch
+    x_batch[:, 204:225] = unknown_cards_exp_batch
+    x_batch[:, 225:] = move_batch
 
     x_no_move = np.empty(X_NO_MOVE_FEATURE_SIZE, dtype=np.int8)
     x_no_move[0:7] = geisha_points
@@ -346,6 +393,13 @@ def get_obs(infoset):
     x_no_move[85:92] = num_cards
     x_no_move[92:99] = num_cards_opp
     x_no_move[99:106] = unknown_cards
+    x_no_move[106:113] = geisha_preferencies_exp
+    x_no_move[113:120] = geisha_preferencies_exp_opp
+    x_no_move[120:141] = hand_cards_exp
+    x_no_move[141:162] = gift_cards_exp
+    x_no_move[162:183] = gift_cards_exp_opp
+    x_no_move[183:204] = all_gift_cards_exp
+    x_no_move[204:225] = unknown_cards_exp
 
     z = _encode_round_moves(infoset[0].round_moves)
     z_batch = np.broadcast_to(z, (num_moves, *z.shape))
