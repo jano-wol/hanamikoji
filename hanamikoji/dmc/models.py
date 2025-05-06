@@ -7,13 +7,13 @@ import numpy as np
 
 import torch
 from torch import nn
-from hanamikoji.env.env import MOVE_VECTOR_SIZE, X_FEATURE_SIZE
+from hanamikoji.env.env import HIST_MOVE_VECTOR_SIZE, X_FEATURE_SIZE
 
 
 class LstmModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.lstm = nn.LSTM(MOVE_VECTOR_SIZE, 128, batch_first=True)
+        self.lstm = nn.LSTM(HIST_MOVE_VECTOR_SIZE, 128, batch_first=True)
         self.dense1 = nn.Linear(X_FEATURE_SIZE + 128, 512)
         self.dense2 = nn.Linear(512, 512)
         self.dense3 = nn.Linear(512, 512)

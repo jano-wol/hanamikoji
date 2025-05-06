@@ -5,6 +5,7 @@ from hanamikoji.env.move_generator import *
 
 ROUND_MOVES = 12
 MOVE_VECTOR_SIZE = 63
+HIST_MOVE_VECTOR_SIZE = 64
 X_FEATURE_SIZE = 169
 X_NO_MOVE_FEATURE_SIZE = (X_FEATURE_SIZE - MOVE_VECTOR_SIZE)
 
@@ -169,13 +170,15 @@ def _get_one_hot_array(num_left_cards):
 def _cards2array(list_cards):
     return np.array(list_cards, dtype=np.int8)
 
-def _opp_move2array(move):
-    ret = np.zeros(MOVE_VECTOR_SIZE, dtype=np.int8)
+def hist_move2array(hist_move, round_start):
+    move_id = hist_move[0]
+    move = hist_move[1]
+    ret = np.zeros(HIST_MOVE_VECTOR_SIZE, dtype=np.int8)
     if move[0] == TYPE_0_STASH:
-        # Opponent move is not known, still we pad this to 7 feature
+        # Not public info, in lstm we do not encode it
         ret[:7] = [1] * 7
     if move[0] == TYPE_1_TRASH:
-        # Opponent move is not known, still we pad this to 7 feature
+        # Not public info, in lstm we do not encode it
         ret[7:14] = [1] * 7
     if move[0] == TYPE_2_CHOOSE_1_2:
         ret[14:21] = move[1]
@@ -188,24 +191,16 @@ def _opp_move2array(move):
     if move[0] == TYPE_5_RESOLVE_2_2:
         ret[49:56] = move[1][0]
         ret[56:] = move[1][1]
+    id_bit = 1 if round_start == move_id else 0
+    ret[63] = id_bit
     return ret
 
 
-def _encode_round_moves(round_moves_curr, round_moves_opp):
-    """
-    We encode the historical moves of the given round. If there is
-    not yet 6 moves on either side then we pad the features with zeros. We encode so that the most recent moves are on
-    fixed indices (5 and 11), and older decision are on index 4, 3,... and  10, 9, ... respectively.
-    (So padding goes to the front). Finally, we obtain a ROUND_MOVES x MOVE_VECTOR_SIZE matrix, which will be fed into
-    LSTM for encoding.
-    """
-    z = np.zeros((ROUND_MOVES, MOVE_VECTOR_SIZE))
-    l_curr = len(round_moves_curr)
-    for i in range(6 - l_curr, 6):
-        z[i, :] = my_move2array(round_moves_curr[i - (6 - l_curr)])
-    l_opp = len(round_moves_opp)
-    for i in range(ROUND_MOVES - l_opp, ROUND_MOVES):
-        z[i, :] = _opp_move2array(round_moves_opp[i - (ROUND_MOVES - l_opp)])
+def _encode_round_moves(round_moves):
+    z = np.zeros((ROUND_MOVES, HIST_MOVE_VECTOR_SIZE))
+    l = len(round_moves)
+    for i in range(l):
+        z[i, :] = hist_move2array(round_moves[i], round_moves[0][0])
     return z
 
 
@@ -235,10 +230,10 @@ def get_obs(infoset):
     shape = (X_NO_MOVE_FEATURE_SIZE)
 
     `z_batch` is a batch of features encoding the historical moves of the round.
-    shape = (num_moves, ROUND_MOVES, MOVE_VECTOR_SIZE)
+    shape = (num_moves, ROUND_MOVES, HIST_MOVE_VECTOR_SIZE)
 
     `z`: same as z_batch but not a batch.
-    shape = (ROUND_MOVES, MOVE_VECTOR_SIZE)
+    shape = (ROUND_MOVES, HIST_MOVE_VECTOR_SIZE)
 
     """
     num_moves = len(infoset[1].moves)
@@ -352,7 +347,7 @@ def get_obs(infoset):
     x_no_move[92:99] = num_cards_opp
     x_no_move[99:106] = unknown_cards
 
-    z = _encode_round_moves(infoset[0].round_moves[curr], infoset[0].round_moves[opp])
+    z = _encode_round_moves(infoset[0].round_moves)
     z_batch = np.broadcast_to(z, (num_moves, *z.shape))
     obs = {
         'id': infoset[0].acting_player_id,

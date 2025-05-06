@@ -10,7 +10,7 @@ import torch
 from torch import multiprocessing as mp
 
 from hanamikoji.dmc.env_utils import Environment
-from hanamikoji.env.env import my_move2array, Env, ROUND_MOVES, MOVE_VECTOR_SIZE, X_NO_MOVE_FEATURE_SIZE
+from hanamikoji.env.env import my_move2array, Env, ROUND_MOVES, MOVE_VECTOR_SIZE, HIST_MOVE_VECTOR_SIZE, X_NO_MOVE_FEATURE_SIZE
 
 shandle = logging.StreamHandler()
 shandle.setFormatter(
@@ -92,7 +92,7 @@ def create_buffers(flags, device_iterator):
                 target=dict(size=(T,), dtype=torch.float32),
                 obs_x_no_move=dict(size=(T, X_NO_MOVE_FEATURE_SIZE), dtype=torch.int8),
                 obs_move=dict(size=(T, MOVE_VECTOR_SIZE), dtype=torch.int8),
-                obs_z=dict(size=(T, ROUND_MOVES, MOVE_VECTOR_SIZE), dtype=torch.int8),
+                obs_z=dict(size=(T, ROUND_MOVES, HIST_MOVE_VECTOR_SIZE), dtype=torch.int8),
             )
             _buffers: Buffers = {key: [] for key in specs}
             for _ in range(flags.num_buffers):

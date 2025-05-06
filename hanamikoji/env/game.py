@@ -51,7 +51,7 @@ class GameState(object):
         # The number of cards in hand
         self.num_cards = {'first': 7, 'second': 6}
         # Contains the moves of the first and second players
-        self.round_moves = {'first': [], 'second': []}
+        self.round_moves = []
 
 
 class GameEnv(object):
@@ -148,21 +148,21 @@ class GameEnv(object):
 
         draw_card = True
         if move[0] == TYPE_0_STASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7])
+            self.state.round_moves.append([curr, [move[0], [0] * 7]])
             self.state.action_cards[curr][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_card = move[1]
             self.state.num_cards[curr] -= 1
             self.state.acting_player_id = opp
         if move[0] == TYPE_1_TRASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7])
+            self.state.round_moves.append([curr, [move[0], [0] * 7]])
             self.state.action_cards[curr][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]
             self.state.num_cards[curr] -= 2
             self.state.acting_player_id = opp
         if move[0] == TYPE_2_CHOOSE_1_2:
-            self.state.round_moves[curr].append(move)
+            self.state.round_moves.append([curr, move])
             self.state.action_cards[curr][2] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             self.state.decision_cards_1_2 = move[1]
@@ -170,7 +170,7 @@ class GameEnv(object):
             self.state.acting_player_id = opp
             draw_card = False
         if move[0] == TYPE_3_CHOOSE_2_2:
-            self.state.round_moves[curr].append(move)
+            self.state.round_moves.append([curr, move])
             self.state.action_cards[curr][3] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1][0])
             info.hand_cards = _sub_cards(info.hand_cards, move[1][1])
@@ -179,17 +179,17 @@ class GameEnv(object):
             self.state.acting_player_id = opp
             draw_card = False
         if move[0] == TYPE_4_RESOLVE_1_2:
-            self.state.round_moves[curr].append(move)
+            self.state.round_moves.append([curr, move])
             self.state.decision_cards_1_2 = None
             self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
         if move[0] == TYPE_5_RESOLVE_2_2:
-            self.state.round_moves[curr].append(move)
+            self.state.round_moves.append([curr, move])
             self.state.decision_cards_2_2 = None
             self.state.gift_cards[curr] = _add_cards(self.state.gift_cards[curr], move[1][0])
             self.state.gift_cards[opp] = _add_cards(self.state.gift_cards[opp], move[1][1])
 
-        if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
+        if len(self.state.round_moves) == 12:
             assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
             self.update_geisha_preferences()
             self.set_winner()
