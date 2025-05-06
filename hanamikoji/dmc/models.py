@@ -13,13 +13,14 @@ from hanamikoji.env.env import HIST_MOVE_VECTOR_SIZE, X_FEATURE_SIZE
 class LstmModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.lstm = nn.LSTM(HIST_MOVE_VECTOR_SIZE, 128, batch_first=True)
-        self.dense1 = nn.Linear(X_FEATURE_SIZE + 128, 512)
-        self.dense2 = nn.Linear(512, 512)
-        self.dense3 = nn.Linear(512, 512)
-        self.dense4 = nn.Linear(512, 512)
-        self.dense5 = nn.Linear(512, 512)
-        self.dense6 = nn.Linear(512, 1)
+        self.lstm = nn.LSTM(HIST_MOVE_VECTOR_SIZE, 192, batch_first=True)
+        self.dense1 = nn.Linear(X_FEATURE_SIZE + 192, 768)
+        self.dense2 = nn.Linear(768, 768)
+        self.dense3 = nn.Linear(768, 768)
+        self.dense4 = nn.Linear(768, 768)
+        self.dense5 = nn.Linear(768, 768)
+        self.dense6 = nn.Linear(768, 768)
+        self.dense7 = nn.Linear(768, 1)
 
     def forward(self, z, x, return_value=False, flags=None):
         lstm_out, (h_n, _) = self.lstm(z)
@@ -36,6 +37,8 @@ class LstmModel(nn.Module):
         x = self.dense5(x)
         x = torch.relu(x)
         x = self.dense6(x)
+        x = torch.relu(x)
+        x = self.dense7(x)
         if return_value:
             return dict(values=x)
         else:
