@@ -190,7 +190,7 @@ def hist_move2array(hist_move, round_start):
         ret[42:49] = move[1][1]
     if move[0] == TYPE_5_RESOLVE_2_2:
         ret[49:56] = move[1][0]
-        ret[56:] = move[1][1]
+        ret[56:63] = move[1][1]
     id_bit = 1 if round_start == move_id else 0
     ret[63] = id_bit
     return ret
