@@ -120,7 +120,7 @@ class Human:
         else:
             l1 = card_list_to_inner(self.parse_move_2_2_a())
             l2 = card_list_to_inner(self.parse_move_2_2_b())
-            if l1 < l2:
+            if l1 > l2:
                 return [3, [l1, l2]]
             else:
                 return [3, [l2, l1]]
