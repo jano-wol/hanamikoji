@@ -12,6 +12,8 @@ from torch import multiprocessing as mp
 from hanamikoji.dmc.env_utils import Environment
 from hanamikoji.env.env import my_move2array, Env, ROUND_MOVES, MOVE_VECTOR_SIZE, X_NO_MOVE_FEATURE_SIZE
 
+BELIEF_OUT = 21  # stash, trashed, hand
+
 shandle = logging.StreamHandler()
 shandle.setFormatter(
     logging.Formatter(
@@ -62,7 +64,7 @@ def create_optimizers(flags, learner_model):
     """
     Create two optimizers for the two round ids.
     """
-    round_ids = ['first', 'second']
+    round_ids = ['first', 'second', 'belief']
     optimizers = {}
     for round_id in round_ids:
         optimizer = torch.optim.RMSprop(
@@ -90,6 +92,7 @@ def create_buffers(flags, device_iterator):
             specs = dict(
                 done=dict(size=(T,), dtype=torch.bool),
                 target=dict(size=(T,), dtype=torch.float32),
+                target_belief=dict(size=(T, BELIEF_OUT), dtype=torch.float32),
                 obs_x_no_move=dict(size=(T, X_NO_MOVE_FEATURE_SIZE), dtype=torch.int8),
                 obs_move=dict(size=(T, MOVE_VECTOR_SIZE), dtype=torch.int8),
                 obs_z=dict(size=(T, ROUND_MOVES, MOVE_VECTOR_SIZE), dtype=torch.int8),
@@ -122,6 +125,7 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
 
         done_buf = {p: [] for p in player_ids}
         target_buf = {p: [] for p in player_ids}
+        target_belief_buf = {p: [] for p in player_ids}
         obs_x_no_move_buf = {p: [] for p in player_ids}
         obs_move_buf = {p: [] for p in player_ids}
         obs_z_buf = {p: [] for p in player_ids}
@@ -132,8 +136,14 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
 
         while True:
             while True:
+                opp = 'second' if round_id == 'first' else 'first'
                 acting_player_ids_by_round_id[round_id].append(acting_player_id)
                 obs_x_no_move_buf[round_id].append(env_output['obs_x_no_move'])
+                opp_infoset = env.env._env.private_info_sets[opp]
+                opp_stash = [0] * 7 if opp_infoset.stashed_card is None else opp_infoset.stashed_card
+                opp_trashed_cards = [0] * 7 if opp_infoset.trashed_cards is None else opp_infoset.trashed_cards
+                opp_hand_cards = [0] * 7 if opp_infoset.hand_cards is None else opp_infoset.hand_cards
+                target_belief_buf[round_id].append(torch.tensor(opp_stash + opp_trashed_cards + opp_hand_cards, device=device))
                 obs_z_buf[round_id].append(env_output['obs_z'])
                 with torch.no_grad():
                     agent_output = model.forward(round_id, obs['z_batch'], obs['x_batch'], flags=flags)
@@ -169,12 +179,14 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                     for t in range(T):
                         buffers[p]['done'][index][t, ...] = done_buf[p][t]
                         buffers[p]['target'][index][t, ...] = target_buf[p][t]
+                        buffers[p]['target_belief'][index][t, ...] = target_belief_buf[p][t]
                         buffers[p]['obs_x_no_move'][index][t, ...] = obs_x_no_move_buf[p][t]
                         buffers[p]['obs_move'][index][t, ...] = obs_move_buf[p][t]
                         buffers[p]['obs_z'][index][t, ...] = obs_z_buf[p][t]
                     full_queue[p].put(index)
                     done_buf[p] = done_buf[p][T:]
                     target_buf[p] = target_buf[p][T:]
+                    target_belief_buf[p] = target_belief_buf[p][T:]
                     obs_x_no_move_buf[p] = obs_x_no_move_buf[p][T:]
                     obs_move_buf[p] = obs_move_buf[p][T:]
                     obs_z_buf[p] = obs_z_buf[p][T:]

@@ -20,8 +20,10 @@ def compute_loss(logits, targets):
 
 def learn(round_id,
           actor_models,
+          belief_model,
           model,
           batch,
+          optimizer_belief,
           optimizer,
           flags,
           lock):
@@ -35,15 +37,26 @@ def learn(round_id,
     obs_x = torch.cat((obs_x_no_move, obs_move), dim=2).float()
     obs_x = torch.flatten(obs_x, 0, 1)
     obs_z = torch.flatten(batch['obs_z'].to(device), 0, 1).float()
+    target_belief = torch.flatten(batch['target_belief'].to(device), 0, 1)
     target = torch.flatten(batch['target'].to(device), 0, 1)
 
     with lock:
-        learner_outputs = model(obs_z, obs_x, return_value=True)
+        learner_belief_outputs = belief_model(obs_z, obs_x)
+        belief_values_detached = learner_belief_outputs['values'].detach()
+        learner_outputs = model(obs_z, obs_x, belief_values_detached, return_value=True)
+
+        loss_belief = compute_loss(learner_belief_outputs['values'], target_belief)
         loss = compute_loss(learner_outputs['values'], target)
         stats = {
+            'loss_belief': loss_belief.item(),
             'loss_'+round_id: loss.item()
         }
-        
+
+        optimizer_belief.zero_grad()
+        loss_belief.backward()
+        nn.utils.clip_grad_norm_(belief_model.parameters(), flags.max_grad_norm)
+        optimizer_belief.step()
+
         optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), flags.max_grad_norm)
@@ -112,17 +125,18 @@ def train(flags):
     # Stat Keys
     stat_keys = [
         'loss_first',
-        'loss_second'
+        'loss_second',
+        'loss_belief'
     ]
     frames, stats = 0, {k: 0 for k in stat_keys}
-    round_id_frames = {'first':0, 'second':0}
+    round_id_frames = {'first':0, 'second':0, 'belief':0}
 
     # Load models if any
     if flags.load_model and os.path.exists(checkpointpath):
         checkpoint_states = torch.load(
             checkpointpath, map_location=("cuda:"+str(flags.training_device) if flags.training_device != "cpu" else "cpu")
         )
-        for k in ['first', 'second']:
+        for k in ['first', 'second', 'belief']:
             learner_model.get_model(k).load_state_dict(checkpoint_states["model_state_dict"][k])
             optimizers[k].load_state_dict(checkpoint_states["optimizer_state_dict"][k])
             for device in device_iterator:
@@ -147,7 +161,7 @@ def train(flags):
         nonlocal frames, round_id_frames, stats
         while frames < flags.total_frames:
             batch = get_batch(free_queue[device][round_id], full_queue[device][round_id], buffers[device][round_id], flags, local_lock)
-            _stats = learn(round_id, models, learner_model.get_model(round_id), batch, optimizers[round_id], flags, round_id_lock)
+            _stats = learn(round_id, models, learner_model.get_model('belief'), learner_model.get_model(round_id), batch, optimizers['belief'], optimizers[round_id], flags, round_id_lock)
 
             with lock:
                 for k in _stats:
@@ -192,7 +206,7 @@ def train(flags):
         }, checkpointpath)
 
         # Save the weights for evaluation purpose
-        for round_id in ['first', 'second']:
+        for round_id in ['first', 'second', 'belief']:
             model_weights_dir = os.path.expandvars(os.path.expanduser(
                 '%s/%s/%s' % (flags.savedir, flags.xpid, round_id + '_weights_'+str(frames)+'.ckpt')))
             torch.save(learner_model.get_model(round_id).state_dict(), model_weights_dir)
@@ -219,14 +233,16 @@ def train(flags):
             fps_avg = np.mean(fps_log)
 
             round_id_fps = {k:(round_id_frames[k]-round_id_start_frames[k])/(end_time-start_time) for k in round_id_frames}
-            log.info('After %i (F:%i S:%i) frames: @ %.1f fps (avg@ %.1f fps) (F:%.1f S:%.1f) Stats:\n%s',
+            log.info('After %i (F:%i S:%i B:%i) frames: @ %.1f fps (avg@ %.1f fps) (F:%.1f S:%.1f B:%.1f) Stats:\n%s',
                      frames,
                      round_id_frames['first'],
                      round_id_frames['second'],
+                     round_id_frames['belief'],
                      fps,
                      fps_avg,
                      round_id_fps['first'],
                      round_id_fps['second'],
+                     round_id_fps['belief'],
                      pprint.pformat(stats))
 
     except KeyboardInterrupt:
