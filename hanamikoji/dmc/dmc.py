@@ -26,7 +26,8 @@ def learn(round_id,
           optimizer_belief,
           optimizer,
           flags,
-          lock):
+          lock,
+          belief_lock):
     """Performs a learning (optimization) step."""
     if flags.training_device != "cpu":
         device = torch.device('cuda:'+str(flags.training_device))
@@ -41,21 +42,21 @@ def learn(round_id,
     target = torch.flatten(batch['target'].to(device), 0, 1)
 
     with lock:
-        learner_belief_outputs = belief_model(obs_z, obs_x)
-        belief_values_detached = learner_belief_outputs['values'].detach()
-        learner_outputs = model(obs_z, obs_x, belief_values_detached, return_value=True)
+        with belief_lock:
+            learner_belief_outputs = belief_model(obs_z, obs_x)
+            belief_values_detached = learner_belief_outputs['values'].detach()
+            loss_belief = compute_loss(learner_belief_outputs['values'], target_belief)
+            optimizer_belief.zero_grad()
+            loss_belief.backward()
+            nn.utils.clip_grad_norm_(belief_model.parameters(), flags.max_grad_norm)
+            optimizer_belief.step()
 
-        loss_belief = compute_loss(learner_belief_outputs['values'], target_belief)
+        learner_outputs = model(obs_z, obs_x, belief_values_detached, return_value=True)
         loss = compute_loss(learner_outputs['values'], target)
         stats = {
             'loss_belief': loss_belief.item(),
             'loss_'+round_id: loss.item()
         }
-
-        optimizer_belief.zero_grad()
-        loss_belief.backward()
-        nn.utils.clip_grad_norm_(belief_model.parameters(), flags.max_grad_norm)
-        optimizer_belief.step()
 
         optimizer.zero_grad()
         loss.backward()
@@ -156,12 +157,14 @@ def train(flags):
             actor.start()
             actor_processes.append(actor)
 
+    belief_lock = threading.Lock()
+
     def batch_and_learn(i, device, round_id, local_lock, round_id_lock, lock=threading.Lock()):
         """Thread target for the learning process."""
         nonlocal frames, round_id_frames, stats
         while frames < flags.total_frames:
             batch = get_batch(free_queue[device][round_id], full_queue[device][round_id], buffers[device][round_id], flags, local_lock)
-            _stats = learn(round_id, models, learner_model.get_model('belief'), learner_model.get_model(round_id), batch, optimizers['belief'], optimizers[round_id], flags, round_id_lock)
+            _stats = learn(round_id, models, learner_model.get_model('belief'), learner_model.get_model(round_id), batch, optimizers['belief'], optimizers[round_id], flags, round_id_lock, belief_lock)
 
             with lock:
                 for k in _stats:
