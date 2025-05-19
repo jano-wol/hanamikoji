@@ -148,7 +148,14 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                 with torch.no_grad():
                     agent_output = model.forward(round_id, obs['z_batch'], obs['x_batch'], flags=flags)
                 _move_idx = int(agent_output['move'].cpu().detach().numpy())
-                move = obs['moves'][_move_idx]
+                try:
+                    move = obs['moves'][_move_idx]  # Original line that fails
+                except IndexError:
+                    print("\n=== DEBUG: IndexError in accessing 'moves' ===")
+                    print(f"_move_idx: {_move_idx} (type: {type(_move_idx)})")
+                    print(f"len(obs['moves']): {len(obs['moves'])}")
+                    print(f"obs['moves'] contents: {obs['moves']}")
+                    print("Possible fixes: Check if '_move_idx' is valid, or if 'moves' is empty.")
                 obs_move_buf[round_id].append(my_move2tensor(move))
                 size[round_id] += 1
                 acting_player_id, round_id, obs, env_output = env.step(move)
