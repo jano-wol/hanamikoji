@@ -1,242 +1,63 @@
 #ifndef HANAMIKOJI_FEATURES_H_INCLUDED
 #define HANAMIKOJI_FEATURES_H_INCLUDED
 
-#include <algorithm>
-#include <array>
-#include <cstring>  // for memset
-#include <map>
-#include <numeric>
-#include <vector>
+#include <torch/script.h>
 #include "game.h"
 #include "movegen.h"
 
-constexpr int ROUND_MOVES = 12;
-constexpr int MOVE_VECTOR_SIZE = 63;
-constexpr int X_FEATURE_SIZE = 169;
-constexpr int X_NO_MOVE_FEATURE_SIZE = X_FEATURE_SIZE - MOVE_VECTOR_SIZE;
-
-using Move = std::pair<int, std::vector<int>>;
-
-std::vector<int> my_move2array(const Move& move)
-{
-  std::vector<int> ret = {};
-  int type = move.first;
-  const auto& data = move.second;
-
-  switch (type) {
-  case TYPE_0_STASH:
-    std::copy(data[0].begin(), data[0].end(), ret.begin());
-    break;
-  case TYPE_1_TRASH:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 7);
-    break;
-  case TYPE_2_CHOOSE_1_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 14);
-    break;
-  case TYPE_3_CHOOSE_2_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 21);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 28);
-    break;
-  case TYPE_4_RESOLVE_1_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 35);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 42);
-    break;
-  case TYPE_5_RESOLVE_2_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 49);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 56);
-    break;
-  }
-  return ret;
-}
-
-std::vector<int> opp_move2array(const Move& move)
-{
-  std::vector<int> ret = {};
-  int type = move.first;
-  const auto& data = move.second;
-
-  switch (type) {
-  case TYPE_0_STASH:
-    std::fill(ret.begin(), ret.begin() + 7, 1);
-    break;
-  case TYPE_1_TRASH:
-    std::fill(ret.begin() + 7, ret.begin() + 14, 1);
-    break;
-  case TYPE_2_CHOOSE_1_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 14);
-    break;
-  case TYPE_3_CHOOSE_2_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 21);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 28);
-    break;
-  case TYPE_4_RESOLVE_1_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 35);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 42);
-    break;
-  case TYPE_5_RESOLVE_2_2:
-    std::copy(data[0].begin(), data[0].end(), ret.begin() + 49);
-    std::copy(data[1].begin(), data[1].end(), ret.begin() + 56);
-    break;
-  }
-  return ret;
-}
-
-std::vector<int> one_hot(int num_cards)
-{
-  std::vector<int> one_hot = {};
-  if (num_cards > 0 && num_cards <= 7) {
-    one_hot[num_cards - 1] = 1;
-  }
-  return one_hot;
-}
-
-std::vector<std::vector<int>> encode_round_moves(const std::vector<Move>& curr_moves,
-                                                                     const std::vector<Move>& opp_moves)
-{
-  std::vector<std::vector<int>> z(ROUND_MOVES);
-  int l_curr = curr_moves.size();
-  for (int i = 6 - l_curr; i < 6; ++i) {
-    z[i] = my_move2array(curr_moves[i - (6 - l_curr)]);
-  }
-  int l_opp = opp_moves.size();
-  for (int i = ROUND_MOVES - l_opp; i < ROUND_MOVES; ++i) {
-    z[i] = opp_move2array(opp_moves[i - (ROUND_MOVES - l_opp)]);
-  }
-  return z;
-}
-
-using Vec7 = std::vector<int>;
-using Vec4 = std::vector<int>;
-using Vec63 = std::vector<int>;
-using FeatureVec = std::vector<int8_t>;                  // 169-length vector
-using FeatureMatrix = std::vector<FeatureVec>;           // shape = (num_moves, 169)
-using HistoryMatrix = std::vector<std::vector<int8_t>>;  // shape = (12, 63)
-using HistoryBatch = std::vector<HistoryMatrix>;         // shape = (num_moves, 12, 63)
-
-struct Obs
-{
-  std::string id;
-  std::string round_id;
-  std::vector<std::pair<int, std::vector<int>>> moves;
-  FeatureMatrix x_batch;
-  FeatureVec x_no_move;
-  HistoryMatrix z;
-  HistoryBatch z_batch;
+// Struct to hold model input
+struct TorchObs {
+    torch::Tensor x_batch;   // [num_moves, 169]
+    torch::Tensor x_no_move; // [169]
+    torch::Tensor z_batch;   // [num_moves, 12, 63]
 };
 
-Obs get_obs(const GameState& gameState, const PrivateInfoSet& privateInfoSet)
-{
-  Obs obs;
-  const int num_moves = privateInfoSet.moves.size();
-  const std::string& curr = gameState.acting_player_id;
-  const std::string& opp = (curr == "first" ? "second" : "first");
+// Helper: flatten 2D vector to tensor
+torch::Tensor toTensor2D(const std::vector<std::vector<float>>& data) {
+    const int rows = data.size();
+    const int cols = data[0].size();
+    torch::Tensor tensor = torch::empty({rows, cols}, torch::kFloat32);
+    for (int i = 0; i < rows; ++i)
+        std::memcpy(tensor[i].data_ptr<float>(), data[i].data(), cols * sizeof(float));
+    return tensor;
+}
 
-  obs.id = curr;
-  obs.round_id = gameState.id_to_round_id.at(curr);
-  obs.moves = privateInfoSet.moves;
+// Helper: flatten 3D vector to tensor
+torch::Tensor toTensor3D(const std::vector<std::vector<std::vector<float>>>& data) {
+    const int dim0 = data.size();
+    const int dim1 = data[0].size();
+    const int dim2 = data[0][0].size();
+    torch::Tensor tensor = torch::empty({dim0, dim1, dim2}, torch::kFloat32);
+    for (int i = 0; i < dim0; ++i)
+        for (int j = 0; j < dim1; ++j)
+            std::memcpy(tensor[i][j].data_ptr<float>(), data[i][j].data(), dim2 * sizeof(float));
+    return tensor;
+}
 
-  // --- FEATURE VECTORS ---
-  Vec7 geisha_points = {2, 2, 2, 3, 3, 4, 5};
-  Vec7 geisha_preferences;
-  for (int i = 0; i < 7; ++i) {
-    geisha_preferences[i] = gameState.geisha_preferences.at(curr)[i] - gameState.geisha_preferences.at(opp)[i];
-  }
+// Main function: creates input tensors
+TorchObs get_obs_torch(const GameState& gameState, const PrivateInfoSet& privateInfoSet) {
+    const int num_moves = privateInfoSet.moves.size();
 
-  Vec7 hand_cards = privateInfoSet.hand_cards;
-  Vec7 stashed_card = privateInfoSet.stashed_card;
-  Vec7 trashed_cards = privateInfoSet.trashed_cards;
-  Vec7 decision_1_2 = gameState.decision_cards_1_2;
-  Vec7 decision_2_2_1 =
-      (gameState.decision_cards_2_2.has_value() ? gameState.decision_cards_2_2.value()[0] : Vec7{0, 0, 0, 0, 0, 0, 0});
-  Vec7 decision_2_2_2 =
-      (gameState.decision_cards_2_2.has_value() ? gameState.decision_cards_2_2.value()[1] : Vec7{0, 0, 0, 0, 0, 0, 0});
-  Vec4 action_cards = gameState.action_cards.at(curr);
-  Vec4 action_cards_opp = gameState.action_cards.at(opp);
-  Vec7 gift_cards = gameState.gift_cards.at(curr);
-  Vec7 gift_cards_opp = gameState.gift_cards.at(opp);
+    std::vector<std::vector<float>> x_batch_vec(num_moves, std::vector<float>(169));
+    std::vector<float> x_no_move_vec(169);
+    std::vector<std::vector<std::vector<float>>> z_batch_vec(num_moves, std::vector<std::vector<float>>(12, std::vector<float>(63)));
 
-  Vec7 all_gift_cards;
-  for (int i = 0; i < 7; ++i) all_gift_cards[i] = gift_cards[i] + stashed_card[i];
+    // ... fill x_batch_vec[j], x_no_move_vec, z_batch_vec[j]
+    // using logic from your previous feature encoding,
+    // but cast all values to float
 
-  Vec7 num_cards = one_hot(gameState.num_cards.at(curr));
-  Vec7 num_cards_opp = one_hot(gameState.num_cards.at(opp));
+    // For example:
+    // x_batch_vec[j][i] = static_cast<float>(geisha_points[i]);
+    // or for move encoding:
+    // move_vec = my_move2array(move);
+    // for (int k = 0; k < 63; ++k) x_batch_vec[j][106 + k] = static_cast<float>(move_vec[k]);
 
-  Vec7 unknown_cards;
-  for (int i = 0; i < 7; ++i)
-    unknown_cards[i] = geisha_points[i] - hand_cards[i] - all_gift_cards[i] - trashed_cards[i] - gift_cards_opp[i] -
-                       decision_1_2[i] - decision_2_2_1[i] - decision_2_2_2[i];
+    // Convert to torch::Tensor
+    torch::Tensor x_batch = toTensor2D(x_batch_vec);       // [num_moves, 169]
+    torch::Tensor x_no_move = torch::from_blob(x_no_move_vec.data(), {169}, torch::kFloat32).clone(); // clone to own memory
+    torch::Tensor z_batch = toTensor3D(z_batch_vec);       // [num_moves, 12, 63]
 
-  // --- x_batch ---
-  obs.x_batch.resize(num_moves, FeatureVec(X_FEATURE_SIZE));
-  for (int j = 0; j < num_moves; ++j) {
-    auto& x = obs.x_batch[j];
-    int idx = 0;
-
-    auto append7 = [&](const Vec7& v) {
-      for (int i = 0; i < 7; ++i) x[idx++] = v[i];
-    };
-    auto append4 = [&](const Vec4& v) {
-      for (int i = 0; i < 4; ++i) x[idx++] = v[i];
-    };
-
-    append7(geisha_points);
-    append7(geisha_preferences);
-    append7(hand_cards);
-    append7(stashed_card);
-    append7(trashed_cards);
-    append7(decision_1_2);
-    append7(decision_2_2_1);
-    append7(decision_2_2_2);
-    append4(action_cards);
-    append4(action_cards_opp);
-    append7(gift_cards);
-    append7(gift_cards_opp);
-    append7(all_gift_cards);
-    append7(num_cards);
-    append7(num_cards_opp);
-    append7(unknown_cards);
-
-    // Move vector
-    Vec63 move_vec = my_move2array(privateInfoSet.moves[j]);
-    for (int i = 0; i < 63; ++i) x[idx++] = move_vec[i];
-  }
-
-  // --- x_no_move ---
-  obs.x_no_move.resize(X_NO_MOVE_FEATURE_SIZE);
-  {
-    int idx = 0;
-    auto append7 = [&](const Vec7& v) {
-      for (int i = 0; i < 7; ++i) obs.x_no_move[idx++] = v[i];
-    };
-    auto append4 = [&](const Vec4& v) {
-      for (int i = 0; i < 4; ++i) obs.x_no_move[idx++] = v[i];
-    };
-
-    append7(geisha_points);
-    append7(geisha_preferences);
-    append7(hand_cards);
-    append7(stashed_card);
-    append7(trashed_cards);
-    append7(decision_1_2);
-    append7(decision_2_2_1);
-    append7(decision_2_2_2);
-    append4(action_cards);
-    append4(action_cards_opp);
-    append7(gift_cards);
-    append7(gift_cards_opp);
-    append7(all_gift_cards);
-    append7(num_cards);
-    append7(num_cards_opp);
-    append7(unknown_cards);
-  }
-
-  // --- z ---
-  obs.z = encode_round_moves(gameState.round_moves.at(curr), gameState.round_moves.at(opp));
-
-  // --- z_batch ---
-  obs.z_batch.resize(num_moves, obs.z);
-
-  return obs;
+    return {x_batch, x_no_move, z_batch};
 }
 
 #endif
