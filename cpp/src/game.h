@@ -106,6 +106,44 @@ public:
     }
   }
 
+  std::string is_game_ended()
+  {
+    int first_geisha_win = 0;
+    int first_geisha_points = 0;
+    int second_geisha_win = 0;
+    int second_geisha_points = 0;
+
+    for (int i = 0; i < 7; ++i) {
+      if (state.geisha_preferences["first"][i] == 1) {
+        first_geisha_win++;
+        first_geisha_points += state.points[i];
+      }
+      if (state.geisha_preferences["second"][i] == 1) {
+        second_geisha_win++;
+        second_geisha_points += state.points[i];
+      }
+    }
+
+    if (first_geisha_points >= 11)
+      return "first";
+    if (second_geisha_points >= 11)
+      return "second";
+    if (first_geisha_win >= 4)
+      return "first";
+    if (second_geisha_win >= 4)
+      return "second";
+    return "";
+  }
+
+  void set_winner()
+  {
+    std::string winner_player = is_game_ended();
+    if (!winner_player.empty()) {
+      winner = winner_player;
+      num_wins[winner]++;
+    }
+  }
+
   void step()
   {
     std::string curr = state.acting_player_id;
@@ -172,7 +210,27 @@ public:
     }
 
     if (state.round_moves["first"].size() + state.round_moves["second"].size() == 12) {
-      // TODO: Round end logic (geisha resolution, winner check, round reset)
+      assert(state.num_cards["first"] == 0 && state.num_cards["second"] == 0);
+
+      update_geisha_preferences();
+      set_winner();
+
+      if (winner.empty()) {
+        auto next_geisha_preferences = state.geisha_preferences;
+        round += 1;
+        state = GameState();
+        state.geisha_preferences = next_geisha_preferences;
+
+        if (round % 2 == 0) {
+          state.acting_player_id = "second";
+          state.id_to_round_id = {{"first", "second"}, {"second", "first"}};
+          state.num_cards = {{"first", 6}, {"second", 7}};
+        }
+
+        private_info_sets["first"] = PrivateInfoSet();
+        private_info_sets["second"] = PrivateInfoSet();
+        init_card_play();
+      }
     } else {
       auto& new_info = private_info_sets[state.acting_player_id];
       if (draw_card && !deck.empty()) {
