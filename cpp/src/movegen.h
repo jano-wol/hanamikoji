@@ -1,5 +1,5 @@
-#ifndef HANAMIKOJI_MOVE_GEN
-#define HANAMIKOJI_MOVE_GEN
+#ifndef HANAMIKOJI_MOVE_GEN_H_INCLUDED
+#define HANAMIKOJI_MOVE_GEN_H_INCLUDED
 
 #include <utility>
 #include <vector>
