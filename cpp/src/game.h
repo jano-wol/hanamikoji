@@ -1,4 +1,5 @@
-// hanamikoji_game.hpp (or .cpp depending on split)
+#ifndef HANAMIKOJI_GAME_H_INCLUDED
+#define HANAMIKOJI_GAME_H_INCLUDED
 
 #include <algorithm>
 #include <array>
@@ -263,3 +264,5 @@ private:
     return mg.getMoves();
   }
 };
+
+#endif
