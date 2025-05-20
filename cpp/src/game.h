@@ -84,6 +84,28 @@ public:
     active_player_info_set = {state, private_info_sets[state.acting_player_id]};
   }
 
+  void update_geisha_preferences()
+  {
+    std::vector<int> first_gifts = add_cards(state.gift_cards["first"], private_info_sets["first"].stashed_card);
+    std::vector<int> second_gifts = add_cards(state.gift_cards["second"], private_info_sets["second"].stashed_card);
+
+    for (int i = 0; i < 7; ++i) {
+      if (first_gifts[i] > second_gifts[i] ||
+          (first_gifts[i] == second_gifts[i] && state.geisha_preferences["first"][i] == 1)) {
+        state.geisha_preferences["first"][i] = 1;
+      } else {
+        state.geisha_preferences["first"][i] = 0;
+      }
+
+      if (first_gifts[i] < second_gifts[i] ||
+          (first_gifts[i] == second_gifts[i] && state.geisha_preferences["second"][i] == 1)) {
+        state.geisha_preferences["second"][i] = 1;
+      } else {
+        state.geisha_preferences["second"][i] = 0;
+      }
+    }
+  }
+
   void step()
   {
     std::string curr = state.acting_player_id;
