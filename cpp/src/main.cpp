@@ -1,16 +1,17 @@
+#include <torch/script.h>
 #include <filesystem>
 #include <iostream>
-#include <torch/script.h>
 
-torch::Tensor run_model(torch::jit::script::Module &model, torch::Tensor z,
-                        torch::Tensor x) {
+torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
+{
   std::vector<torch::jit::IValue> inputs;
   inputs.push_back(z);
   inputs.push_back(x);
   return model.forward(inputs).toTensor();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
   if (argc < 1) {
     std::cerr << "No argv[0] found!" << std::endl;
     return -1;
@@ -33,11 +34,11 @@ int main(int argc, char *argv[]) {
 
   // Create dummy input (same shape as during tracing)
   int a = 43;
-  torch::Tensor z = torch::randn({a, 12, 63}); // Replace with actual value
-  torch::Tensor x = torch::randn({43, 169});   // Replace with actual value
+  torch::Tensor z = torch::randn({a, 12, 63});  // Replace with actual value
+  torch::Tensor x = torch::randn({43, 169});    // Replace with actual value
 
   // Choose model based on player ID
-  std::string player_id = "first"; // or "second"
+  std::string player_id = "first";  // or "second"
 
   torch::Tensor result;
   if (player_id == "first")

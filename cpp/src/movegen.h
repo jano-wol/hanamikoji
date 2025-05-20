@@ -11,15 +11,14 @@ const int TYPE_3_CHOOSE_2_2 = 3;
 const int TYPE_4_RESOLVE_1_2 = 4;
 const int TYPE_5_RESOLVE_2_2 = 5;
 
-class MovesGener {
+class MovesGener
+{
 public:
   std::vector<std::pair<int, std::vector<int>>> moves;
 
-  MovesGener(const std::vector<int> &cards_list,
-             const std::vector<int> &action_cards,
-             const std::vector<int> &choose_1_2,
-             const std::pair<std::vector<int>, std::vector<int>> &choose_2_2) {
-
+  MovesGener(const std::vector<int>& cards_list, const std::vector<int>& action_cards,
+             const std::vector<int>& choose_1_2, const std::pair<std::vector<int>, std::vector<int>>& choose_2_2)
+  {
     if (!choose_1_2.empty()) {
       for (int i = 0; i < 7; ++i) {
         if (choose_1_2[i] != 0) {
@@ -38,18 +37,14 @@ public:
 
     if (!choose_2_2.first.empty()) {
       std::vector<int> combined(14);
-      std::copy(choose_2_2.first.begin(), choose_2_2.first.end(),
-                combined.begin());
-      std::copy(choose_2_2.second.begin(), choose_2_2.second.end(),
-                combined.begin() + 7);
+      std::copy(choose_2_2.first.begin(), choose_2_2.first.end(), combined.begin());
+      std::copy(choose_2_2.second.begin(), choose_2_2.second.end(), combined.begin() + 7);
       moves.emplace_back(TYPE_5_RESOLVE_2_2, combined);
 
       if (choose_2_2.first != choose_2_2.second) {
         std::vector<int> combined(14);
-        std::copy(choose_2_2.second.begin(), choose_2_2.second.end(),
-                  combined.begin());
-        std::copy(choose_2_2.first.begin(), choose_2_2.first.end(),
-                  combined.begin() + 7);
+        std::copy(choose_2_2.second.begin(), choose_2_2.second.end(), combined.begin());
+        std::copy(choose_2_2.first.begin(), choose_2_2.first.end(), combined.begin() + 7);
         moves.emplace_back(TYPE_5_RESOLVE_2_2, combined);
       }
       return;
@@ -115,7 +110,7 @@ public:
           temp_hand[q]--;
 
           if (temp_hand[p] < 0 || temp_hand[q] < 0)
-            continue; // TODO this is needed??
+            continue;  // TODO this is needed??
 
           for (int r = p; r < 7; ++r) {
             if (temp_hand[r] == 0)
@@ -143,9 +138,7 @@ public:
     }
   }
 
-  const std::vector<std::pair<int, std::vector<int>>> &getMoves() const {
-    return moves;
-  }
+  const std::vector<std::pair<int, std::vector<int>>>& getMoves() const { return moves; }
 };
 
 #endif
