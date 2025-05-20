@@ -38,14 +38,18 @@ public:
 
     if (!choose_2_2.first.empty()) {
       std::vector<int> combined(14);
-      std::copy(choose_2_2.first.begin(), choose_2_2.first.end(), combined.begin());
-      std::copy(choose_2_2.second.begin(), choose_2_2.second.end(), combined.begin() + 7);
+      std::copy(choose_2_2.first.begin(), choose_2_2.first.end(),
+                combined.begin());
+      std::copy(choose_2_2.second.begin(), choose_2_2.second.end(),
+                combined.begin() + 7);
       moves.emplace_back(TYPE_5_RESOLVE_2_2, combined);
 
       if (choose_2_2.first != choose_2_2.second) {
         std::vector<int> combined(14);
-        std::copy(choose_2_2.second.begin(), choose_2_2.second.end(), combined.begin());
-        std::copy(choose_2_2.first.begin(), choose_2_2.first.end(), combined.begin() + 7);
+        std::copy(choose_2_2.second.begin(), choose_2_2.second.end(),
+                  combined.begin());
+        std::copy(choose_2_2.first.begin(), choose_2_2.first.end(),
+                  combined.begin() + 7);
         moves.emplace_back(TYPE_5_RESOLVE_2_2, combined);
       }
       return;
