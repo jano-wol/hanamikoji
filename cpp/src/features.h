@@ -79,7 +79,7 @@ torch::Tensor oppMoveToTensor(const Move& move)
   return ret;
 }
 
-torch::Tensor getOneHotTensor(int n)
+torch::Tensor getOneHotTensor(int32_t n)
 {
   auto one_hot = torch::zeros({7}, torch::kFloat32);
   if (n > 0 && n <= 7)
@@ -96,9 +96,39 @@ torch::Tensor encodeRoundMoves(const std::vector<Move>& round_moves_curr, const 
 
   int l_opp = static_cast<int>(round_moves_opp.size());
   for (int i = ROUND_MOVES - l_opp; i < ROUND_MOVES; ++i)
-    z[i] = oppMoveToTensor(round_moves_opp[i - (ROUND_MOVES - l_opp)]); 
+    z[i] = oppMoveToTensor(round_moves_opp[i - (ROUND_MOVES - l_opp)]);
 
   return z;
+}
+
+std::vector<int32_t> add_vec(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
+{
+  std::vector<int32_t> result(7);
+  for (int i = 0; i < 7; ++i) result[i] = a[i] + b[i];
+  return result;
+}
+
+std::vector<int32_t> sub_vec(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
+{
+  std::vector<int32_t> result(7);
+  for (int i = 0; i < 7; ++i) result[i] = a[i] - b[i];
+  return result;
+}
+
+std::vector<int32_t> calcUnknowns(const std::vector<int32_t>& a, const std::vector<int32_t>& b,
+                                  const std::vector<int32_t>& c, const std::vector<int32_t>& d,
+                                  const std::vector<int32_t>& e, const std::vector<int32_t>& f,
+                                  const std::vector<int32_t>& g, const std::vector<int32_t>& h)
+{
+  std::vector<int32_t> ret;
+  ret = sub_vec(a, b);
+  ret = sub_vec(ret, c);
+  ret = sub_vec(ret, d);
+  ret = sub_vec(ret, e);
+  ret = sub_vec(ret, f);
+  ret = sub_vec(ret, g);
+  ret = sub_vec(ret, h);
+  return ret;
 }
 
 TorchObs get_obs(const GameState& gameState, const PrivateInfoSet& privateInfoSet)
@@ -123,43 +153,72 @@ TorchObs get_obs(const GameState& gameState, const PrivateInfoSet& privateInfoSe
   auto dummy_7 = torch::zeros({7}, torch::kFloat32);
   auto dummy_4 = torch::zeros({4}, torch::kFloat32);
 
+  std::vector<int32_t> geisha_points_vec{2, 2, 2, 3, 3, 4, 5};
+  std::vector<int32_t> preferences_vec = sub_vec(gameState.geisha_preferences[curr], gameState.geisha_preferences[opp]);
+  std::vector<int32_t> decision_1_2_vec =
+      gameState.decision_cards_1_2.empty() ? std::vector<int32_t>(7, 0) : gameState.decision_cards_1_2;
+  std::vector<int32_t> decision_2_2_1_vec =
+      gameState.decision_cards_2_2.first.empty() ? std::vector<int32_t>(7, 0) : gameState.decision_cards_2_2.first;
+  std::vector<int32_t> decision_2_2_2_vec =
+      gameState.decision_cards_2_2.second.empty() ? std::vector<int32_t>(7, 0) : gameState.decision_cards_2_2.second;
+  std::vector<int32_t> all_gift_cards_vec = add_vec(gameState.gift_cards[curr], privateInfoSet.stashed_card);
+  std::vector<int32_t> unknown_cards =
+      calcUnknowns(geisha_points_vec, privateInfoSet.hand_cards, all_gift_cards_vec, privateInfoSet.trashed_cards,
+                   gameState.gift_cards[opp], decision_1_2_vec, decision_2_2_1_vec, decision_2_2_2_vec);
+
+  auto feature_1 = torch::tensor(geisha_points_vec, torch::kFloat32);
+  auto feature_2 = torch::tensor(preferences_vec, torch::kFloat32);
+  auto feature_3 = torch::tensor(privateInfoSet.hand_cards, torch::kFloat32);
+  auto feature_4 = torch::tensor(privateInfoSet.stashed_card, torch::kFloat32);
+  auto feature_5 = torch::tensor(privateInfoSet.trashed_cards, torch::kFloat32);
+  auto feature_6 = torch::tensor(decision_1_2_vec, torch::kFloat32);
+  auto feature_7 = torch::tensor(decision_2_2_1_vec, torch::kFloat32);
+  auto feature_8 = torch::tensor(decision_2_2_2_vec, torch::kFloat32);
+  auto feature_9 = torch::tensor(gameState.action_cards[curr], torch::kFloat32);
+  auto feature_10 = torch::tensor(gameState.action_cards[opp], torch::kFloat32);
+  auto feature_11 = torch::tensor(gameState.gift_cards[curr], torch::kFloat32);
+  auto feature_12 = torch::tensor(gameState.gift_cards[opp], torch::kFloat32);
+  auto feature_13 = torch::tensor(all_gift_cards_vec, torch::kFloat32);
+  auto feature_14 = getOneHotTensor(gameState.num_cards[curr]);
+  auto feature_15 = getOneHotTensor(gameState.num_cards[opp]);
+  auto feature_16 = torch::tensor(unknown_cards, torch::kFloat32);
+
   for (int i = 0; i < num_moves; ++i) {
-    x_batch[i].slice(0, 0, 7) = dummy_7;     // geisha_points
-    x_batch[i].slice(0, 7, 14) = dummy_7;    // preferences
-    x_batch[i].slice(0, 14, 21) = dummy_7;   // hand
-    x_batch[i].slice(0, 21, 28) = dummy_7;   // stash
-    x_batch[i].slice(0, 28, 35) = dummy_7;   // trash
-    x_batch[i].slice(0, 35, 42) = dummy_7;   // decision 1_2
-    x_batch[i].slice(0, 42, 49) = dummy_7;   // decision 2_2-1
-    x_batch[i].slice(0, 49, 56) = dummy_7;   // decision 2_2-2
-    x_batch[i].slice(0, 56, 60) = dummy_4;   // actions
-    x_batch[i].slice(0, 60, 64) = dummy_4;   // opp actions
-    x_batch[i].slice(0, 64, 71) = dummy_7;   // gift
-    x_batch[i].slice(0, 71, 78) = dummy_7;   // gift opp
-    x_batch[i].slice(0, 78, 85) = dummy_7;   // all gift
-    x_batch[i].slice(0, 85, 92) = dummy_7;   // card count
-    x_batch[i].slice(0, 92, 99) = dummy_7;   // opp card count
-    x_batch[i].slice(0, 99, 106) = dummy_7;  // unknown
+    x_batch[i].slice(0, 0, 7) = feature_1;      // geisha_points
+    x_batch[i].slice(0, 7, 14) = feature_2;     // preferences
+    x_batch[i].slice(0, 14, 21) = feature_3;    // hand
+    x_batch[i].slice(0, 21, 28) = feature_4;    // stash
+    x_batch[i].slice(0, 28, 35) = feature_5;    // trash
+    x_batch[i].slice(0, 35, 42) = feature_6;    // decision 1_2
+    x_batch[i].slice(0, 42, 49) = feature_7;    // decision 2_2-1
+    x_batch[i].slice(0, 49, 56) = feature_8;    // decision 2_2-2
+    x_batch[i].slice(0, 56, 60) = feature_9;    // actions
+    x_batch[i].slice(0, 60, 64) = feature_10;   // opp actions
+    x_batch[i].slice(0, 64, 71) = feature_11;   // gift
+    x_batch[i].slice(0, 71, 78) = feature_12;   // gift opp
+    x_batch[i].slice(0, 78, 85) = feature_13;   // all gift
+    x_batch[i].slice(0, 85, 92) = feature_14;   // card count
+    x_batch[i].slice(0, 92, 99) = feature_15;   // opp card count
+    x_batch[i].slice(0, 99, 106) = feature_16;  // unknown
     x_batch[i].slice(0, 106, 169) = move_batch[i];
   }
 
-  // Fill x_no_move similarly (excluding move features)
-  x_no_move.slice(0, 0, 7) = dummy_7;
-  x_no_move.slice(0, 7, 14) = dummy_7;
-  x_no_move.slice(0, 14, 21) = dummy_7;
-  x_no_move.slice(0, 21, 28) = dummy_7;
-  x_no_move.slice(0, 28, 35) = dummy_7;
-  x_no_move.slice(0, 35, 42) = dummy_7;
-  x_no_move.slice(0, 42, 49) = dummy_7;
-  x_no_move.slice(0, 49, 56) = dummy_7;
-  x_no_move.slice(0, 56, 60) = dummy_4;
-  x_no_move.slice(0, 60, 64) = dummy_4;
-  x_no_move.slice(0, 64, 71) = dummy_7;
-  x_no_move.slice(0, 71, 78) = dummy_7;
-  x_no_move.slice(0, 78, 85) = dummy_7;
-  x_no_move.slice(0, 85, 92) = dummy_7;
-  x_no_move.slice(0, 92, 99) = dummy_7;
-  x_no_move.slice(0, 99, 106) = dummy_7;
+  x_no_move.slice(0, 0, 7) = feature_1;
+  x_no_move.slice(0, 7, 14) = feature_2;
+  x_no_move.slice(0, 14, 21) = feature_3;
+  x_no_move.slice(0, 21, 28) = feature_4;
+  x_no_move.slice(0, 28, 35) = feature_5;
+  x_no_move.slice(0, 35, 42) = feature_6;
+  x_no_move.slice(0, 42, 49) = feature_7;
+  x_no_move.slice(0, 49, 56) = feature_8;
+  x_no_move.slice(0, 56, 60) = feature_9;
+  x_no_move.slice(0, 60, 64) = feature_10;
+  x_no_move.slice(0, 64, 71) = feature_11;
+  x_no_move.slice(0, 71, 78) = feature_12;
+  x_no_move.slice(0, 78, 85) = feature_13;
+  x_no_move.slice(0, 85, 92) = feature_14;
+  x_no_move.slice(0, 92, 99) = feature_15;
+  x_no_move.slice(0, 99, 106) = feature_16;
 
   return TorchObs{x_batch, x_no_move, z_batch};
 }
