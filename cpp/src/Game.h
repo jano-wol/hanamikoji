@@ -211,6 +211,17 @@ public:
     }
   }
 
+  void reset()
+  {
+    deck = {};
+    winner = -1;
+    round = 1;
+    state = GameState();
+    private_info_sets[0] = PrivateInfoSet();
+    private_info_sets[1] = PrivateInfoSet();
+    init_card_play();
+  }
+
   GameState state;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::unique_ptr<IPlayer>> players;

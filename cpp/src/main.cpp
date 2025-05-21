@@ -17,13 +17,20 @@ int main(int /*argc*/, char* argv[])
   // auto deep_agent_2 = std::make_unique<DeepAgent>(exe_dir);
   auto random_agent = std::make_unique<RandomAgent>();
   std::vector<std::unique_ptr<IPlayer>> players;
-  players.emplace_back(std::move(random_agent));
   players.emplace_back(std::move(deep_agent_1));
+  players.emplace_back(std::move(random_agent));
 
   GameEnv env(std::move(players));
-  env.init_card_play();
-  while (env.winner == -1) {
-    env.step();
+  std::vector<int> results{0, 0};
+  for (int sim = 0; sim < 10000; ++sim) {
+    env.reset();
+    while (env.winner == -1) {
+      env.step();
+    }
+    results[env.winner]++;
+    if (sim % 1000 == 0) {
+      std::cout << sim << "\n";
+    }
   }
-  std::cout << "winner=" << env.winner << "\n";
+  std::cout << "(" << results[0] << ", " << results[1] << ")\n";
 }
