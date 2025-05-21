@@ -184,7 +184,13 @@ public:
     if (curr == agent) {
       json msg;
       msg["type"] = "move_desc";
-      msg["desc"] = move;
+      if (move.second.size() == 7) {
+        msg["desc"] = move;
+      } else {
+        std::vector<int> v1(move.second.begin(), move.second.begin() + 7);
+        std::vector<int> v2(move.second.begin() + 7, move.second.end());
+        msg["desc"] = {move.first, {v1, v2}};
+      }
       server.send_message(msg);
     }
     if (curr == human) {
