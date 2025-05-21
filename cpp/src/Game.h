@@ -173,8 +173,13 @@ public:
     int curr = state.acting_player_id;
     int opp = get_opp();
     auto& info = private_info_sets[curr];
-    int move_index = players[curr]->act(state, info);
-    auto move = info.moves[move_index];
+    auto move = players[curr]->act(state, info);
+    if (curr == agent) {
+      json msg;
+      msg["type"] = "move_desc";
+      msg["desc"] = move;
+      client.send_message(msg);
+    }
 
     bool is_draw_card = true;
 
