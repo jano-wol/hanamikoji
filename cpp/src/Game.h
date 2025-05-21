@@ -46,6 +46,14 @@ public:
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
     state = GameState();
+    json msg;
+    msg["type"] = "init_player_id";
+    server.send_message(msg);
+    auto resp = server.receive_message();
+    std::string hand_str = resp["ans"];
+    if (resp == "second") {
+      std::swap(players[0], players[1]);
+    }
     if (players[0]->toString() == "Human") {
       human = 0;
       agent = 1;
