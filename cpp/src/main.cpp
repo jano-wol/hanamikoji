@@ -22,15 +22,10 @@ int main(int /*argc*/, char* argv[])
 
   GameEnv env(std::move(players), "ws://localhost:8768");
   std::vector<int> results{0, 0};
-  for (int sim = 0; sim < 10000; ++sim) {
+  while (true) {
     env.reset();
     while (env.winner == -1) {
       env.step();
     }
-    results[env.winner]++;
-    if (sim % 1000 == 0) {
-      std::cout << sim << "\n";
-    }
   }
-  std::cout << "(" << results[0] << ", " << results[1] << ")\n";
 }
