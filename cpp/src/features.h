@@ -24,28 +24,28 @@ struct TorchObs
 typedef std::pair<int, std::vector<int>> Move;
 
 // Converts move to tensor representation
-torch::Tensor moveToTensor(const Move& move)
+torch::Tensor myMoveToTensor(const Move& move)
 {
-  auto ret = torch::zeros({MOVE_VECTOR_SIZE}, torch::kInt32);
+  auto ret = torch::zeros({MOVE_VECTOR_SIZE}, torch::kFloat32);
 
   switch (move.first) {
   case TYPE_0_STASH:
-    ret.slice(0, 0, 7) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 0, 7) = torch::tensor(move.second, torch::kFloat32);
     break;
   case TYPE_1_TRASH:
-    ret.slice(0, 7, 14) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 7, 14) = torch::tensor(move.second, torch::kFloat32);
     break;
   case TYPE_2_CHOOSE_1_2:
-    ret.slice(0, 14, 21) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 14, 21) = torch::tensor(move.second, torch::kFloat32);
     break;
   case TYPE_3_CHOOSE_2_2:
-    ret.slice(0, 21, 35) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 21, 35) = torch::tensor(move.second, torch::kFloat32);
     break;
   case TYPE_4_RESOLVE_1_2:
-    ret.slice(0, 35, 49) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 35, 49) = torch::tensor(move.second, torch::kFloat32);
     break;
   case TYPE_5_RESOLVE_2_2:
-    ret.slice(0, 49, 63) = torch::tensor(move.second, torch::kInt32);
+    ret.slice(0, 49, 63) = torch::tensor(move.second, torch::kFloat32);
     break;
   }
 
@@ -78,22 +78,22 @@ TorchObs get_obs(const Infoset& infoset)
 {
   const int num_moves = static_cast<int>(infoset.legal_moves.size());
 
-  auto x_batch = torch::empty({num_moves, X_FEATURE_SIZE}, torch::kInt8);
-  auto x_no_move = torch::empty({X_NO_MOVE_FEATURE_SIZE}, torch::kInt8);
+  auto x_batch = torch::empty({num_moves, X_FEATURE_SIZE}, torch::kFloat32);
+  auto x_no_move = torch::empty({X_NO_MOVE_FEATURE_SIZE}, torch::kFloat32);
 
   auto z =
       encodeRoundMoves(infoset.round_moves.at(infoset.acting_player), infoset.round_moves.at(infoset.opponent_player));
   auto z_batch = z.unsqueeze(0).expand({num_moves, ROUND_MOVES, MOVE_VECTOR_SIZE}).clone();
 
-  torch::Tensor move_batch = torch::empty({num_moves, MOVE_VECTOR_SIZE}, torch::kInt8);
+  torch::Tensor move_batch = torch::empty({num_moves, MOVE_VECTOR_SIZE}, torch::kFloat32);
   for (int i = 0; i < num_moves; ++i) {
     move_batch[i] = moveToTensor(infoset.legal_moves[i]);
   }
 
   // Fill in x_batch with all feature slices (placeholder: fill with dummy data)
   // You will replace below with actual tensors from game state
-  auto dummy_7 = torch::zeros({7}, torch::kInt8);
-  auto dummy_4 = torch::zeros({4}, torch::kInt8);
+  auto dummy_7 = torch::zeros({7}, torch::kFloat32);
+  auto dummy_4 = torch::zeros({4}, torch::kFloat32);
 
   for (int i = 0; i < num_moves; ++i) {
     x_batch[i].slice(0, 0, 7) = dummy_7;     // geisha_points
@@ -133,7 +133,7 @@ TorchObs get_obs(const Infoset& infoset)
   x_no_move.slice(0, 92, 99) = dummy_7;
   x_no_move.slice(0, 99, 106) = dummy_7;
 
-  return TorchObs{x_batch.to(torch::kFloat32), x_no_move, z_batch.to(torch::kFloat32)};
+  return TorchObs{x_batch, x_no_move, z_batch};
 }
 
 #endif  // HANAMIKOJI_FEATURES_H_INCLUDED
