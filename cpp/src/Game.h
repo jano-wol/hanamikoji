@@ -50,8 +50,8 @@ public:
     msg["type"] = "init_player_id";
     server.send_message(msg);
     auto resp = server.receive_message();
-    std::string hand_str = resp["ans"];
-    if (resp == "second") {
+    std::string resp_str = resp["ans"];
+    if (resp_str == "second") {
       std::swap(players[0], players[1]);
     }
     if (players[0]->toString() == "Human") {
