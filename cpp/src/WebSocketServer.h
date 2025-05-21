@@ -64,6 +64,7 @@ public:
   void send_message(const json& msg)
   {
     std::string payload = msg.dump();
+    std::cout << "SEND=" << msg << "\n";
     websocketpp::lib::error_code ec;
 
     std::lock_guard<std::mutex> lock(hdl_mutex_);
@@ -80,7 +81,9 @@ public:
 
     std::string payload = message_queue_.front();
     message_queue_.pop();
-    return json::parse(payload);
+    auto ret = json::parse(payload);
+    std::cout << "RECIEVE=" << ret << "\n";
+    return ret;
   }
 
 private:
