@@ -1,12 +1,13 @@
 #include <torch/script.h>
-#include <asio.hpp> 
-#include <websocketpp/config/asio_no_tls_client.hpp>
-#include <websocketpp/client.hpp>
-#include <thread>
-#include <mutex>
+#include <asio.hpp>
 #include <condition_variable>
-#include <queue>
 #include <iostream>
+#include <mutex>
+#include <nlohmann/json.hpp>
+#include <queue>
+#include <thread>
+#include <websocketpp/client.hpp>
+#include <websocketpp/config/asio_no_tls_client.hpp>
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
@@ -46,6 +47,8 @@ public:
     int64_t best_move_index = values.argmax(0).item<int64_t>();
     return static_cast<int>(best_move_index);
   }
+
+  std::string toString() override { return "DeepAgent"; }
 
   torch::jit::script::Module model_first;
   torch::jit::script::Module model_second;

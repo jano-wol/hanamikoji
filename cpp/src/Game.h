@@ -27,6 +27,15 @@ std::vector<int32_t> sub_cards(const std::vector<int32_t>& a, const std::vector<
   return result;
 }
 
+std::vector<int32_t> card_list_to_inner(const std::vector<int32_t>& l)
+{
+  std::vector<int32_t> result(7, 0);
+  for (auto c : l) {
+    result[c] += 1;
+  }
+  return result;
+}
+
 class GameEnv
 {
 public:
@@ -35,23 +44,38 @@ public:
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
     state = GameState();
+    if (players[0]->toString() == "Human") {
+      human = 0;
+      agent = 1;
+    } else {
+      human = 1;
+      agent = 0;
+    }
   }
 
-  void init_card_play()
+  std::vector<int32_t> parse_starting_hand()
   {
-    deck = {0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6};
-    shuffle(deck.begin(), deck.end(), random_engine);
+    std::vector<int32_t> ret;
+    int expected_length = ((agent == 0 && round % 2 == 1) || (agent == 1 && round % 2 == 0)) ? 7 : 6;
+    return ret;
+  }
 
-    std::vector<int32_t> f(7, 0), s(7, 0);
-    for (int i = 0; i < 7; ++i) f[deck[i]]++;
-    for (int i = 7; i < 13; ++i) s[deck[i]]++;
+  int draw_card()
+  {
+    while
+    True:
+      msg = {'type' : 'draw_card'} await send_message(self.websocket, msg) hand_str =
+          (await get_external_data(self.websocket))['ans'] if len (hand_str) != 1 or not hand_str.isdigit()
+          : raise ValueError(f "Invalid input. Please enter exactly 1 digits.") if 0 <= int(hand_str) <= 6
+          : return int(hand_str) raise ValueError("Invalid card value. PLease enter a digit between 1 and 7.")
+  }
 
-    private_info_sets[state.acting_player_id].hand_cards = f;
-    private_info_sets[get_opp()].hand_cards = s;
-
-    deck.erase(deck.begin(), deck.begin() + 13);
-
-    private_info_sets[state.acting_player_id].moves = get_moves();
+  void card_play_init()
+  {
+    private_info_sets[agent].hand_cards = card_list_to_inner(parse_starting_hand());
+    if (state.acting_player_id == agent) {
+      private_info_sets[state.acting_player_id].moves = get_moves();
+    }
   }
 
   void update_geisha_preferences()
@@ -128,23 +152,29 @@ public:
     case TYPE_0_STASH:
       state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int32_t>(7, 0));  // TODO FIX?
       state.action_cards[curr][0] = 0;
-      info.hand_cards = sub_cards(info.hand_cards, move.second);
-      info.stashed_card = move.second;
+      if (curr == agent) {
+        info.hand_cards = sub_cards(info.hand_cards, move.second);
+        info.stashed_card = move.second;
+      }
       state.num_cards[curr] -= 1;
       state.acting_player_id = opp;
       break;
     case TYPE_1_TRASH:
       state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int32_t>(7, 0));  // TODO FIX?
       state.action_cards[curr][1] = 0;
-      info.hand_cards = sub_cards(info.hand_cards, move.second);
-      info.trashed_cards = move.second;
+      if (curr == agent) {
+        info.hand_cards = sub_cards(info.hand_cards, move.second);
+        info.trashed_cards = move.second;
+      }
       state.num_cards[curr] -= 2;
       state.acting_player_id = opp;
       break;
     case TYPE_2_CHOOSE_1_2:
       state.round_moves[curr].emplace_back(move);
       state.action_cards[curr][2] = 0;
-      info.hand_cards = sub_cards(info.hand_cards, move.second);
+      if (curr == agent) {
+        info.hand_cards = sub_cards(info.hand_cards, move.second);
+      }
       state.decision_cards_1_2 = move.second;
       state.num_cards[curr] -= 3;
       state.acting_player_id = opp;
@@ -155,8 +185,10 @@ public:
       state.action_cards[curr][3] = 0;
       state.decision_cards_2_2 = {std::vector<int32_t>(move.second.begin(), move.second.begin() + 7),
                                   std::vector<int32_t>(move.second.begin() + 7, move.second.end())};
-      info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.first);
-      info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.second);
+      if (curr == agent) {
+        info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.first);
+        info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.second);
+      }
       state.num_cards[curr] -= 4;
       state.acting_player_id = opp;
       draw_card = false;
@@ -198,38 +230,31 @@ public:
         }
         private_info_sets[0] = PrivateInfoSet();
         private_info_sets[1] = PrivateInfoSet();
-        init_card_play();
+        card_play_init();
       }
     } else {
       auto& new_info = private_info_sets[state.acting_player_id];
-      if (draw_card && !deck.empty()) {
-        new_info.hand_cards[deck[0]]++;
+      if (draw_card) {
         state.num_cards[state.acting_player_id]++;
-        deck.erase(deck.begin());
+        if (state.acting_player_id == agent) {
+          auto card = draw_card();
+          info.hand_cards[card] += 1
+        }
       }
-      new_info.moves = get_moves();
+      if (state.acting_player_id == agent) {
+        new_info.moves = get_moves();
+      }
     }
-  }
-
-  void reset()
-  {
-    deck = {};
-    winner = -1;
-    round = 1;
-    state = GameState();
-    private_info_sets[0] = PrivateInfoSet();
-    private_info_sets[1] = PrivateInfoSet();
-    init_card_play();
   }
 
   GameState state;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::unique_ptr<IPlayer>> players;
-  std::vector<int32_t> deck;
   int round = 1;
   int winner = -1;
+  int human = -1;
+  int agent = -1;
   std::vector<int32_t> num_wins = {0, 0};
-  std::default_random_engine random_engine;
 
   int get_opp() { return 1 - state.acting_player_id; }
 

@@ -9,6 +9,7 @@ message(${PROJECT_SOURCE_DIR}!!!)
 target_include_directories(main PRIVATE
     ${PROJECT_SOURCE_DIR}/../ext/websocketpp
     ${PROJECT_SOURCE_DIR}/../ext/asio-1.30.2/include
+    ${PROJECT_SOURCE_DIR}/../ext/nlohmann
 )
 
 find_package(Threads REQUIRED)

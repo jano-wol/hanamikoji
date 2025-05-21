@@ -14,6 +14,8 @@ public:
     std::uniform_int_distribution<size_t> dist(0, privateInfoSet.moves.size() - 1);
     return dist(rng);
   }
+
+  std::string toString() override { return "RandomAgent"; }
 };
 
 #endif
