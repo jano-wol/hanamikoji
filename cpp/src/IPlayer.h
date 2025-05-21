@@ -20,7 +20,7 @@ struct GameState
   std::pair<std::vector<int32_t>, std::vector<int32_t>> decision_cards_2_2 = {};
   std::vector<std::vector<int32_t>> geisha_preferences = {std::vector<int32_t>(7, 0), std::vector<int32_t>(7, 0)};
   std::vector<int32_t> num_cards = {7, 6};
-  std::vector<std::vector<std::pair<int, std::vector<int32_t>>>> round_moves = {{{}}, {{}}};
+  std::vector<std::vector<std::pair<int, std::vector<int32_t>>>> round_moves = {{}, {}};
 };
 
 class IPlayer
