@@ -73,7 +73,7 @@ public:
     msg["desc"] = std::to_string(expected_length);
     client.send_message(msg);
     auto resp = client.receive_message();
-    std::string hand_str = resp['ans'];
+    std::string hand_str = resp["ans"];
     std::vector<int32_t> ret(7, 0);
     for (char c : hand_str) {
       int val = c - '0';
@@ -91,7 +91,7 @@ public:
     msg["type"] = "draw_card";
     client.send_message(msg);
     auto resp = client.receive_message();
-    std::string card_str = resp['ans'];
+    std::string card_str = resp["ans"];
     return card_str[0] - '0';
   }
 
@@ -102,7 +102,7 @@ public:
     msg["desc"] = private_info_sets[agent].stashed_card;
     client.send_message(msg);
     auto resp = client.receive_message();
-    std::vector<int32_t> stash = resp['ans'];
+    std::vector<int32_t> stash = resp["ans"];
     return stash;
   }
 
