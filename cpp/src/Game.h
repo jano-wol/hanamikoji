@@ -12,6 +12,7 @@
 
 #include "IPlayer.h"
 #include "Movegen.h"
+#include "WebSocketClient.h"
 
 std::vector<int32_t> add_cards(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
 {
@@ -39,8 +40,10 @@ std::vector<int32_t> card_list_to_inner(const std::vector<int32_t>& l)
 class GameEnv
 {
 public:
-  GameEnv(std::vector<std::unique_ptr<IPlayer>> players_) : players(std::move(players_)), round(1), winner(-1)
+  GameEnv(std::vector<std::unique_ptr<IPlayer>> players_, const std::string& ws_uri)
+      : players(std::move(players_)), round(1), winner(-1)
   {
+    client.connect(ws_uri);
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
     state = GameState();
@@ -53,6 +56,15 @@ public:
     }
   }
 
+  int get_opp() { return 1 - state.acting_player_id; }
+
+  std::vector<std::pair<int, std::vector<int32_t>>> get_moves()
+  {
+    MovesGener mg(private_info_sets[state.acting_player_id].hand_cards, state.action_cards[state.acting_player_id],
+                  state.decision_cards_1_2, state.decision_cards_2_2);
+    return mg.getMoves();
+  }
+
   std::vector<int32_t> parse_starting_hand()
   {
     std::vector<int32_t> ret;
@@ -62,12 +74,10 @@ public:
 
   int draw_card()
   {
-    while
-    True:
-      msg = {'type' : 'draw_card'} await send_message(self.websocket, msg) hand_str =
-          (await get_external_data(self.websocket))['ans'] if len (hand_str) != 1 or not hand_str.isdigit()
-          : raise ValueError(f "Invalid input. Please enter exactly 1 digits.") if 0 <= int(hand_str) <= 6
-          : return int(hand_str) raise ValueError("Invalid card value. PLease enter a digit between 1 and 7.")
+    msg = {'type' : 'draw_card'} await send_message(self.websocket, msg) hand_str =
+        (await get_external_data(self.websocket))['ans'] if len (hand_str) != 1 or not hand_str.isdigit()
+        : raise ValueError(f "Invalid input. Please enter exactly 1 digits.") if 0 <= int(hand_str) <= 6
+        : return int(hand_str) raise ValueError("Invalid card value. PLease enter a digit between 1 and 7.")
   }
 
   void card_play_init()
@@ -146,7 +156,7 @@ public:
     int move_index = players[curr]->act(state, info);
     auto move = info.moves[move_index];
 
-    bool draw_card = true;
+    bool is_draw_card = true;
 
     switch (move.first) {
     case TYPE_0_STASH:
@@ -178,7 +188,7 @@ public:
       state.decision_cards_1_2 = move.second;
       state.num_cards[curr] -= 3;
       state.acting_player_id = opp;
-      draw_card = false;
+      is_draw_card = false;
       break;
     case TYPE_3_CHOOSE_2_2:
       state.round_moves[curr].emplace_back(move);
@@ -191,7 +201,7 @@ public:
       }
       state.num_cards[curr] -= 4;
       state.acting_player_id = opp;
-      draw_card = false;
+      is_draw_card = false;
       break;
     case TYPE_4_RESOLVE_1_2:
       state.round_moves[curr].emplace_back(move);
@@ -234,7 +244,7 @@ public:
       }
     } else {
       auto& new_info = private_info_sets[state.acting_player_id];
-      if (draw_card) {
+      if (is_draw_card) {
         state.num_cards[state.acting_player_id]++;
         if (state.acting_player_id == agent) {
           auto card = draw_card();
@@ -248,6 +258,7 @@ public:
   }
 
   GameState state;
+  WebSocketClient client;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::unique_ptr<IPlayer>> players;
   int round = 1;
@@ -255,15 +266,6 @@ public:
   int human = -1;
   int agent = -1;
   std::vector<int32_t> num_wins = {0, 0};
-
-  int get_opp() { return 1 - state.acting_player_id; }
-
-  std::vector<std::pair<int, std::vector<int32_t>>> get_moves()
-  {
-    MovesGener mg(private_info_sets[state.acting_player_id].hand_cards, state.action_cards[state.acting_player_id],
-                  state.decision_cards_1_2, state.decision_cards_2_2);
-    return mg.getMoves();
-  }
 };
 
 #endif

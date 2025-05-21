@@ -6,7 +6,6 @@
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
-#include "WebSocketClient.h"
 
 torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
 {
@@ -19,13 +18,12 @@ torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torc
 class DeepAgent : public IPlayer
 {
 public:
-  DeepAgent(const std::string& exe_dir, const std::string& ws_uri)
+  DeepAgent(const std::string& exe_dir)
   {
     model_first = torch::jit::load(exe_dir + "/first.pt");
     model_second = torch::jit::load(exe_dir + "/second.pt");
     model_first.eval();
     model_second.eval();
-    client.connect(ws_uri);
   }
 
   int act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
@@ -47,7 +45,6 @@ public:
 
   std::string toString() override { return "DeepAgent"; }
 
-  WebSocketClient client;
   torch::jit::script::Module model_first;
   torch::jit::script::Module model_second;
 };
