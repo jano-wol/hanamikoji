@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "movegen.h"
+#include "Movegen.h"
 
 std::vector<int32_t> add_cards(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
 {

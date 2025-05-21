@@ -4,8 +4,8 @@
 #include <torch/script.h>
 #include <array>
 #include <vector>
-#include "game.h"
-#include "movegen.h"
+#include "Game.h"
+#include "Movegen.h"
 
 // Constants
 constexpr int ROUND_MOVES = 12;
