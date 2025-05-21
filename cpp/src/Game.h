@@ -265,6 +265,11 @@ public:
         private_info_sets[0] = PrivateInfoSet();
         private_info_sets[1] = PrivateInfoSet();
         card_play_init();
+      } else {
+        json msg;
+        msg["type"] = "winner";
+        msg["desc"] = players[winner]->toString();
+        server.send_message(msg);
       }
     } else {
       auto& new_info = private_info_sets[state.acting_player_id];
