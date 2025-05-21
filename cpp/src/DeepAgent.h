@@ -1,7 +1,17 @@
 #include <torch/script.h>
+#include <filesystem>
+#include <string>
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
+
+torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
+{
+  std::vector<torch::jit::IValue> inputs;
+  inputs.push_back(z);
+  inputs.push_back(x);
+  return model.forward(inputs).toTensor();
+}
 
 class DeepAgent : public IPlayer
 {
@@ -12,40 +22,25 @@ public:
     model_second = torch::jit::load(ckpt_dir_path + "/second.pt");
     model_first.eval();
     model_second.eval();
-
-    if (torch::cuda::is_available()) {
-      model_first.to(torch::kCUDA);
-      model_second.to(torch::kCUDA);
-    }
   }
 
-  int act(const GameState& gameState, const PrivateInfoSet& infoset) override
+  int act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
   {
-    const auto& moves = infoset.moves;
-    if (moves.size() == 1) {
+    if (privateInfoSet.moves.size() == 1) {
       return 0;
     }
 
-    TorchObs obs = get_obs(gameState, infoset);  // assume implemented
-    torch::Tensor x = obs.x_batch.to(torch::kFloat32);
-    torch::Tensor z = obs.z_batch.to(torch::kFloat32);
-
-    if (torch::cuda::is_available()) {
-      x = x.to(torch::kCUDA);
-      z = z.to(torch::kCUDA);
+    TorchObs obs = get_obs(gameState, privateInfoSet);
+    torch::Tensor values;
+    if (gameState.id_to_round_id[gameState.acting_player_id] == 0) {
+      values = run_model(model_first, obs.z_batch, obs.x_batch);
+    } else {
+      values = run_model(model_second, obs.z_batch, obs.x_batch);
     }
-
-    torch::jit::Module& model =
-        infoset.id_to_round_id.at(infoset.acting_player_id) == "first" ? model_first : model_second;
-
-    auto output = model.forward({z, x}).toGenericDict();
-    torch::Tensor y_pred = output.at("values").toTensor();
-
-    int best_idx = y_pred.argmax(0).item<int>();
-    return moves[best_idx];
+    int64_t best_move_index = values.argmax(0).item<int64_t>();
+    return static_cast<int>(best_move_index);
   }
 
-private:
-  torch::jit::Module model_first;
-  torch::jit::Module model_second;
+  torch::jit::script::Module model_first;
+  torch::jit::script::Module model_second;
 };
