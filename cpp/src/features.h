@@ -101,20 +101,21 @@ torch::Tensor encodeRoundMoves(const std::vector<Move>& round_moves_curr, const 
   return z;
 }
 
-TorchObs get_obs(const Infoset& infoset)
+TorchObs get_obs(const GameState& gameState, const PrivateInfoSet& privateInfoSet)
 {
-  const int num_moves = static_cast<int>(infoset.legal_moves.size());
+  const int num_moves = static_cast<int>(privateInfoSet.moves.size());
+  int curr = gameState.acting_player_id;
+  int opp = 1 - curr;
 
   auto x_batch = torch::empty({num_moves, X_FEATURE_SIZE}, torch::kFloat32);
   auto x_no_move = torch::empty({X_NO_MOVE_FEATURE_SIZE}, torch::kFloat32);
 
-  auto z =
-      encodeRoundMoves(infoset.round_moves.at(infoset.acting_player), infoset.round_moves.at(infoset.opponent_player));
+  auto z = encodeRoundMoves(gameState.round_moves[curr], gameState.round_moves[opp]);
   auto z_batch = z.unsqueeze(0).expand({num_moves, ROUND_MOVES, MOVE_VECTOR_SIZE}).clone();
 
   torch::Tensor move_batch = torch::empty({num_moves, MOVE_VECTOR_SIZE}, torch::kFloat32);
   for (int i = 0; i < num_moves; ++i) {
-    move_batch[i] = moveToTensor(infoset.legal_moves[i]);
+    move_batch[i] = myMoveToTensor(privateInfoSet.moves[i]);
   }
 
   // Fill in x_batch with all feature slices (placeholder: fill with dummy data)
