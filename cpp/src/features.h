@@ -23,7 +23,6 @@ struct TorchObs
 
 typedef std::pair<int, std::vector<int>> Move;
 
-// Converts move to tensor representation
 torch::Tensor myMoveToTensor(const Move& move)
 {
   auto ret = torch::zeros({MOVE_VECTOR_SIZE}, torch::kFloat32);
@@ -52,24 +51,52 @@ torch::Tensor myMoveToTensor(const Move& move)
   return ret;
 }
 
-torch::Tensor getOneHotCards(int n)
+torch::Tensor oppMoveToTensor(const Move& move)
 {
-  auto one_hot = torch::zeros({7}, torch::kInt8);
+  auto ret = torch::zeros({MOVE_VECTOR_SIZE}, torch::kFloat32);
+  std::vector<int32_t> vec(7, 1);
+  switch (move.first) {
+  case TYPE_0_STASH:
+    ret.slice(0, 0, 7) = torch::tensor(vec, torch::kFloat32);
+    break;
+  case TYPE_1_TRASH:
+    ret.slice(0, 7, 14) = torch::tensor(vec, torch::kFloat32);
+    break;
+  case TYPE_2_CHOOSE_1_2:
+    ret.slice(0, 14, 21) = torch::tensor(move.second, torch::kFloat32);
+    break;
+  case TYPE_3_CHOOSE_2_2:
+    ret.slice(0, 21, 35) = torch::tensor(move.second, torch::kFloat32);
+    break;
+  case TYPE_4_RESOLVE_1_2:
+    ret.slice(0, 35, 49) = torch::tensor(move.second, torch::kFloat32);
+    break;
+  case TYPE_5_RESOLVE_2_2:
+    ret.slice(0, 49, 63) = torch::tensor(move.second, torch::kFloat32);
+    break;
+  }
+
+  return ret;
+}
+
+torch::Tensor getOneHotTensor(int n)
+{
+  auto one_hot = torch::zeros({7}, torch::kFloat32);
   if (n > 0 && n <= 7)
-    one_hot[n - 1] = 1;
+    one_hot[n - 1] = 1.0f;
   return one_hot;
 }
 
-torch::Tensor encodeRoundMoves(const std::vector<Move>& self_moves, const std::vector<Move>& opp_moves)
+torch::Tensor encodeRoundMoves(const std::vector<Move>& round_moves_curr, const std::vector<Move>& round_moves_opp)
 {
-  auto z = torch::zeros({ROUND_MOVES, MOVE_VECTOR_SIZE}, torch::kInt8);
+  auto z = torch::zeros({ROUND_MOVES, MOVE_VECTOR_SIZE}, torch::kFloat32);
 
-  int self_count = static_cast<int>(self_moves.size());
-  for (int i = 6 - self_count, j = 0; i < 6; ++i, ++j) z[i] = moveToTensor(self_moves[j]);
+  int l_curr = static_cast<int>(round_moves_curr.size());
+  for (int i = 6 - l_curr; i < 6; ++i) z[i] = myMoveToTensor(round_moves_curr[i - (6 - l_curr)]);
 
-  int opp_count = static_cast<int>(opp_moves.size());
-  for (int i = ROUND_MOVES - opp_count, j = 0; i < ROUND_MOVES; ++i, ++j)
-    z[i] = moveToTensor(opp_moves[j]);  // Simplification: opp moves same encoding
+  int l_opp = static_cast<int>(round_moves_opp.size());
+  for (int i = ROUND_MOVES - l_opp; i < ROUND_MOVES; ++i)
+    z[i] = oppMoveToTensor(round_moves_opp[i - (ROUND_MOVES - l_opp)]); 
 
   return z;
 }
