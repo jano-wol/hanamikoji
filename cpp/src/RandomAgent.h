@@ -1,9 +1,9 @@
-#ifndef HANAMIKOJI_RANDOM_AGENT_H_INCLUDED
-#define HANAMIKOJI_RANDOM_AGENT_H_INCLUDED
+#ifndef HANAMIKOJI_RANDOM_PLAYER_H_INCLUDED
+#define HANAMIKOJI_RANDOM_PLAYER_H_INCLUDED
 
 #include "IPlayers.h"
 
-class RandomAgent : public IPlayer
+class RandomPlayer : public IPlayer
 {
 public:
   int act(const GameState& /*gameState*/, const PrivateInfoSet& /*privateInfoSet*/) override
