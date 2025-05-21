@@ -41,27 +41,12 @@ class GameEnv
 {
 public:
   GameEnv(std::vector<std::unique_ptr<IPlayer>> players_, int port)
-      : server(port), players(std::move(players_)), round(1), winner(-1)
-  {
-    private_info_sets.push_back(PrivateInfoSet());
-    private_info_sets.push_back(PrivateInfoSet());
-    state = GameState();
-    json msg;
-    msg["type"] = "init_player_id";
-    server.send_message(msg);
-    auto resp = server.receive_message();
-    std::string resp_str = resp["ans"];
-    if (resp_str == "second") {
-      std::swap(players[0], players[1]);
-    }
-    if (players[0]->toString() == "Human") {
-      human = 0;
-      agent = 1;
-    } else {
-      human = 1;
-      agent = 0;
-    }
-  }
+      : server(port),
+        private_info_sets{PrivateInfoSet(), PrivateInfoSet()},
+        players(std::move(players_)),
+        round(1),
+        winner(-1)
+  {}
 
   int get_opp() { return 1 - state.acting_player_id; }
 
@@ -325,6 +310,22 @@ public:
     state = GameState();
     private_info_sets[0] = PrivateInfoSet();
     private_info_sets[1] = PrivateInfoSet();
+    json msg;
+    msg["type"] = "init_player_id";
+    server.send_message(msg);
+    auto resp = server.receive_message();
+    std::string resp_str = resp["ans"];
+    int agentPlace = resp_str == "first" ? 0 : 1;
+    if (players[agentPlace]->toString() != "DeepAgent") {
+      std::swap(players[0], players[1]);
+    }
+    if (players[0]->toString() == "Human") {
+      human = 0;
+      agent = 1;
+    } else {
+      human = 1;
+      agent = 0;
+    }
     card_play_init();
   }
 
