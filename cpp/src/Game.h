@@ -77,7 +77,7 @@ public:
     int expected_length = ((agent == 0 && round % 2 == 1) || (agent == 1 && round % 2 == 0)) ? 7 : 6;
     json msg;
     msg["type"] = "init_hand";
-    msg["desc"] = std::to_string(expected_length);
+    msg["desc"] = expected_length;
     server.send_message(msg);
     auto resp = server.receive_message();
     std::string hand_str = resp["ans"];
