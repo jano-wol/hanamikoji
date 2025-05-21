@@ -211,7 +211,6 @@ public:
     }
   }
 
-private:
   GameState state;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::unique_ptr<IPlayer>> players;
