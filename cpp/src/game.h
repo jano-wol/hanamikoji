@@ -79,7 +79,6 @@ public:
     deck.erase(deck.begin(), deck.begin() + 13);
 
     private_info_sets[state.acting_player_id].moves = get_moves();
-    active_player_info_set = {state, private_info_sets[state.acting_player_id]};
   }
 
   void update_geisha_preferences()
@@ -146,15 +145,15 @@ public:
   {
     int curr = state.acting_player_id;
     int opp = get_opp();
-    auto info = private_info_sets[curr];
+    auto& info = private_info_sets[curr];
     int move_index = players[curr]->act(state, info);
-    auto move = active_player_info_set.second.moves[move_index];
+    auto move = info.moves[move_index];
 
     bool draw_card = true;
 
     switch (move.first) {
     case TYPE_0_STASH:
-      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int>(7, 0));
+      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int>(7, 0)); // TODO FIX?
       state.action_cards[curr][0] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.stashed_card = move.second;
@@ -162,7 +161,7 @@ public:
       state.acting_player_id = opp;
       break;
     case TYPE_1_TRASH:
-      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int>(7, 0));
+      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int>(7, 0)); // TODO FIX?
       state.action_cards[curr][1] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.trashed_cards = move.second;
@@ -236,7 +235,6 @@ public:
         deck.erase(deck.begin());
       }
       new_info.moves = get_moves();
-      active_player_info_set = {state, new_info};
     }
   }
 
@@ -248,7 +246,6 @@ private:
   int winner = -1;
   int round = 1;
   std::vector<int> num_wins = {0, 0};
-  std::pair<GameState, PrivateInfoSet> active_player_info_set;
   std::default_random_engine random_engine;
 
   int get_opp() { return 1 - state.acting_player_id; }
