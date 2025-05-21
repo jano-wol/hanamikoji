@@ -12,7 +12,7 @@
 
 #include "IPlayer.h"
 #include "Movegen.h"
-#include "WebSocketClient.h"
+#include "WebSocketServer.h"
 
 std::vector<int32_t> add_cards(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
 {
@@ -40,10 +40,9 @@ std::vector<int32_t> card_list_to_inner(const std::vector<int32_t>& l)
 class GameEnv
 {
 public:
-  GameEnv(std::vector<std::unique_ptr<IPlayer>> players_, const std::string& ws_uri)
-      : players(std::move(players_)), round(1), winner(-1)
+  GameEnv(std::vector<std::unique_ptr<IPlayer>> players_, int port)
+      : server(port), players(std::move(players_)), round(1), winner(-1)
   {
-    client.connect(ws_uri);
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
     state = GameState();
@@ -71,8 +70,8 @@ public:
     json msg;
     msg["type"] = "init_hand";
     msg["desc"] = std::to_string(expected_length);
-    client.send_message(msg);
-    auto resp = client.receive_message();
+    server.send_message(msg);
+    auto resp = server.receive_message();
     std::string hand_str = resp["ans"];
     std::vector<int32_t> ret(7, 0);
     for (char c : hand_str) {
@@ -89,8 +88,8 @@ public:
   {
     json msg;
     msg["type"] = "draw_card";
-    client.send_message(msg);
-    auto resp = client.receive_message();
+    server.send_message(msg);
+    auto resp = server.receive_message();
     std::string card_str = resp["ans"];
     return card_str[0] - '0';
   }
@@ -100,8 +99,8 @@ public:
     json msg;
     msg["type"] = "stash_req";
     msg["desc"] = private_info_sets[agent].stashed_card;
-    client.send_message(msg);
-    auto resp = client.receive_message();
+    server.send_message(msg);
+    auto resp = server.receive_message();
     std::vector<int32_t> stash = resp["ans"];
     return stash;
   }
@@ -178,7 +177,7 @@ public:
       json msg;
       msg["type"] = "move_desc";
       msg["desc"] = move;
-      client.send_message(msg);
+      server.send_message(msg);
     }
 
     bool is_draw_card = true;
@@ -293,7 +292,7 @@ public:
   }
 
   GameState state;
-  WebSocketClient client;
+  WebSocketServer server;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::unique_ptr<IPlayer>> players;
   int round = 1;
