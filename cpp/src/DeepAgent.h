@@ -1,6 +1,12 @@
 #include <torch/script.h>
-#include <filesystem>
-#include <string>
+#include <asio.hpp> 
+#include <websocketpp/config/asio_no_tls_client.hpp>
+#include <websocketpp/client.hpp>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <iostream>
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
