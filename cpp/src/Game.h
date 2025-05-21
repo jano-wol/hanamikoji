@@ -198,7 +198,18 @@ public:
       msg["type"] = "move_req";
       server.send_message(msg);
       auto resp = server.receive_message();
-      move = resp["ans"];
+      int first = resp["ans"][0];
+      std::vector<int32_t> second;
+      if (resp["ans"][1][0].is_array()) {
+        for (const auto& row : resp["ans"][1]) {
+          for (const auto& val : row) {
+            second.push_back(val.get<int32_t>());
+          }
+        }
+      } else {
+        second = resp["ans"][1].get<std::vector<int32_t>>();
+      }
+      move = {first, second};
     }
 
     bool is_draw_card = true;
