@@ -87,14 +87,29 @@ public:
 
   int draw_card()
   {
-    msg = {'type' : 'draw_card'} await send_message(self.websocket, msg) hand_str =
-        (await get_external_data(self.websocket))['ans'] if len (hand_str) != 1 or not hand_str.isdigit()
-        : raise ValueError(f "Invalid input. Please enter exactly 1 digits.") if 0 <= int(hand_str) <= 6
-        : return int(hand_str) raise ValueError("Invalid card value. PLease enter a digit between 1 and 7.")
+    json msg;
+    msg["type"] = "draw_card";
+    client.send_message(msg);
+    auto resp = client.receive_message();
+    std::string card_str = resp['ans'];
+    return card_str[0] - '0';
+  }
+
+  std::vector<int32_t> reveal_human_stash()
+  {
+    json msg;
+    msg["type"] = "stash_req";
+    msg["desc"] = private_info_sets[agent].stashed_card;
+    client.send_message(msg);
+    auto resp = client.receive_message();
+    std::vector<int32_t> stash = resp['ans'];
+    return stash;
   }
 
   void update_geisha_preferences()
   {
+    auto human_stash = reveal_human_stash();
+    private_info_sets[human].stashed_card = human_stash;
     std::vector<int32_t> first_gifts = add_cards(state.gift_cards[0], private_info_sets[0].stashed_card);
     std::vector<int32_t> second_gifts = add_cards(state.gift_cards[1], private_info_sets[1].stashed_card);
 
