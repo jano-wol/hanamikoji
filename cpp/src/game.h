@@ -12,40 +12,40 @@
 
 #include "movegen.h"
 
-std::vector<int> add_cards(const std::vector<int>& a, const std::vector<int>& b)
+std::vector<int32_t> add_cards(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
 {
-  std::vector<int> result(7);
+  std::vector<int32_t> result(7);
   for (int i = 0; i < 7; ++i) result[i] = a[i] + b[i];
   return result;
 }
 
-std::vector<int> sub_cards(const std::vector<int>& a, const std::vector<int>& b)
+std::vector<int32_t> sub_cards(const std::vector<int32_t>& a, const std::vector<int32_t>& b)
 {
-  std::vector<int> result(7);
+  std::vector<int32_t> result(7);
   for (int i = 0; i < 7; ++i) result[i] = a[i] - b[i];
   return result;
 }
 
 struct PrivateInfoSet
 {
-  std::vector<int> hand_cards;
-  std::vector<int> stashed_card = std::vector<int>(7, 0);
-  std::vector<int> trashed_cards = std::vector<int>(7, 0);
-  std::vector<std::pair<int, std::vector<int>>> moves;
+  std::vector<int32_t> hand_cards;
+  std::vector<int32_t> stashed_card = std::vector<int32_t>(7, 0);
+  std::vector<int32_t> trashed_cards = std::vector<int32_t>(7, 0);
+  std::vector<std::pair<int, std::vector<int32_t>>> moves;
 };
 
 struct GameState
 {
   int acting_player_id = 0;
-  std::vector<int> id_to_round_id = {0, 1};
-  std::vector<int> points = {2, 2, 2, 3, 3, 4, 5};
-  std::vector<std::vector<int>> gift_cards = {std::vector<int>(7, 0), std::vector<int>(7, 0)};
-  std::vector<std::vector<int>> action_cards = {{1, 1, 1, 1}, {1, 1, 1, 1}};
-  std::vector<int> decision_cards_1_2 = {};
-  std::pair<std::vector<int>, std::vector<int>> decision_cards_2_2 = {};
-  std::vector<std::vector<int>> geisha_preferences = {std::vector<int>(7, 0), std::vector<int>(7, 0)};
-  std::vector<int> num_cards = {7, 6};
-  std::vector<std::vector<std::pair<int, std::vector<int>>>> round_moves = {{{}}, {{}}};
+  std::vector<int32_t> id_to_round_id = {0, 1};
+  std::vector<int32_t> points = {2, 2, 2, 3, 3, 4, 5};
+  std::vector<std::vector<int32_t>> gift_cards = {std::vector<int32_t>(7, 0), std::vector<int32_t>(7, 0)};
+  std::vector<std::vector<int32_t>> action_cards = {{1, 1, 1, 1}, {1, 1, 1, 1}};
+  std::vector<int32_t> decision_cards_1_2 = {};
+  std::pair<std::vector<int32_t>, std::vector<int32_t>> decision_cards_2_2 = {};
+  std::vector<std::vector<int32_t>> geisha_preferences = {std::vector<int32_t>(7, 0), std::vector<int32_t>(7, 0)};
+  std::vector<int32_t> num_cards = {7, 6};
+  std::vector<std::vector<std::pair<int, std::vector<int32_t>>>> round_moves = {{{}}, {{}}};
 };
 
 class Player
@@ -69,7 +69,7 @@ public:
     deck = {0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6};
     shuffle(deck.begin(), deck.end(), random_engine);
 
-    std::vector<int> f(7, 0), s(7, 0);
+    std::vector<int32_t> f(7, 0), s(7, 0);
     for (int i = 0; i < 7; ++i) f[deck[i]]++;
     for (int i = 7; i < 13; ++i) s[deck[i]]++;
 
@@ -83,8 +83,8 @@ public:
 
   void update_geisha_preferences()
   {
-    std::vector<int> first_gifts = add_cards(state.gift_cards[0], private_info_sets[0].stashed_card);
-    std::vector<int> second_gifts = add_cards(state.gift_cards[1], private_info_sets[1].stashed_card);
+    std::vector<int32_t> first_gifts = add_cards(state.gift_cards[0], private_info_sets[0].stashed_card);
+    std::vector<int32_t> second_gifts = add_cards(state.gift_cards[1], private_info_sets[1].stashed_card);
 
     for (int i = 0; i < 7; ++i) {
       if (first_gifts[i] > second_gifts[i] ||
@@ -153,7 +153,7 @@ public:
 
     switch (move.first) {
     case TYPE_0_STASH:
-      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int>(7, 0)); // TODO FIX?
+      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int32_t>(7, 0)); // TODO FIX?
       state.action_cards[curr][0] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.stashed_card = move.second;
@@ -161,7 +161,7 @@ public:
       state.acting_player_id = opp;
       break;
     case TYPE_1_TRASH:
-      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int>(7, 0)); // TODO FIX?
+      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int32_t>(7, 0)); // TODO FIX?
       state.action_cards[curr][1] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.trashed_cards = move.second;
@@ -180,8 +180,8 @@ public:
     case TYPE_3_CHOOSE_2_2:
       state.round_moves[curr].emplace_back(move);
       state.action_cards[curr][3] = 0;
-      state.decision_cards_2_2 = {std::vector<int>(move.second.begin(), move.second.begin() + 7),
-                                  std::vector<int>(move.second.begin() + 7, move.second.end())};
+      state.decision_cards_2_2 = {std::vector<int32_t>(move.second.begin(), move.second.begin() + 7),
+                                  std::vector<int32_t>(move.second.begin() + 7, move.second.end())};
       info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.first);
       info.hand_cards = sub_cards(info.hand_cards, state.decision_cards_2_2.second);
       state.num_cards[curr] -= 4;
@@ -192,17 +192,17 @@ public:
       state.round_moves[curr].emplace_back(move);
       state.decision_cards_1_2.clear();
       state.gift_cards[curr] =
-          add_cards(state.gift_cards[curr], std::vector<int>(move.second.begin(), move.second.begin() + 7));
+          add_cards(state.gift_cards[curr], std::vector<int32_t>(move.second.begin(), move.second.begin() + 7));
       state.gift_cards[opp] =
-          add_cards(state.gift_cards[opp], std::vector<int>(move.second.begin() + 7, move.second.end()));
+          add_cards(state.gift_cards[opp], std::vector<int32_t>(move.second.begin() + 7, move.second.end()));
       break;
     case TYPE_5_RESOLVE_2_2:
       state.round_moves[curr].emplace_back(move);
       state.decision_cards_2_2 = {};
       state.gift_cards[curr] =
-          add_cards(state.gift_cards[curr], std::vector<int>(move.second.begin(), move.second.begin() + 7));
+          add_cards(state.gift_cards[curr], std::vector<int32_t>(move.second.begin(), move.second.begin() + 7));
       state.gift_cards[opp] =
-          add_cards(state.gift_cards[opp], std::vector<int>(move.second.begin() + 7, move.second.end()));
+          add_cards(state.gift_cards[opp], std::vector<int32_t>(move.second.begin() + 7, move.second.end()));
       break;
     }
 
@@ -242,15 +242,15 @@ private:
   GameState state;
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::shared_ptr<Player>> players;
-  std::vector<int> deck;
+  std::vector<int32_t> deck;
   int winner = -1;
   int round = 1;
-  std::vector<int> num_wins = {0, 0};
+  std::vector<int32_t> num_wins = {0, 0};
   std::default_random_engine random_engine;
 
   int get_opp() { return 1 - state.acting_player_id; }
 
-  std::vector<std::pair<int, std::vector<int>>> get_moves()
+  std::vector<std::pair<int, std::vector<int32_t>>> get_moves()
   {
     MovesGener mg(private_info_sets[state.acting_player_id].hand_cards, state.action_cards[state.acting_player_id],
                   state.decision_cards_1_2, state.decision_cards_2_2);
