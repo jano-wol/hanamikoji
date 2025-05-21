@@ -1,16 +1,12 @@
+#ifndef HANAMIKOJI_DEEP_AGENT_H_INCLUDED
+#define HANAMIKOJI_DEEP_AGENT_H_INCLUDED
+
 #include <torch/script.h>
-#include <asio.hpp>
-#include <condition_variable>
 #include <iostream>
-#include <mutex>
-#include <nlohmann/json.hpp>
-#include <queue>
-#include <thread>
-#include <websocketpp/client.hpp>
-#include <websocketpp/config/asio_no_tls_client.hpp>
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
+#include "WebSocketClient.h"
 
 torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
 {
@@ -23,12 +19,13 @@ torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torc
 class DeepAgent : public IPlayer
 {
 public:
-  DeepAgent(const std::string& exe_dir)
+  DeepAgent(const std::string& exe_dir, const std::string& ws_uri)
   {
     model_first = torch::jit::load(exe_dir + "/first.pt");
     model_second = torch::jit::load(exe_dir + "/second.pt");
     model_first.eval();
     model_second.eval();
+    client.connect(ws_uri);
   }
 
   int act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
@@ -50,6 +47,9 @@ public:
 
   std::string toString() override { return "DeepAgent"; }
 
+  WebSocketClient client;
   torch::jit::script::Module model_first;
   torch::jit::script::Module model_second;
 };
+
+#endif
