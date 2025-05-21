@@ -51,21 +51,40 @@ public:
 
   void connect(const std::string& uri)
   {
-    websocketpp::lib::error_code ec;
-    auto con = client_.get_connection(uri, ec);
-    if (ec) {
-      std::cerr << "[ERROR] Connect: " << ec.message() << std::endl;
-      return;
-    }
+    while (true) {
+      websocketpp::lib::error_code ec;
+      auto con = client_.get_connection(uri, ec);
+      if (ec) {
+        std::cerr << "[ERROR] Creating connection failed: " << ec.message() << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        continue;
+      }
 
-    client_.connect(con);
-    client_thread_ = std::thread([this]() { client_.run(); });
+      connected_ = false;  // Reset before trying
+      client_.connect(con);
 
-    while (!connected_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      // Start client loop thread if not already running
+      if (!client_thread_.joinable()) {
+        client_thread_ = std::thread([this]() { client_.run(); });
+      }
+
+      // Wait briefly for on_open handler
+      int wait_ms = 0;
+      while (!connected_ && wait_ms < 2000) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        wait_ms += 100;
+      }
+
+      if (connected_) {
+        std::cout << "[INFO] Connected to WebSocket server." << std::endl;
+        break;
+      } else {
+        std::cerr << "[WARN] Connection failed. Retrying..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+      }
     }
   }
-
+  
   void send_message(const json& msg)
   {
     std::string payload = msg.dump();
