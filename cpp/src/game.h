@@ -57,7 +57,7 @@ public:
 class GameEnv
 {
 public:
-  GameEnv(std::vector<std::shared_ptr<Player>> players) : players(players), round(1), winner(-1)
+  GameEnv(std::vector<std::shared_ptr<Player>> players_) : players(std::move(players_)), round(1), winner(-1)
   {
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
@@ -153,7 +153,7 @@ public:
 
     switch (move.first) {
     case TYPE_0_STASH:
-      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int32_t>(7, 0)); // TODO FIX?
+      state.round_moves[curr].emplace_back(TYPE_0_STASH, std::vector<int32_t>(7, 0));  // TODO FIX?
       state.action_cards[curr][0] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.stashed_card = move.second;
@@ -161,7 +161,7 @@ public:
       state.acting_player_id = opp;
       break;
     case TYPE_1_TRASH:
-      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int32_t>(7, 0)); // TODO FIX?
+      state.round_moves[curr].emplace_back(TYPE_1_TRASH, std::vector<int32_t>(7, 0));  // TODO FIX?
       state.action_cards[curr][1] = 0;
       info.hand_cards = sub_cards(info.hand_cards, move.second);
       info.trashed_cards = move.second;
@@ -243,8 +243,8 @@ private:
   std::vector<PrivateInfoSet> private_info_sets;
   std::vector<std::shared_ptr<Player>> players;
   std::vector<int32_t> deck;
-  int winner = -1;
   int round = 1;
+  int winner = -1;
   std::vector<int32_t> num_wins = {0, 0};
   std::default_random_engine random_engine;
 
