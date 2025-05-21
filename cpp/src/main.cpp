@@ -1,6 +1,8 @@
 #include <torch/script.h>
 #include <filesystem>
 #include <iostream>
+#include "features.h"
+
 
 torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
 {
