@@ -309,7 +309,7 @@ public:
         state.num_cards[state.acting_player_id]++;
         if (state.acting_player_id == agent) {
           auto card = draw_card();
-          info.hand_cards[card] += 1;
+          new_info.hand_cards[card] += 1;
         }
       }
       if (state.acting_player_id == agent) {
