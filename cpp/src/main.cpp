@@ -3,7 +3,7 @@
 #include <iostream>
 #include "DeepAgent.h"
 #include "Game.h"
-#include "RandomAgent.h"
+#include "Human.h"
 
 int main(int /*argc*/, char* argv[])
 {
@@ -14,10 +14,10 @@ int main(int /*argc*/, char* argv[])
   }
 
   auto deep_agent_1 = std::make_unique<DeepAgent>(exe_dir);
-  auto random_agent = std::make_unique<RandomAgent>();
+  auto human = std::make_unique<Human>();
   std::vector<std::unique_ptr<IPlayer>> players;
   players.emplace_back(std::move(deep_agent_1));
-  players.emplace_back(std::move(random_agent));
+  players.emplace_back(std::move(human));
 
   GameEnv env(std::move(players), 8768);
   std::vector<int> results{0, 0};

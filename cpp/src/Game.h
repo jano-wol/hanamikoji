@@ -187,6 +187,13 @@ public:
       msg["desc"] = move;
       server.send_message(msg);
     }
+    if (curr == human) {
+      json msg;
+      msg["type"] = "move_req";
+      server.send_message(msg);
+      auto resp = server.receive_message();
+      move = resp["ans"];
+    }
 
     bool is_draw_card = true;
 
