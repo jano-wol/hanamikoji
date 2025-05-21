@@ -13,5 +13,12 @@ int main(int /*argc*/, char* argv[])
     exe_dir = std::filesystem::current_path();
   }
 
-  auto deep_agent = std::make_unique<DeepAgent>(exe_dir);
+  auto deep_agent_1 = std::make_unique<DeepAgent>(exe_dir);
+  //auto deep_agent_2 = std::make_unique<DeepAgent>(exe_dir);
+  auto random_agent = std::make_unique<RandomAgent>();
+  std::vector<std::unique_ptr<IPlayer>> players;
+  players.emplace_back(std::move(deep_agent_1));
+  players.emplace_back(std::move(random_agent));
+
+  GameEnv env(std::move(players));
 }

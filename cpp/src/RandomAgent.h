@@ -1,6 +1,8 @@
 #ifndef HANAMIKOJI_RANDOM_AGENT_H_INCLUDED
 #define HANAMIKOJI_RANDOM_AGENT_H_INCLUDED
 
+#include <random>
+
 #include "IPlayer.h"
 
 class RandomAgent : public IPlayer
