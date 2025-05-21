@@ -16,10 +16,10 @@ torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torc
 class DeepAgent : public IPlayer
 {
 public:
-  DeepAgent(const std::string& ckpt_dir_path)
+  DeepAgent(const std::string& exe_dir)
   {
-    model_first = torch::jit::load(ckpt_dir_path + "/first.pt");
-    model_second = torch::jit::load(ckpt_dir_path + "/second.pt");
+    model_first = torch::jit::load(exe_dir + "/first.pt");
+    model_second = torch::jit::load(exe_dir + "/second.pt");
     model_first.eval();
     model_second.eval();
   }

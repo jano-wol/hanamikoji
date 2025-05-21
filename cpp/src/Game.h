@@ -57,7 +57,7 @@ public:
 class GameEnv
 {
 public:
-  GameEnv(std::vector<std::shared_ptr<Player>> players_) : players(std::move(players_)), round(1), winner(-1)
+  GameEnv(std::vector<std::unique_ptr<Player>> players_) : players(std::move(players_)), round(1), winner(-1)
   {
     private_info_sets.push_back(PrivateInfoSet());
     private_info_sets.push_back(PrivateInfoSet());
@@ -241,7 +241,7 @@ public:
 private:
   GameState state;
   std::vector<PrivateInfoSet> private_info_sets;
-  std::vector<std::shared_ptr<Player>> players;
+  std::vector<std::unique_ptr<Player>> players;
   std::vector<int32_t> deck;
   int round = 1;
   int winner = -1;

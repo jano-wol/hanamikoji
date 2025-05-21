@@ -5,12 +5,13 @@
 #include "Game.h"
 #include "RandomAgent.h"
 
-torch::Tensor run_model(torch::jit::script::Module& model, torch::Tensor z, torch::Tensor x)
+int main(int /*argc*/, char* argv[])
 {
-  std::vector<torch::jit::IValue> inputs;
-  inputs.push_back(z);
-  inputs.push_back(x);
-  return model.forward(inputs).toTensor();
-}
+  std::filesystem::path exe_path = argv[0];
+  std::filesystem::path exe_dir = exe_path.parent_path();
+  if (exe_dir.empty()) {
+    exe_dir = std::filesystem::current_path();
+  }
 
-int main(int argc, char* argv[]) { return 0; }
+  auto deep_agent = std::make_unique<DeepAgent>(exe_dir);
+}
