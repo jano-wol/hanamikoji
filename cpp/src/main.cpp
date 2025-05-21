@@ -20,7 +20,7 @@ int main(int /*argc*/, char* argv[])
   players.emplace_back(std::move(deep_agent_1));
   players.emplace_back(std::move(random_agent));
 
-  GameEnv env(std::move(players));
+  GameEnv env(std::move(players), "ws://localhost:8768");
   std::vector<int> results{0, 0};
   for (int sim = 0; sim < 10000; ++sim) {
     env.reset();

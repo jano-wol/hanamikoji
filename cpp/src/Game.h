@@ -65,11 +65,24 @@ public:
     return mg.getMoves();
   }
 
-  std::vector<int32_t> parse_starting_hand()
+  void card_play_init()
   {
-    std::vector<int32_t> ret;
     int expected_length = ((agent == 0 && round % 2 == 1) || (agent == 1 && round % 2 == 0)) ? 7 : 6;
-    return ret;
+    json msg;
+    msg["type"] = "init_hand";
+    msg["desc"] = std::to_string(expected_length);
+    client.send_message(msg);
+    auto resp = client.receive_message();
+    std::string hand_str = resp['ans'];
+    std::vector<int32_t> ret(7, 0);
+    for (char c : hand_str) {
+      int val = c - '0';
+      ++ret[val];
+    }
+    private_info_sets[agent].hand_cards = ret;
+    if (state.acting_player_id == agent) {
+      private_info_sets[state.acting_player_id].moves = get_moves();
+    }
   }
 
   int draw_card()
@@ -78,14 +91,6 @@ public:
         (await get_external_data(self.websocket))['ans'] if len (hand_str) != 1 or not hand_str.isdigit()
         : raise ValueError(f "Invalid input. Please enter exactly 1 digits.") if 0 <= int(hand_str) <= 6
         : return int(hand_str) raise ValueError("Invalid card value. PLease enter a digit between 1 and 7.")
-  }
-
-  void card_play_init()
-  {
-    private_info_sets[agent].hand_cards = card_list_to_inner(parse_starting_hand());
-    if (state.acting_player_id == agent) {
-      private_info_sets[state.acting_player_id].moves = get_moves();
-    }
   }
 
   void update_geisha_preferences()
@@ -255,6 +260,16 @@ public:
         new_info.moves = get_moves();
       }
     }
+  }
+
+  void reset()
+  {
+    winner = -1;
+    round = 1;
+    state = GameState();
+    private_info_sets[0] = PrivateInfoSet();
+    private_info_sets[1] = PrivateInfoSet();
+    card_play_init();
   }
 
   GameState state;
