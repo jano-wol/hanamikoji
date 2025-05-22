@@ -8,11 +8,10 @@
 class RandomAgent : public IPlayer
 {
 public:
-  std::pair<int, std::vector<int32_t>> act(const GameState& /*gameState*/, const PrivateInfoSet& privateInfoSet) override
+  std::pair<std::pair<int, std::vector<int32_t>>, double> act(const GameState& /*gameState*/,
+                                                              const PrivateInfoSet& privateInfoSet) override
   {
-    static std::mt19937 rng{std::random_device{}()};
-    std::uniform_int_distribution<size_t> dist(0, privateInfoSet.moves.size() - 1);
-    return privateInfoSet.moves[dist(rng)];
+    return {};
   }
 
   std::string toString() override { return "RandomAgent"; }
