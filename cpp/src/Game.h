@@ -130,6 +130,7 @@ public:
     int curr = state.acting_player_id;
     auto& info = private_info_sets[curr];
     auto move = players[curr]->act(state, info);
+    ++call;
     return move;
   }
 
@@ -171,6 +172,7 @@ public:
   int winner = -1;
   int human = -1;
   int agent = -1;
+  int call = 0;
   std::vector<int32_t> num_wins = {0, 0};
 };
 

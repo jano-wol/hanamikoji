@@ -51,9 +51,11 @@ void dumpSortedByValue(const std::map<std::vector<int32_t>, double>& ret, const 
   std::vector<std::pair<std::vector<int32_t>, double>> sorted_entries(ret.begin(), ret.end());
 
   // Sort by the double value (ascending)
-  std::sort(sorted_entries.begin(), sorted_entries.end(),
-            [](const auto& a, const auto& b) { return a.second < b.second; });
-
+  std::sort(sorted_entries.begin(), sorted_entries.end(), [](const auto& a, const auto& b) {
+    if (a.second != b.second)
+      return a.second > b.second;
+    return a.first > b.first;  // Tie-breaker: lexicographic vector comparison
+  });
   // Open output file
   std::ofstream out(filename);
   if (!out) {
@@ -63,13 +65,13 @@ void dumpSortedByValue(const std::map<std::vector<int32_t>, double>& ret, const 
 
   // Write to file
   for (const auto& [vec, val] : sorted_entries) {
-    out << val << " : [";
+    out << "[";
     for (size_t i = 0; i < vec.size(); ++i) {
       out << vec[i];
       if (i < vec.size() - 1)
         out << ", ";
     }
-    out << "]\n";
+    out << "] : " << val << "\n";
   }
 
   out.close();
@@ -129,15 +131,14 @@ int main(int /*argc*/, char* argv[])
 
   int r = 0;
   for (const auto& geishaPreference : allGeishaPreferences) {
+    ++r;
+    if (r % 10 == 0) {
+      std::cout << r << "/" << allGeishaPreferences.size() << "\n";
+    }
     auto win = is_ended(geishaPreference);
     if (win != 0) {
       ret[geishaPreference] = win;
       continue;
-    }
-    ++r;
-    if (r == 5)
-    {
-      break;
     }
     double p = 0;
     for (const auto& startHand : allStartHands) {
@@ -154,5 +155,6 @@ int main(int /*argc*/, char* argv[])
     }
     ret[geishaPreference] = p / double(allStartHands.size());
   }
+  std::cout << "totalCall=" << env.call << "\n";
   dumpSortedByValue(ret, "jano.txt");
 }
