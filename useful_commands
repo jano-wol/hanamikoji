@@ -34,6 +34,10 @@ https://github.com/nlohmann/json/blob/develop/include/nlohmann/json.hpp
 
 git clone https://github.com/zaphoyd/websocketpp.git
 
+Maybe needed:
+sudo apt install ninja-build
+sudo apt  install cmake
+
 When everything is ready:
 ./cpp/scripts/configure.sh release
 ./cpp/scripts/build.sh release
