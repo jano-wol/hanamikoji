@@ -14,6 +14,9 @@ scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_re
 scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_recent_model/second.ckpt ~/Repositories/
 
 --- CPP setup ---
+Make sure first.pt and second.pt are ./baselines folder.
+source venv/bin/activate
+python ./convert.py
 
 In the cpp folder there should be an ext folder:
 jano@j:~/Repositories/hanamikoji/cpp/ext$ ls
