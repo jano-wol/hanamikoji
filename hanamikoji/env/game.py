@@ -213,11 +213,9 @@ class GameEnv(object):
             assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
             self.update_geisha_preferences()
             if self.round % 2 == 1:
-                print(f'round={self.round} round_end={self.state.geisha_preferences}')
                 self.round_end_reward = self.round_end_rewards[
                     tuple(_sub_cards(self.state.geisha_preferences['second'], self.state.geisha_preferences['first']))]
             if self.round % 2 == 0:
-                print(f'round={self.round} round_end={self.state.geisha_preferences}')
                 self.round_end_reward = self.round_end_rewards[
                     tuple(_sub_cards(self.state.geisha_preferences['first'], self.state.geisha_preferences['second']))]
             self.set_winner()
