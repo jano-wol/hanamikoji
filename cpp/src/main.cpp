@@ -10,6 +10,7 @@ const std::vector<int> cardCounts = {2, 2, 2, 3, 3, 4, 5};
 
 std::vector<std::vector<int32_t>> allGeishaPreferences;
 std::vector<std::vector<int32_t>> allStartHands;
+std::map<std::vector<int32_t>, double> startHandDist;
 
 void generateAllGeishaPreferences()
 {
@@ -107,11 +108,37 @@ int is_ended(std::vector<int32_t> geishaPreferences)
   return 0;
 }
 
+int64_t C(int n, int k)
+{
+  if (k < 0 || k > n)
+    return 0;
+  k = std::min(k, n - k);  // Take advantage of symmetry
+  int64_t result = 1;
+  for (int i = 1; i <= k; ++i) {
+    result *= (n - i + 1);
+    result /= i;
+  }
+  return result;
+}
+
+void initStartHandDist()
+{
+  double all = 116280.0;
+  for (const auto& startHand : allStartHands) {
+    int64_t val = 1;
+    for (int i = 0; i < 7; ++i) {
+      val *= C(cardCounts[i], startHand[i]);
+    }
+    startHandDist[startHand] = double(val) / all;
+  }
+}
+
 int main(int /*argc*/, char* argv[])
 {
   generateAllGeishaPreferences();
   std::vector<int> current(cardTypes.size(), 0);
   backtrack(current, 0, 7);
+  initStartHandDist();
 
   std::filesystem::path exe_path = argv[0];
   std::filesystem::path exe_dir = exe_path.parent_path();
@@ -151,9 +178,9 @@ int main(int /*argc*/, char* argv[])
       if (p_ < -1.0) {
         p_ = -1.0;
       }
-      p += p_;
+      p += p_ * startHandDist[startHand];
     }
-    ret[geishaPreference] = p / double(allStartHands.size());
+    ret[geishaPreference] = p;
   }
   std::cout << "totalCall=" << env.call << "\n";
   dumpSortedByValue(ret, "jano.txt");
