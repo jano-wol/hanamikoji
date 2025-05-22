@@ -12,3 +12,26 @@ python ./train.py --actor_device_cpu --training_device cpu --num_actors 1 --load
 python ./train.py --gpu_devices 0,1,2,3 --num_actor_devices 3 --num_actors 15 --training_device 3
 scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_recent_model/first.ckpt ~/Repositories/
 scp -i ~/.ssh/id_rsa -P 41161 root@104.187.142.167:/workspace/hanamikoji/most_recent_model/second.ckpt ~/Repositories/
+
+--- CPP setup ---
+
+In the cpp folder there should be an ext folder:
+jano@j:~/Repositories/hanamikoji/cpp/ext$ ls
+asio-1.30.2  libtorch-linux-cpu  nlohmann  websocketpp
+To get these in the ext folder:
+
+Download and extract:
+https://sourceforge.net/projects/asio/files/asio/1.30.2%20%28Stable%29/
+
+Download extract and rename to libtorch-linux-cpu (Package=LibTorch, language=C++/Java):
+https://pytorch.org/
+
+put this file to path .../ext/nlohmann/nlohmann/json.hpp
+https://github.com/nlohmann/json/blob/develop/include/nlohmann/json.hpp
+
+git clone https://github.com/zaphoyd/websocketpp.git
+
+When everything is ready:
+./cpp/scripts/configure.sh release
+./cpp/scripts/build.sh release
+./cpp/build/release/bin/main
