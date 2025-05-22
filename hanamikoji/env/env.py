@@ -89,7 +89,7 @@ class Env:
             obs = None
         else:
             obs = get_obs(self.infoset)
-        return obs, reward, done, {}
+        return obs, reward, self._env.round_end_reward, done, {}
 
     def _get_reward(self):
         """
