@@ -148,14 +148,14 @@ class GameEnv(object):
 
         draw_card = True
         if move[0] == TYPE_0_STASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7])
+            self.state.round_moves[curr].append([move[0], [0] * 7]) # TODO FIX?
             self.state.action_cards[curr][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_card = move[1]
             self.state.num_cards[curr] -= 1
             self.state.acting_player_id = opp
         if move[0] == TYPE_1_TRASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7])
+            self.state.round_moves[curr].append([move[0], [0] * 7]) # TODO FIX?
             self.state.action_cards[curr][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]

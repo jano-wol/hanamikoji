@@ -13,3 +13,7 @@ eval_data.pkl
 /.idea/**
 *.ckpt
 *.pkl
+/cpp/ext
+/cpp/build
+*.pt
+*.vscode/**
