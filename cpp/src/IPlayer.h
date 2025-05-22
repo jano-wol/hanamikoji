@@ -26,7 +26,9 @@ struct GameState
 class IPlayer
 {
 public:
-  virtual int act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) = 0;
+  virtual std::pair<int, std::vector<int32_t>> act(const GameState& gameState,
+                                                   const PrivateInfoSet& privateInfoSet) = 0;
+  virtual std::string toString() = 0;
   virtual ~IPlayer() = default;
 };
 

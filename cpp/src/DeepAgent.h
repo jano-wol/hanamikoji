@@ -1,6 +1,8 @@
+#ifndef HANAMIKOJI_DEEP_AGENT_H_INCLUDED
+#define HANAMIKOJI_DEEP_AGENT_H_INCLUDED
+
 #include <torch/script.h>
-#include <filesystem>
-#include <string>
+#include <iostream>
 #include "Features.h"
 #include "Game.h"
 #include "IPlayer.h"
@@ -24,10 +26,10 @@ public:
     model_second.eval();
   }
 
-  int act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
+  std::pair<int, std::vector<int32_t>> act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
   {
     if (privateInfoSet.moves.size() == 1) {
-      return 0;
+      return privateInfoSet.moves[0];
     }
 
     TorchObs obs = get_obs(gameState, privateInfoSet);
@@ -38,9 +40,13 @@ public:
       values = run_model(model_second, obs.z_batch, obs.x_batch);
     }
     int64_t best_move_index = values.argmax(0).item<int64_t>();
-    return static_cast<int>(best_move_index);
+    return privateInfoSet.moves[best_move_index];
   }
+
+  std::string toString() override { return "DeepAgent"; }
 
   torch::jit::script::Module model_first;
   torch::jit::script::Module model_second;
 };
+
+#endif
