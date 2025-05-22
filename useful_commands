@@ -26,7 +26,7 @@ To get these in the ext folder:
 Download and extract:
 https://sourceforge.net/projects/asio/files/asio/1.30.2%20%28Stable%29/
 
-Download extract and rename to libtorch-linux-cpu (Package=LibTorch, language=C++/Java):
+Download extract and rename to libtorch-linux-cpu (Package=LibTorch, language=C++/Java, Compute PLatform = CPU):
 https://pytorch.org/
 
 put this file to path .../ext/nlohmann/nlohmann/json.hpp
