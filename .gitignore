@@ -17,3 +17,4 @@ eval_data.pkl
 /cpp/build
 *.pt
 *.vscode/**
+*.out
