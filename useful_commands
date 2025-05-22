@@ -30,7 +30,7 @@ Download extract and rename to libtorch-linux-cpu (Package=LibTorch, language=C+
 https://pytorch.org/
 
 put this file to path .../ext/nlohmann/nlohmann/json.hpp
-https://github.com/nlohmann/json/blob/develop/include/nlohmann/json.hpp
+https://github.com/nlohmann/json/blob/develop/single_include/nlohmann/json.hpp
 
 git clone https://github.com/zaphoyd/websocketpp.git
 
