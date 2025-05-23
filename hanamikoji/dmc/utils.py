@@ -146,8 +146,8 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                 target_buf[round_id].append(None)
                 acting_player_id, round_id, round_end_reward, obs, env_output = env.step(move)
                 if round_end_reward is not None:
-                    target_buf['first'][-diff['first']:] = [-round_end_reward] * diff['first']
-                    target_buf['second'][-diff['second']:] = [round_end_reward] * diff['second']
+                    target_buf['first'][-6:] = [-round_end_reward] * 6
+                    target_buf['second'][-6:] = [round_end_reward] * 6
                 if env_output['done']:
                     result_glob = env_output['episode_result']
                     for p in player_ids:
