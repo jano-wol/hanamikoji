@@ -70,6 +70,7 @@ class GameEnv(object):
         # Storing all the info of the active player. It is an object pair.
         # First element is GameState, second element is PrivateInfo.
         self.active_player_info_set = None
+        self.card_play_data = None
 
     def get_opp(self):
         return 'first' if self.state.acting_player_id == 'second' else 'second'
@@ -138,6 +139,14 @@ class GameEnv(object):
         moves = mg.gen_moves()
         return moves
 
+    def get_new_round_play_data(self):
+        assert (self.round < 20)
+        if self.card_play_data is not None:
+            game_idx = self.num_wins['first'] + self.num_wins['second']
+            return self.card_play_data[game_idx * 20 + self.round]
+        else:
+            return get_card_play_data()
+
     def step(self):
         curr = self.state.acting_player_id
         opp = self.get_opp()
@@ -203,7 +212,7 @@ class GameEnv(object):
                     self.state.id_to_round_id = {'first': 'second', 'second': 'first'}
                     self.state.num_cards = {'first': 6, 'second': 7}
                 self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
-                card_play_data = get_card_play_data()
+                card_play_data = self.get_new_round_play_data()
                 self.card_play_init(card_play_data)
         else:
             info = self.private_info_sets[self.state.acting_player_id]

@@ -63,7 +63,7 @@ class Env:
         This function is usually called when a game is over.
         """
         self._env.reset()
-        card_play_data = get_card_play_data()
+        card_play_data = self._env.get_new_round_play_data()
         self._env.card_play_init(card_play_data)
         # First element is GameState, second element is PrivateInfo.
         self.infoset = self._active_player_info_set()

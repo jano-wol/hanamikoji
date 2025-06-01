@@ -19,7 +19,7 @@ if __name__ == '__main__':
     print("generating data...")
 
     data = []
-    for _ in range(flags.num_games):
+    for _ in range(flags.num_games * 30):
         data.append(get_card_play_data())
 
     print("saving pickle file...")

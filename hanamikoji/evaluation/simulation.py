@@ -20,16 +20,16 @@ def load_card_play_models(card_play_model_path_dict):
 def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
     players = load_card_play_models(card_play_model_path_dict)
 
-    glob = 0
     env = GameEnv(players)
-    for idx, card_play_data in enumerate(card_play_data_list):
+    env.card_play_data = card_play_data_list
+    for idx in range(10000):
+        card_play_data = env.get_new_round_play_data()
         env.card_play_init(card_play_data)
         while not env.winner:
             env.step()
         env.reset()
-        if glob % 1000 == 0:
-            print(glob)
-        glob += 1
+        if idx % 1000 == 0:
+            print(idx)
 
     q.put((env.num_wins['first'],
            env.num_wins['second']
