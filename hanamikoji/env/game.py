@@ -143,7 +143,7 @@ class GameEnv(object):
         assert (self.round < 20)
         if self.card_play_data is not None:
             game_idx = self.num_wins['first'] + self.num_wins['second']
-            return self.card_play_data[game_idx * 20 + self.round]
+            return deepcopy(self.card_play_data[game_idx * 20 + self.round])
         else:
             return get_card_play_data()
 

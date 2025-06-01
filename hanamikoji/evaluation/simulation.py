@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import pickle
+from copy import deepcopy
 
 from hanamikoji.env.game import GameEnv
 
@@ -19,20 +20,21 @@ def load_card_play_models(card_play_model_path_dict):
 
 def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
     players = load_card_play_models(card_play_model_path_dict)
-
-    env = GameEnv(players)
-    env.card_play_data = card_play_data_list
+    players_2 = {'first': players['second'], 'second': players['first']}
+    envs = [GameEnv(players), GameEnv(players_2)]
+    envs[0].card_play_data = envs[1].card_play_data = card_play_data_list
     for idx in range(10000):
-        card_play_data = env.get_new_round_play_data()
-        env.card_play_init(card_play_data)
-        while not env.winner:
-            env.step()
-        env.reset()
+        for env in envs:
+            card_play_data = deepcopy(env.get_new_round_play_data())
+            env.card_play_init(card_play_data)
+            while not env.winner:
+                env.step()
+            env.reset()
         if idx % 1000 == 0:
-            print(idx)
+            print(f'game={idx}, {envs[0].num_wins['first'] + envs[1].num_wins['second']} - {envs[0].num_wins['second'] + envs[1].num_wins['first']}')
 
-    q.put((env.num_wins['first'],
-           env.num_wins['second']
+    q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'],
+           envs[0].num_wins['second'] + envs[1].num_wins['first']
            ))
 
 
