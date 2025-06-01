@@ -32,7 +32,7 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
             env.reset()
         if idx % 1000 == 0:
             print(f'game={idx}, {envs[0].num_wins['first'] + envs[1].num_wins['second']} - {envs[0].num_wins['second'] + envs[1].num_wins['first']}')
-
+    print(f'Final: {envs[0].num_wins['first'] + envs[1].num_wins['second']} - {envs[0].num_wins['second'] + envs[1].num_wins['first']}')
     q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'],
            envs[0].num_wins['second'] + envs[1].num_wins['first']
            ))
