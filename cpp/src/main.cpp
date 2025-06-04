@@ -135,7 +135,6 @@ void initStartHandDist()
 
 int main(int /*argc*/, char* argv[])
 {
-  generateAllGeishaPreferences();
   std::vector<int> current(cardTypes.size(), 0);
   backtrack(current, 0, 7);
   initStartHandDist();
@@ -156,32 +155,16 @@ int main(int /*argc*/, char* argv[])
 
   std::map<std::vector<int32_t>, double> ret;
 
-  int r = 0;
-  for (const auto& geishaPreference : allGeishaPreferences) {
-    ++r;
-    if (r % 10 == 0) {
-      std::cout << r << "/" << allGeishaPreferences.size() << "\n";
-    }
-    auto win = is_ended(geishaPreference);
-    if (win != 0) {
-      ret[geishaPreference] = win;
-      continue;
-    }
-    double p = 0;
-    for (const auto& startHand : allStartHands) {
+  std::vector<int32_t> geishaPreference;
+  for (int i = 0; i < 7; ++i)
+  {
+    geishaPreference.push_back(0);
+  }
+  for (const auto& startHand : allStartHands) {
       env.reset(geishaPreference, startHand);
       auto res = env.eval();
-      double p_ = res.second;
-      if (p_ > 1.0) {
-        p_ = 1.0;
-      }
-      if (p_ < -1.0) {
-        p_ = -1.0;
-      }
-      p += p_ * startHandDist[startHand];
+      ret[startHand] = res.second;
     }
-    ret[geishaPreference] = p;
-  }
   std::cout << "totalCall=" << env.call << "\n";
   dumpSortedByValue(ret, "jano.txt");
 }
