@@ -8,8 +8,8 @@ class Human : public IPlayer
 public:
   Human() {}
 
-  std::pair<int, std::vector<int32_t>> act(const GameState& /*gameState*/,
-                                           const PrivateInfoSet& /*privateInfoSet*/) override
+  std::pair<std::pair<int, std::vector<int32_t>>, double> act(const GameState& /*gameState*/,
+                                                              const PrivateInfoSet& /*privateInfoSet*/) override
   {
     return {};
   }

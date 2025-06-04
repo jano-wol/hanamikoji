@@ -26,12 +26,9 @@ public:
     model_second.eval();
   }
 
-  std::pair<int, std::vector<int32_t>> act(const GameState& gameState, const PrivateInfoSet& privateInfoSet) override
+  std::pair<std::pair<int, std::vector<int32_t>>, double> act(const GameState& gameState,
+                                                              const PrivateInfoSet& privateInfoSet) override
   {
-    if (privateInfoSet.moves.size() == 1) {
-      return privateInfoSet.moves[0];
-    }
-
     TorchObs obs = get_obs(gameState, privateInfoSet);
     torch::Tensor values;
     if (gameState.id_to_round_id[gameState.acting_player_id] == 0) {
@@ -39,8 +36,10 @@ public:
     } else {
       values = run_model(model_second, obs.z_batch, obs.x_batch);
     }
-    int64_t best_move_index = values.argmax(0).item<int64_t>();
-    return privateInfoSet.moves[best_move_index];
+    auto max_result = values.max(0); 
+    int64_t best_move_index = std::get<1>(max_result).item<int64_t>();
+    double max_value = std::get<0>(max_result).item<double>();
+    return {privateInfoSet.moves[best_move_index], max_value};
   }
 
   std::string toString() override { return "DeepAgent"; }
