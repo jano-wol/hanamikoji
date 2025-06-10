@@ -18,24 +18,27 @@ def load_card_play_models(card_play_model_path_dict):
     return players
 
 
-def mp_simulate(card_play_data_list, card_play_model_path_dict, q):
-    players = load_card_play_models(card_play_model_path_dict)
-    players_2 = {'first': players['second'], 'second': players['first']}
-    envs = [GameEnv(players), GameEnv(players_2)]
-    envs[0].card_play_data = envs[1].card_play_data = card_play_data_list
-    for idx in range(10000):
-        for env in envs:
-            card_play_data = deepcopy(env.get_new_round_play_data())
-            env.card_play_init(card_play_data)
-            while not env.winner:
-                env.step()
-            env.reset()
-        if idx % 1000 == 0:
-            print(f'game={idx}, {envs[0].num_wins['first'] + envs[1].num_wins['second']} - {envs[0].num_wins['second'] + envs[1].num_wins['first']}')
-    print(f'Final: {envs[0].num_wins['first'] + envs[1].num_wins['second']} - {envs[0].num_wins['second'] + envs[1].num_wins['first']}')
-    q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'],
-           envs[0].num_wins['second'] + envs[1].num_wins['first']
-           ))
+def mp_simulate(card_play_data_list, card_play_model_path_dict, training_plan, num_games, q):
+    if training_plan is None:
+        players = load_card_play_models(card_play_model_path_dict)
+        players_2 = {'first': players['second'], 'second': players['first']}
+        envs = [GameEnv(players, training_plan), GameEnv(players_2, training_plan)]
+        envs[0].card_play_data = envs[1].card_play_data = card_play_data_list
+        for idx in range(num_games):
+            for env in envs:
+                card_play_data = deepcopy(env.get_new_round_play_data())
+                env.card_play_init(card_play_data)
+                while not env.winner:
+                    env.step()
+                env.reset()
+            if idx % 1000 == 0:
+                v_1 = envs[0].num_wins['first'] + envs[1].num_wins['second']
+                v_2 = envs[0].num_wins['second'] + envs[1].num_wins['first']
+                print(f'game={idx}, {v_1} - {v_2}')
+        v_1 = envs[0].num_wins['first'] + envs[1].num_wins['second']
+        v_2 = envs[0].num_wins['second'] + envs[1].num_wins['first']
+        print(f'Final: {v_1} - {v_2}')
+        q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'], envs[0].num_wins['second'] + envs[1].num_wins['first']))
 
 
 def data_allocation_per_worker(card_play_data_list, num_workers):
@@ -46,7 +49,7 @@ def data_allocation_per_worker(card_play_data_list, num_workers):
     return card_play_data_list_each_worker
 
 
-def evaluate(first, second, eval_data, num_workers):
+def evaluate(first, second, eval_data, num_workers, training_plan, num_games):
     with open(eval_data, 'rb') as f:
         card_play_data_list = pickle.load(f)
 
@@ -68,7 +71,7 @@ def evaluate(first, second, eval_data, num_workers):
     for card_play_data in card_play_data_list_each_worker:
         p = ctx.Process(
             target=mp_simulate,
-            args=(card_play_data, card_play_model_path_dict, q))
+            args=(card_play_data, card_play_model_path_dict, training_plan, num_games, q))
         p.start()
         processes.append(p)
 
