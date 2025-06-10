@@ -47,7 +47,7 @@ class Environment:
             )
         
     def step(self, move):
-        obs, reward, done, _ = self.env.step(move)
+        obs, reward, round_end_reward, done, _ = self.env.step(move)
         self.episode_result += reward
         episode_result = self.episode_result
 
@@ -58,7 +58,7 @@ class Environment:
         acting_player_id, round_id, obs, x_no_move, z = _format_observation(obs, self.device)
         done = torch.tensor(done).view(1, 1)
         
-        return acting_player_id, round_id, obs, dict(
+        return acting_player_id, round_id, round_end_reward, obs, dict(
             done=done,
             episode_result=episode_result,
             obs_x_no_move=x_no_move,

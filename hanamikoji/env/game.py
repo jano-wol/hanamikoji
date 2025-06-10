@@ -11,6 +11,22 @@ def _sub_cards(a, b):
     return [a - b for a, b in zip(a, b)]
 
 
+def read_vector_map(filename):
+    result = {}
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+            # Split the line into the vector part and the value
+            vector_part, value_part = line.split(" : ")
+            # Convert string list to actual list of integers
+            vector = list(map(int, vector_part.strip('[]').split(',')))
+            value = float(value_part)
+            result[tuple(vector)] = value  # use tuple so keys are hashable
+    return result
+
+
 deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
 
 
@@ -71,6 +87,8 @@ class GameEnv(object):
         # First element is GameState, second element is PrivateInfo.
         self.active_player_info_set = None
         self.card_play_data = None
+        self.round_end_rewards = read_vector_map("consistent.txt")
+        self.round_end_reward = None
 
     def get_opp(self):
         return 'first' if self.state.acting_player_id == 'second' else 'second'
@@ -148,6 +166,7 @@ class GameEnv(object):
             return get_card_play_data()
 
     def step(self):
+        self.round_end_reward = None
         curr = self.state.acting_player_id
         opp = self.get_opp()
         info = self.private_info_sets[curr]
@@ -201,6 +220,12 @@ class GameEnv(object):
         if len(self.state.round_moves['first']) + len(self.state.round_moves['second']) == 12:
             assert self.state.num_cards['first'] == 0 and self.state.num_cards['second'] == 0
             self.update_geisha_preferences()
+            if self.round % 2 == 1:
+                self.round_end_reward = self.round_end_rewards[
+                    tuple(_sub_cards(self.state.geisha_preferences['second'], self.state.geisha_preferences['first']))]
+            if self.round % 2 == 0:
+                self.round_end_reward = self.round_end_rewards[
+                    tuple(_sub_cards(self.state.geisha_preferences['first'], self.state.geisha_preferences['second']))]
             self.set_winner()
             if self.winner is None:
                 next_geisha_preferences = deepcopy(self.state.geisha_preferences)
