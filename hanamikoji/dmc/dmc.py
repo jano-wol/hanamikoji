@@ -208,6 +208,11 @@ def train(flags):
             model_weights_dir = os.path.expandvars(os.path.expanduser(
                 '%s/%s/%s' % (flags.savedir, flags.xpid, round_id + '_weights_'+str(frames)+'.ckpt')))
             torch.save(learner_model.get_model(round_id).state_dict(), model_weights_dir)
+            if flags.training_plan:
+                parts = flags.training_plan.split('_')
+                player = parts[0]
+                if player == round_id:
+                    torch.save(learner_model.get_model(round_id).state_dict(), './baselines/' + flags.training_plan + '.ckpt')
 
     fps_log = []
     timer = timeit.default_timer
