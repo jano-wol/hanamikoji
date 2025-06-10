@@ -276,7 +276,7 @@ class GameEnv(object):
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
         self.active_player_info_set = None
         if self.training_plan:
-            self.state.geisha_preferences = self.training_plan[2]
+            self.state.geisha_preferences = deepcopy(self.training_plan[2])
 
 
 class PrivateInfoSet(object):
