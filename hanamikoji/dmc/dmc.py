@@ -189,7 +189,10 @@ def train(flags):
     def checkpoint(frames):
         if flags.disable_checkpoint:
             return
-        log.info('Saving checkpoint to %s', checkpointpath)
+        model_path = 'model_' + flags.training_plan + '_model.tar'
+        savepointpath = os.path.expandvars(
+            os.path.expanduser('%s/%s/%s' % (flags.savedir, flags.xpid, model_path)))
+        log.info('Saving checkpoint to %s', savepointpath)
         _models = learner_model.get_models()
         torch.save({
             'model_state_dict': {k: _models[k].state_dict() for k in _models},
@@ -198,7 +201,7 @@ def train(flags):
             'flags': vars(flags),
             'frames': frames,
             'round_id_frames': round_id_frames
-        }, checkpointpath)
+        }, savepointpath)
 
         # Save the weights for evaluation purpose
         for round_id in ['first', 'second']:
