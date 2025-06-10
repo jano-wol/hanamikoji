@@ -83,7 +83,7 @@ class Env:
         self.infoset = self._active_player_info_set()
         done = False
         reward = 0.0
-        if self._game_over():
+        if self._game_over() or (self._env.round_end_reward is not None and self._env.training_plan is not None) :
             done = True
             reward = self._get_reward()
             obs = None

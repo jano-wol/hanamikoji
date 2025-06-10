@@ -36,6 +36,14 @@ def learn(round_id,
     obs_x = torch.flatten(obs_x, 0, 1)
     obs_z = torch.flatten(batch['obs_z'].to(device), 0, 1).float()
     target = torch.flatten(batch['target'].to(device), 0, 1)
+    do_not_train = None
+    if flags.training_plan:
+        parts = flags.training_plan.split('_')
+        player = parts[0]
+        if player == 'first':
+            do_not_train = 'second'
+        if player == 'second':
+            do_not_train = 'first'
 
     with lock:
         learner_outputs = model(obs_z, obs_x, return_value=True)
@@ -43,11 +51,12 @@ def learn(round_id,
         stats = {
             'loss_'+round_id: loss.item()
         }
-        
-        optimizer.zero_grad()
-        loss.backward()
-        nn.utils.clip_grad_norm_(model.parameters(), flags.max_grad_norm)
-        optimizer.step()
+
+        if do_not_train != round_id:
+            optimizer.zero_grad()
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), flags.max_grad_norm)
+            optimizer.step()
 
         for actor_model in actor_models.values():
             actor_model.get_model(round_id).load_state_dict(model.state_dict())

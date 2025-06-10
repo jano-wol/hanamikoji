@@ -42,6 +42,18 @@ def get_card_play_data():
     return {'first': f, 'second': s, 'deck': _deck[13:21]}
 
 
+def get_card_play_data_training_plan(training_plan):
+    _deck = deck.copy()
+    for i in range(7):
+        for j in range(training_plan[1][i]):
+            _deck.remove(i)
+    np.random.shuffle(_deck)
+    s = [0] * 7
+    for num in _deck[:6]:
+        s[num] += 1
+    return {'first': training_plan[1], 'second': s, 'deck': _deck[6:14]}
+
+
 class GameState(object):
     """
     GameState contains the public data of the game.
@@ -163,6 +175,8 @@ class GameEnv(object):
         if self.card_play_data is not None:
             game_idx = self.num_wins['first'] + self.num_wins['second']
             return deepcopy(self.card_play_data[game_idx * 20 + self.round])
+        elif self.training_plan is not None:
+            return get_card_play_data_training_plan(self.training_plan)
         else:
             return get_card_play_data()
 
@@ -177,14 +191,14 @@ class GameEnv(object):
 
         draw_card = True
         if move[0] == TYPE_0_STASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7]) # TODO FIX?
+            self.state.round_moves[curr].append([move[0], [0] * 7])  # TODO FIX?
             self.state.action_cards[curr][0] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.stashed_card = move[1]
             self.state.num_cards[curr] -= 1
             self.state.acting_player_id = opp
         if move[0] == TYPE_1_TRASH:
-            self.state.round_moves[curr].append([move[0], [0] * 7]) # TODO FIX?
+            self.state.round_moves[curr].append([move[0], [0] * 7])  # TODO FIX?
             self.state.action_cards[curr][1] = 0
             info.hand_cards = _sub_cards(info.hand_cards, move[1])
             info.trashed_cards = move[1]
@@ -227,6 +241,11 @@ class GameEnv(object):
             if self.round % 2 == 0:
                 self.round_end_reward = self.round_end_rewards[
                     tuple(_sub_cards(self.state.geisha_preferences['first'], self.state.geisha_preferences['second']))]
+            if self.training_plan:
+                self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
+                card_play_data = self.get_new_round_play_data()
+                self.card_play_init(card_play_data)
+                return
             self.set_winner()
             if self.winner is None:
                 next_geisha_preferences = deepcopy(self.state.geisha_preferences)
@@ -256,6 +275,8 @@ class GameEnv(object):
         self.state = GameState()
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
         self.active_player_info_set = None
+        if self.training_plan:
+            self.state.geisha_preferences = self.training_plan[2]
 
 
 class PrivateInfoSet(object):

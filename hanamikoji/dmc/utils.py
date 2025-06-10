@@ -174,8 +174,9 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
                 if round_end_reward is not None:
                     target_buf['first'][-6:] = [-round_end_reward] * 6
                     target_buf['second'][-6:] = [round_end_reward] * 6
+                    if flags.training_plan != '':
+                        env_output['done'] = True
                 if env_output['done']:
-                    result_glob = env_output['episode_result']
                     for p in player_ids:
                         # diff is the number of new training data valuated by model p
                         if diff[p] > 0:
