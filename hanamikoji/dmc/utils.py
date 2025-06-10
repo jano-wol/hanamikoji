@@ -33,8 +33,34 @@ def my_move2tensor(list_cards):
     return matrix
 
 
+def _decompose_training_plan(training_plan):
+    parts = training_plan.split('_')
+    player = parts[0]
+    color_string = parts[1]
+    color_map = {'v': 0, 'r': 1, 'w': 2, 'o': 3, 'b': 4, 'g': 5, 'p': 6}
+    hand = [0] * 7
+    for c in color_string:
+        hand[color_map[c]] += 1
+    preference_string = parts[2]
+    geisha_preferences = {'first': [0] * 7, 'second': [0] * 7}
+    for i, ch in enumerate(preference_string):
+        if ch == 'f':
+            geisha_preferences['first'][i] = 1
+        elif ch == 's':
+            geisha_preferences['second'][i] = 1
+    elo_diff = int(parts[3])
+    if len(parts) > 4:
+        move_desc = parts[4]
+    else:
+        move_desc = None
+    return [player, hand, geisha_preferences, elo_diff, move_desc]
+
+
 def create_env(flags):
-    return Env(flags.objective)
+    training_plan = None
+    if flags.training_plan != '':
+        training_plan = _decompose_training_plan(flags.training_plan)
+    return Env(flags.objective, training_plan)
 
 
 def get_batch(free_queue,
@@ -106,29 +132,6 @@ def create_buffers(flags, device_iterator):
     return buffers
 
 
-def _decompose_training_plan(training_plan):
-    parts = training_plan.split('_')
-    player = parts[0]
-    color_string = parts[1]
-    color_map = {'v': 0, 'r': 1, 'w': 2, 'o': 3, 'b': 4, 'g': 5, 'p': 6}
-    hand = [0] * 7
-    for c in color_string:
-        hand[color_map[c]] += 1
-    preference_string = parts[2]
-    geisha_preferences = {'first': [0] * 7, 'second': [0] * 7}
-    for i, ch in enumerate(preference_string):
-        if ch == 'f':
-            geisha_preferences['first'][i] = 1
-        elif ch == 's':
-            geisha_preferences['second'][i] = 1
-    elo_diff = int(parts[3])
-    if len(parts) > 4:
-        move_desc = parts[4]
-    else:
-        move_desc = None
-    return [player, hand, geisha_preferences, elo_diff, move_desc]
-
-
 def act(i, device, free_queue, full_queue, model, buffers, flags):
     """
     This function will run forever until we stop it. It will generate
@@ -137,10 +140,6 @@ def act(i, device, free_queue, full_queue, model, buffers, flags):
     """
     player_ids = ['first', 'second']
     try:
-        training_plan = None
-        if flags.training_plan is not '':
-            training_plan = _decompose_training_plan(flags.training_plan)
-
         T = flags.unroll_length
         log.info('Device %s Actor %i started.', str(device), i)
 

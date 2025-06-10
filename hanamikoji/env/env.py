@@ -32,7 +32,7 @@ class Env:
     Hanamikoji multi-agent wrapper
     """
 
-    def __init__(self, objective):
+    def __init__(self, objective, training_plan):
         """
         Objective is wp/adp/logadp. Here, we use dummy agents.
         This is because, in the original game, the players
@@ -52,7 +52,7 @@ class Env:
             self.players[player_id] = DummyAgent(player_id)
 
         # Initialize the internal environment
-        self._env = GameEnv(self.players)
+        self._env = GameEnv(self.players, training_plan)
 
         self.infoset = None
 

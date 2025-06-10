@@ -72,7 +72,7 @@ class GameState(object):
 
 class GameEnv(object):
 
-    def __init__(self, players):
+    def __init__(self, players, training_plan):
         self.players = players
         self.deck = None
         self.winner = None
@@ -89,6 +89,7 @@ class GameEnv(object):
         self.card_play_data = None
         self.round_end_rewards = read_vector_map("consistent.txt")
         self.round_end_reward = None
+        self.training_plan = training_plan
 
     def get_opp(self):
         return 'first' if self.state.acting_player_id == 'second' else 'second'
