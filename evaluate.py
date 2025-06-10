@@ -48,4 +48,5 @@ if __name__ == '__main__':
              eval_data,
              args.num_workers,
              training_plan,
+             args.training_plan,
              args.num_games)

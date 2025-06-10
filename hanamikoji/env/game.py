@@ -275,6 +275,7 @@ class GameEnv(object):
         self.state = GameState()
         self.private_info_sets = {'first': PrivateInfoSet(), 'second': PrivateInfoSet()}
         self.active_player_info_set = None
+        self.round_end_reward = None
         if self.training_plan:
             self.state.geisha_preferences = deepcopy(self.training_plan[2])
 
