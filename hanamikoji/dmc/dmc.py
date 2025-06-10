@@ -77,8 +77,15 @@ def train(flags):
         xp_args=flags.__dict__,
         rootdir=flags.savedir,
     )
-    checkpointpath = os.path.expandvars(
-        os.path.expanduser('%s/%s/%s' % (flags.savedir, flags.xpid, 'model.tar')))
+    model_path = 'model.tar'
+    if flags.training_plan:
+        model_path = flags.training_plan + '_model.tar'
+    savepointpath = os.path.expandvars(
+        os.path.expanduser('%s/%s/%s' % (flags.savedir, flags.xpid, model_path)))
+    if os.path.exists(savepointpath):
+        checkpointpath = savepointpath
+    else:
+        checkpointpath = os.path.expandvars(os.path.expanduser('%s/%s/%s' % (flags.savedir, flags.xpid, 'model.tar')))
 
     T = flags.unroll_length
     B = flags.batch_size
@@ -189,7 +196,9 @@ def train(flags):
     def checkpoint(frames):
         if flags.disable_checkpoint:
             return
-        model_path = 'model_' + flags.training_plan + '_model.tar'
+        model_path = 'model.tar'
+        if flags.training_plan:
+            model_path = flags.training_plan + '_model.tar'
         savepointpath = os.path.expandvars(
             os.path.expanduser('%s/%s/%s' % (flags.savedir, flags.xpid, model_path)))
         log.info('Saving checkpoint to %s', savepointpath)
