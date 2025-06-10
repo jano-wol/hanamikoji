@@ -53,3 +53,7 @@ parser.add_argument('--momentum', default=0, type=float,
                     help='RMSProp momentum')
 parser.add_argument('--epsilon', default=1e-5, type=float,
                     help='RMSProp epsilon')
+parser.add_argument('--training_plan', default='', type=str,
+                    help='Plan for refined training. Defines round local player, hand, geisha pref (also in round local manner), and ELO advantage. '
+                         'In case second player a first player start action should be also given '
+                         'first_rrwobgp_nnffsfs_160 or second_vwogppp_nnffsfs_0_2' )
