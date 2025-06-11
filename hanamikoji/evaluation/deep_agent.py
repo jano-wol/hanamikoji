@@ -39,6 +39,13 @@ class DeepAgent:
         return instance
 
     @classmethod
+    def validate_player(cls):
+        instance = cls.__new__(cls)
+        instance.model_first = _load_model('first_validate', './baselines')
+        instance.model_second = _load_model('second_validate', './baselines')
+        return instance
+
+    @classmethod
     def from_training_plan(cls, training_plan, training_plan_str):
         instance = cls.__new__(cls)
         if training_plan[0] == 'first':

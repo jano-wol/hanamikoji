@@ -1,10 +1,20 @@
 import multiprocessing as mp
+import math
 import pickle
 from copy import deepcopy
 
 from hanamikoji.env.game import GameEnv
 from hanamikoji.evaluation.deep_agent import DeepAgent
 
+
+def elo_diff(p_a, p_b):
+    """Calculate Elo difference between Player B and Player A
+       based on their win probabilities against the same opponent."""
+
+    def log_odds(p):
+        return math.log10(p / (1 - p))
+
+    return 400 * (log_odds(p_b) - log_odds(p_a))
 
 def load_card_play_models(card_play_model_path_dict):
     players = {}
@@ -41,12 +51,13 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, training_plan, t
         q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'],
                envs[0].num_wins['second'] + envs[1].num_wins['first']))
     else:
-        players = {'first': DeepAgent.default_player(), 'second': DeepAgent.default_player()}
         if training_plan[0] == 'first':
+            players = {'first': DeepAgent.default_player(), 'second': DeepAgent.validate_player()}
             players_2 = {'first': DeepAgent.from_training_plan(training_plan, training_plan_str),
-                         'second': DeepAgent.default_player()}
+                         'second': DeepAgent.validate_player()}
         else:
-            players_2 = {'first': DeepAgent.default_player(),
+            players = {'first': DeepAgent.validate_player(), 'second': DeepAgent.default_player()}
+            players_2 = {'first': DeepAgent.validate_player(),
                          'second': DeepAgent.from_training_plan(training_plan, training_plan_str)}
         envs = [GameEnv(players, training_plan), GameEnv(players_2, training_plan)]
         envs[0].card_play_data = envs[1].card_play_data = card_play_data_list
@@ -68,16 +79,18 @@ def mp_simulate(card_play_data_list, card_play_model_path_dict, training_plan, t
             if idx % 10 == 0:
                 if training_plan[0] == 'first':
                     print(
-                        f'games finished={idx + 1}, first.ckpt win_chance={p[0] / float(idx + 1)}  {training_plan_str}.ckpt win_chance={p[1] / float(idx + 1)}')
+                        f'games finished={idx + 1}, first.ckpt win_chance={p[0] / float(idx + 1)} {training_plan_str}.ckpt win_chance={p[1] / float(idx + 1)}')
                 if training_plan[0] == 'second':
                     print(
-                        f'games finished={idx + 1}, second.ckpt win_chance={1 - (p[0] / float(idx + 1))}  {training_plan_str}.ckpt win_chance={1 - (p[1] / float(idx + 1))}')
+                        f'games finished={idx + 1}, second.ckpt win_chance={1 - (p[0] / float(idx + 1))} {training_plan_str}.ckpt win_chance={1 - (p[1] / float(idx + 1))}')
         if training_plan[0] == 'first':
-            print(
-                f'Final. first.ckpt win_chance={p[0] / float(idx + 1)}  {training_plan_str}.ckpt win_chance={p[1] / float(idx + 1)}')
+            p_a = p[0] / float(num_games)
+            p_b = p[1] / float(num_games)
+            print(f'Final. first.ckpt win_chance={p_a} {training_plan_str}.ckpt win_chance={p_b} ELO gain={elo_diff(p_a, p_b)}')
         if training_plan[0] == 'second':
-            print(
-                f'Final. second.ckpt win_chance={1 - (p[0] / float(idx + 1))}  {training_plan_str}.ckpt win_chance={1 - (p[1] / float(idx + 1))}')
+            p_a = 1 - (p[0] / float(num_games))
+            p_b = 1 - (p[1] / float(num_games))
+            print(f'Final. second.ckpt win_chance={p_a} {training_plan_str}.ckpt win_chance={p_b} ELO gain={elo_diff(p_a, p_b)}')
         q.put((envs[0].num_wins['first'] + envs[1].num_wins['second'],
                envs[0].num_wins['second'] + envs[1].num_wins['first']))
 
